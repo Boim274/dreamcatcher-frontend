@@ -1,0 +1,142 @@
+import { useEffect, useRef } from 'react';
+import feather from 'feather-icons';
+
+const materialIcons = {
+  tshirt: 'graphic_eq',
+  box: 'inventory_2',
+  image: 'image',
+  palette: 'palette',
+  smartphone: 'smartphone',
+  monitor: 'desktop_windows',
+  printer: 'print',
+  scissors: 'content_cut',
+  brush: 'brush',
+  star: 'star',
+  heart: 'favorite',
+  check: 'check_circle',
+  x: 'cancel',
+  plus: 'add',
+  minus: 'remove',
+  'arrow-right': 'arrow_forward',
+  'arrow-left': 'arrow_back',
+  'chevron-right': 'chevron_right',
+  'chevron-left': 'chevron_left',
+  'chevron-down': 'expand_more',
+  'chevron-up': 'expand_less',
+  menu: 'menu',
+  'x-circle': 'radio_button_unchecked',
+  'check-circle': 'check_circle',
+  clock: 'schedule',
+  truck: 'local_shipping',
+  package: 'inventory_2',
+  user: 'person',
+  users: 'group',
+  phone: 'phone',
+  mail: 'mail',
+  'map-pin': 'location_on',
+  'dollar-sign': 'payments',
+  'file-text': 'description',
+  edit: 'edit',
+  trash: 'delete',
+  search: 'search',
+  filter: 'filter_list',
+  download: 'download',
+  upload: 'upload_file',
+  eye: 'visibility',
+  'eye-off': 'visibility_off',
+  lock: 'lock',
+  unlock: 'lock_open',
+  home: 'home',
+  settings: 'settings',
+  'log-out': 'logout',
+  'bar-chart': 'bar_chart',
+  'pie-chart': 'pie_chart',
+  'trending-up': 'trending_up',
+  calendar: 'calendar_today',
+  'credit-card': 'credit_card',
+  percent: 'percent',
+  tag: 'sell',
+  layers: 'layers',
+  zap: 'flash_on',
+  cloud: 'cloud',
+  'cloud-upload': 'cloud_upload',
+  'cloud-download': 'cloud_download',
+  'refresh-cw': 'sync',
+  repeat: 'repeat',
+  send: 'send',
+  save: 'save',
+  copy: 'content_copy',
+  share: 'share',
+  'external-link': 'open_in_new',
+  link: 'link',
+  info: 'info',
+  'help-circle': 'help',
+  'alert-circle': 'error',
+  'alert-triangle': 'warning',
+  shield: 'shield',
+  award: 'emoji_events',
+  gift: 'card_giftcard',
+  'shopping-bag': 'shopping_bag',
+  'shopping-cart': 'shopping_cart',
+  inbox: 'inbox',
+  file: 'insert_drive_file',
+  folder: 'folder',
+  camera: 'photo_camera',
+  video: 'videocam',
+  mic: 'mic',
+  music: 'music_note',
+  play: 'play_arrow',
+  pause: 'pause',
+  'skip-back': 'skip_previous',
+  'skip-forward': 'skip_next',
+  volume: 'volume_up',
+  'volume-x': 'volume_off',
+  maximize: 'fullscreen',
+  minimize: 'fullscreen_exit',
+  'zoom-in': 'zoom_in',
+  'zoom-out': 'zoom_out',
+  sun: 'light_mode',
+  moon: 'dark_mode',
+  map: 'map',
+  compass: 'explore',
+  globe: 'language',
+  flag: 'flag',
+  bookmark: 'bookmark',
+  book: 'menu_book',
+  clipboard: 'content_paste',
+  list: 'list',
+  grid: 'grid_view',
+  sliders: 'tune',
+  tool: 'handyman',
+  briefcase: 'work',
+  coffee: 'coffee',
+  smile: 'sentiment_satisfied',
+  frown: 'sentiment_dissatisfied',
+  meh: 'sentiment_neutral',
+};
+
+export default function Icon({ name, size = 24, className = '' }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      const featherIcon = feather.icons[name];
+      if (featherIcon) {
+        ref.current.innerHTML = featherIcon.toSvg({
+          width: size,
+          height: size,
+          class: className
+        });
+      } else {
+        const materialName = materialIcons[name];
+        if (materialName) {
+          ref.current.innerHTML = `<span class="material-symbols-outlined" style="font-size:${size}px">${materialName}</span>`;
+        } else {
+          ref.current.innerHTML = `<span class="material-symbols-outlined" style="font-size:${size}px">circle</span>`;
+        }
+      }
+    }
+  }, [name, size, className]);
+
+  return <span ref={ref} className={`inline-flex items-center justify-center ${className}`} />;
+}
