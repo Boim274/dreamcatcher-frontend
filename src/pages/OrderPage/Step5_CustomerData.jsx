@@ -39,7 +39,7 @@ export default function Step5CustomerData() {
             <Icon name="user" size={20} className="text-[#6B7280]" /> Nama Lengkap
           </label>
           <input type="text" value={form.name} onChange={(e) => handleChange('name', e.target.value)} placeholder="Masukkan nama"
-            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 ${errors.name ? 'border-[#EF4444]' : 'border-gray-300'}`} />
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:border-[#982598] focus:ring-2 focus:ring-[#982598]/20 ${errors.name ? 'border-[#EF4444]' : 'border-gray-300'}`} />
           {errors.name && <p className="text-[#EF4444] text-sm mt-1">{errors.name}</p>}
         </div>
 
@@ -47,12 +47,12 @@ export default function Step5CustomerData() {
           <div>
             <label className="font-medium mb-2 block">Email (opsional)</label>
             <input type="email" value={form.email} onChange={(e) => handleChange('email', e.target.value)} placeholder="email@example.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20" />
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#982598] focus:ring-2 focus:ring-[#982598]/20" />
           </div>
           <div>
             <label className="font-medium mb-2 block">Nomor HP</label>
             <input type="tel" value={form.phone} onChange={(e) => handleChange('phone', e.target.value)} placeholder="081234567890"
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 ${errors.phone ? 'border-[#EF4444]' : 'border-gray-300'}`} />
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:border-[#982598] focus:ring-2 focus:ring-[#982598]/20 ${errors.phone ? 'border-[#EF4444]' : 'border-gray-300'}`} />
             {errors.phone && <p className="text-[#EF4444] text-sm mt-1">{errors.phone}</p>}
           </div>
         </div>
@@ -61,14 +61,14 @@ export default function Step5CustomerData() {
           <label className="font-medium mb-3 block">Metode Pengiriman</label>
           <div className="grid grid-cols-2 gap-4">
             <button type="button" onClick={() => handleChange('deliveryMethod', 'pickup')}
-              className={`p-4 rounded-xl border-2 transition-all ${form.deliveryMethod === 'pickup' ? 'border-[#FF6B35] bg-[#FF6B35]/5' : 'border-gray-200 hover:border-[#FF6B35]/50'}`}>
-              <Icon name="map-pin" size={24} className={`mx-auto mb-2 ${form.deliveryMethod === 'pickup' ? 'text-[#FF6B35]' : 'text-[#6B7280]'}`} />
+              className={`p-4 rounded-xl border-2 transition-all ${form.deliveryMethod === 'pickup' ? 'border-[#982598] bg-[#982598]/5' : 'border-gray-200 hover:border-[#982598]/50'}`}>
+              <Icon name="map-pin" size={24} className={`mx-auto mb-2 ${form.deliveryMethod === 'pickup' ? 'text-[#982598]' : 'text-[#6B7280]'}`} />
               <p className="font-medium">Ambil Sendiri</p>
               <p className="text-sm text-[#6B7280]">Di toko</p>
             </button>
             <button type="button" onClick={() => handleChange('deliveryMethod', 'delivery')}
-              className={`p-4 rounded-xl border-2 transition-all ${form.deliveryMethod === 'delivery' ? 'border-[#FF6B35] bg-[#FF6B35]/5' : 'border-gray-200 hover:border-[#FF6B35]/50'}`}>
-              <Icon name="truck" size={24} className={`mx-auto mb-2 ${form.deliveryMethod === 'delivery' ? 'text-[#FF6B35]' : 'text-[#6B7280]'}`} />
+              className={`p-4 rounded-xl border-2 transition-all ${form.deliveryMethod === 'delivery' ? 'border-[#982598] bg-[#982598]/5' : 'border-gray-200 hover:border-[#982598]/50'}`}>
+              <Icon name="truck" size={24} className={`mx-auto mb-2 ${form.deliveryMethod === 'delivery' ? 'text-[#982598]' : 'text-[#6B7280]'}`} />
               <p className="font-medium">Dikirim</p>
               <p className="text-sm text-[#6B7280]">+ Rp 15.000</p>
             </button>
@@ -81,7 +81,7 @@ export default function Step5CustomerData() {
               <label className="font-medium mb-2 block">Alamat Pengiriman</label>
               <textarea value={form.address} onChange={(e) => handleChange('address', e.target.value)}
                 placeholder="Masukkan alamat lengkap"
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 min-h-[100px] resize-none ${errors.address ? 'border-[#EF4444]' : 'border-gray-300'}`} />
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:border-[#982598] focus:ring-2 focus:ring-[#982598]/20 min-h-[100px] resize-none ${errors.address ? 'border-[#EF4444]' : 'border-gray-300'}`} />
               {errors.address && <p className="text-[#EF4444] text-sm mt-1">{errors.address}</p>}
             </>
           )}
@@ -98,10 +98,10 @@ export default function Step5CustomerData() {
       </div>
 
       <div className="flex gap-4 mt-6">
-        <button onClick={prevStep} className="flex items-center gap-2 border-2 border-[#FF6B35] text-[#FF6B35] font-semibold py-3 px-6 rounded-lg hover:bg-[#FF6B35] hover:text-white transition-colors">
+        <button onClick={prevStep} className="flex items-center gap-2 border-2 border-[#982598] text-[#982598] font-semibold py-3 px-6 rounded-lg hover:bg-[#982598] hover:text-white transition-colors">
           <Icon name="arrow-left" size={20} /> Kembali
         </button>
-        <button onClick={handleNext} className="flex items-center gap-2 flex-1 justify-center bg-[#FF6B35] text-white font-semibold py-3 px-6 rounded-lg hover:bg-[#E55A26] transition-colors">
+        <button onClick={handleNext} className="flex items-center gap-2 flex-1 justify-center bg-[#982598] text-white font-semibold py-3 px-6 rounded-lg hover:bg-[#7a1f7a] transition-colors">
           Lanjut <Icon name="arrow-right" size={20} />
         </button>
       </div>

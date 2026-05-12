@@ -1,15 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #FF6B35;
-  --color-primary-dark: #E55A26;
-  --color-primary-light: #FF8C5A;
+  --color-primary: #982598;
+  --color-primary-dark: #7a1f7a;
+  --color-primary-light: #b84db8;
+  --color-primary-50: #f5e6f5;
+  --color-primary-100: #eddaed;
+  --color-primary-200: #dbb5db;
+  --color-primary-300: #c990c9;
+  --color-primary-400: #b76bb7;
+  --color-primary-500: #982598;
+  --color-primary-600: #7a1f7a;
+  --color-primary-700: #5c1a5c;
+  --color-primary-800: #3e123e;
+  --color-primary-900: #200920;
   --color-secondary: #1A1A2E;
   --color-accent: #FFD700;
   --color-success: #22C55E;
   --color-warning: #F59E0B;
   --color-danger: #EF4444;
-  --color-bg-light: #F8F9FA;
+  --color-bg-light: #FAFAFA;
   --color-text-primary: #1A1A2E;
   --color-text-secondary: #6B7280;
 
@@ -82,12 +92,12 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D1D5DB;
+  background: #982598;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9CA3AF;
+  background: #7a1f7a;
 }
 
 /* Line clamp */
@@ -104,3 +114,36 @@ html {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Custom utility classes for purple theme */
+.bg-primary { background-color: #982598; }
+.bg-primary-dark { background-color: #7a1f7a; }
+.bg-primary-light { background-color: #b84db8; }
+.bg-primary-50 { background-color: #f5e6f5; }
+.bg-primary-100 { background-color: #eddaed; }
+.bg-primary-200 { background-color: #dbb5db; }
+
+.text-primary { color: #982598; }
+.text-primary-dark { color: #7a1f7a; }
+.text-primary-light { color: #b84db8; }
+
+.border-primary { border-color: #982598; }
+.border-primary-dark { border-color: #7a1f7a; }
+.border-primary-light { border-color: #b84db8; }
+
+.hover\:bg-primary:hover { background-color: #982598; }
+.hover\:bg-primary-dark:hover { background-color: #7a1f7a; }
+.hover\:bg-primary-light:hover { background-color: #b84db8; }
+
+.hover\:text-primary:hover { color: #982598; }
+.hover\:text-primary-dark:hover { color: #7a1f7a; }
+.hover\:text-primary-light:hover { color: #b84db8; }
+
+.hover\:border-primary:hover { border-color: #982598; }
+.hover\:border-primary-dark:hover { border-color: #7a1f7a; }
+.hover\:border-primary-light:hover { border-color: #b84db8; }
+
+.ring-primary { --tw-ring-color: #982598; }
+.focus\:border-primary:focus { border-color: #982598; }
+.focus\:ring-primary:focus { --tw-ring-color: #982598; }
+

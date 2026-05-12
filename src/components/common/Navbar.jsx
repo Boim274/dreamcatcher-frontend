@@ -21,10 +21,10 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-[#FF6B35] rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-[#982598] rounded-lg flex items-center justify-center">
               <Icon name="scissors" size={20} className="text-white" />
             </div>
-            <span className="font-bold text-xl text-[#1A1A2E]">Dreamcatcher<span className="text-[#FF6B35]">.id</span></span>
+            <span className="font-bold text-xl text-[#1A1A2E]">Dreamcatcher<span className="text-[#982598]">.id</span></span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
@@ -33,7 +33,7 @@ export default function Navbar() {
                 key={link.to}
                 to={link.to}
                 className={`font-medium transition-colors ${
-                  location.pathname === link.to ? 'text-[#FF6B35]' : 'text-[#6B7280] hover:text-[#FF6B35]'
+                  location.pathname === link.to ? 'text-[#982598]' : 'text-[#6B7280] hover:text-[#982598]'
                 }`}
               >
                 {link.label}
@@ -43,7 +43,7 @@ export default function Navbar() {
               href="https://wa.me/6281234567890"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#FF6B35] hover:bg-[#E55A26] text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
+              className="inline-flex items-center gap-2 bg-[#982598] hover:bg-[#7a1f7a] text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
             >
               <Icon name="phone" size={16} /> WhatsApp
             </a>
@@ -62,12 +62,12 @@ export default function Navbar() {
                   key={link.to}
                   to={link.to}
                   onClick={() => setIsOpen(false)}
-                  className={`font-medium py-2 ${location.pathname === link.to ? 'text-[#FF6B35]' : 'text-[#6B7280]'}`}
+                  className={`font-medium py-2 ${location.pathname === link.to ? 'text-[#982598]' : 'text-[#6B7280]'}`}
                 >
                   {link.label}
                 </Link>
               ))}
-              <a href="https://wa.me/6281234567890" className="bg-[#FF6B35] text-white font-semibold py-3 rounded-lg text-center mt-2">
+              <a href="https://wa.me/6281234567890" className="bg-[#982598] text-white font-semibold py-3 rounded-lg text-center mt-2">
                 <Icon name="phone" size={16} /> WhatsApp
               </a>
             </div>

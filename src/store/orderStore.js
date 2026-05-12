@@ -10,6 +10,9 @@ export const useOrderStore = create(
         quantity: 1,
         sizes: [],
         notes: '',
+        dimension: { width: '', height: '', unit: 'cm' },
+        material: '',
+        finishing: '',
       },
       design: {
         id: null,
@@ -53,13 +56,45 @@ export const useOrderStore = create(
 
       setOrderResult: (result) => set({ orderResult: result }),
 
-      reset: () => set({
+      resetForm: () => set({
+        currentStep: 1,
+        productDetail: {
+          quantity: 1,
+          sizes: [],
+          notes: '',
+          dimension: { width: '', height: '', unit: 'cm' },
+          material: '',
+          finishing: '',
+        },
+        design: {
+          id: null,
+          imageUrl: null,
+          isValid: false,
+          validationMessage: null,
+          type: null,
+          prompt: null,
+        },
+        mockupImage: null,
+        customerData: {
+          name: '',
+          email: '',
+          phone: '',
+          address: '',
+          deliveryMethod: 'pickup',
+        },
+        orderResult: null,
+      }),
+
+      resetAll: () => set({
         currentStep: 1,
         selectedService: null,
         productDetail: {
           quantity: 1,
           sizes: [],
           notes: '',
+          dimension: { width: '', height: '', unit: 'cm' },
+          material: '',
+          finishing: '',
         },
         design: {
           id: null,
@@ -96,6 +131,9 @@ export const useOrderStore = create(
     }),
     {
       name: 'order-storage',
+      partialize: (state) => ({
+        selectedService: state.selectedService,
+      }),
     }
   )
 );

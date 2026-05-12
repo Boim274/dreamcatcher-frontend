@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import feather from 'feather-icons';
 
 const materialIcons = {
-  tshirt: 'graphic_eq',
+  tshirt: 'checkroom',
+  shirt: 'checkroom',
   box: 'inventory_2',
   image: 'image',
   palette: 'palette',

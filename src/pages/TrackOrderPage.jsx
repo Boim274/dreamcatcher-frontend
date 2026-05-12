@@ -184,6 +184,12 @@ export default function TrackOrderPage() {
                     <span className="text-text-secondary">Pengiriman</span>
                     <span>{order.delivery_method === 'pickup' ? 'Ambil Sendiri' : 'Dikirim'}</span>
                   </div>
+                  {order.delivery_method === 'delivery' && order.address && (
+                    <div className="flex justify-between">
+                      <span className="text-text-secondary">Alamat</span>
+                      <span>{order.address}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between font-bold text-lg pt-2 border-t">
                     <span>Total</span>
                     <span className="text-primary">Rp {order.total_price.toLocaleString('id-ID')}</span>

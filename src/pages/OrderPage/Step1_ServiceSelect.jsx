@@ -4,24 +4,39 @@ import api from '../../services/api';
 import Spinner from '../../components/ui/Spinner';
 import Icon from '../../components/ui/Icon';
 
+const serviceIcons = {
+  'kaos': 'shirt',
+  'sablon': 'shirt',
+  'banner': 'monitor',
+  'stiker': 'image',
+  'bordir': 'layers',
+  'default': 'box',
+};
+
+const getServiceIcon = (name) => {
+  const lower = name.toLowerCase();
+  for (const [key, icon] of Object.entries(serviceIcons)) {
+    if (lower.includes(key)) return icon;
+  }
+  return 'box';
+};
+
 export default function Step1ServiceSelect() {
-  const { setSelectedService, nextStep, selectedService } = useOrderStore();
+  const { setSelectedService, nextStep, selectedService, resetForm } = useOrderStore();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.get('/services')
-      .then(res => {
-        const sablonKaos = (res.data.services || []).filter(s => 
-          s.name.toLowerCase().includes('kaos') || s.name.toLowerCase().includes('sablon')
-        );
-        setServices(sablonKaos);
-      })
+      .then(res => setServices(res.data.services || []))
       .catch(() => setServices([]))
       .finally(() => setLoading(false));
   }, []);
 
   const handleSelect = (service) => {
+    if (selectedService?.id !== service.id) {
+      resetForm();
+    }
     setSelectedService(service);
     setTimeout(() => nextStep(), 300);
   };
@@ -48,28 +63,28 @@ export default function Step1ServiceSelect() {
               onClick={() => handleSelect(service)}
               className={`p-6 rounded-xl border-2 text-left transition-all ${
                 isSelected
-                  ? 'border-[#FF6B35] bg-[#FF6B35]/5'
-                  : 'border-gray-200 hover:border-[#FF6B35]/50 hover:shadow-md'
+                  ? 'border-[#982598] bg-[#982598]/5'
+                  : 'border-gray-200 hover:border-[#982598]/50 hover:shadow-md'
               }`}
             >
               <div className="flex items-start gap-4">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                  isSelected ? 'bg-[#FF6B35] text-white' : 'bg-gray-100 text-[#6B7280]'
+                  isSelected ? 'bg-[#982598] text-white' : 'bg-gray-100 text-[#6B7280]'
                 }`}>
-                  <Icon name="box" size={24} />
+                  <Icon name={getServiceIcon(service.name)} size={24} />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg mb-1">{service.name}</h3>
                   <p className="text-[#6B7280] text-sm mb-3 line-clamp-2">{service.description}</p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-[#FF6B35] font-bold text-lg">
+                    <span className="text-[#982598] font-bold text-lg">
                       Rp {(service.price_per_unit || service.base_price)?.toLocaleString('id-ID')}
                     </span>
                     <span className="text-[#6B7280] text-sm">/pcs</span>
                   </div>
                   <p className="text-[#6B7280] text-xs mt-1">Min. order: {service.minimum_order} pcs</p>
                 </div>
-                 {isSelected && <Icon name="arrow-right" size={20} className="text-[#FF6B35]" />}
+                 {isSelected && <Icon name="arrow-right" size={20} className="text-[#982598]" />}
               </div>
             </button>
           );

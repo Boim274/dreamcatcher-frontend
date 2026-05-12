@@ -93,17 +93,17 @@ export default function Step3DesignUpload() {
       <h2 className="text-xl font-semibold mb-6">Upload / Generate Desain</h2>
 
       <div className="flex gap-2 mb-6">
-        <button onClick={() => setActiveTab('upload')} className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${activeTab === 'upload' ? 'bg-[#FF6B35] text-white' : 'bg-gray-100 text-[#6B7280] hover:bg-gray-200'}`}>
+        <button onClick={() => setActiveTab('upload')} className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${activeTab === 'upload' ? 'bg-[#982598] text-white' : 'bg-gray-100 text-[#6B7280] hover:bg-gray-200'}`}>
           <Icon name="upload" size={20} /> Upload
         </button>
-        <button onClick={() => setActiveTab('ai')} className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${activeTab === 'ai' ? 'bg-[#FF6B35] text-white' : 'bg-gray-100 text-[#6B7280] hover:bg-gray-200'}`}>
+        <button onClick={() => setActiveTab('ai')} className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${activeTab === 'ai' ? 'bg-[#982598] text-white' : 'bg-gray-100 text-[#6B7280] hover:bg-gray-200'}`}>
           <Icon name="zap" size={20} /> AI Generate
         </button>
       </div>
 
       {activeTab === 'upload' ? (
         <div onDragOver={(e) => { e.preventDefault(); setDragActive(true); }} onDragLeave={() => setDragActive(false)} onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${dragActive ? 'border-[#FF6B35] bg-[#FF6B35]/5' : 'border-gray-300'}`}>
+          className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${dragActive ? 'border-[#982598] bg-[#982598]/5' : 'border-gray-300'}`}>
           {uploading ? (
             <div className="py-8"><Spinner size="lg" /><p className="mt-4 text-[#6B7280]">Mengupload...</p></div>
           ) : previewUrl ? (
@@ -111,7 +111,7 @@ export default function Step3DesignUpload() {
               <img src={previewUrl} alt="Preview" className="max-h-64 mx-auto rounded-lg mb-4" />
               <label className="cursor-pointer">
                 <input type="file" accept="image/*" onChange={(e) => handleFileSelect(e.target.files[0])} className="hidden" />
-                <span className="inline-flex items-center gap-2 border-2 border-[#FF6B35] text-[#FF6B35] font-semibold py-2 px-4 rounded-lg hover:bg-[#FF6B35] hover:text-white transition-colors">
+                <span className="inline-flex items-center gap-2 border-2 border-[#982598] text-[#982598] font-semibold py-2 px-4 rounded-lg hover:bg-[#982598] hover:text-white transition-colors">
                   <Icon name="refresh-cw" size={16} /> Ganti
                 </span>
               </label>
@@ -122,7 +122,7 @@ export default function Step3DesignUpload() {
               <p className="text-[#6B7280] mb-2">Drag & drop gambar di sini</p>
               <label className="cursor-pointer">
                 <input type="file" accept="image/*" onChange={(e) => handleFileSelect(e.target.files[0])} className="hidden" />
-                <span className="inline-flex items-center gap-2 bg-[#FF6B35] text-white font-semibold py-3 px-6 rounded-lg hover:bg-[#E55A26]">Pilih File</span>
+                <span className="inline-flex items-center gap-2 bg-[#982598] text-white font-semibold py-3 px-6 rounded-lg hover:bg-[#7a1f7a]">Pilih File</span>
               </label>
               <p className="text-[#6B7280] text-sm mt-4">JPG, PNG (maks. 5MB)</p>
             </>
@@ -134,10 +134,10 @@ export default function Step3DesignUpload() {
             <label className="font-medium mb-2 block">Prompt Desain</label>
             <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)}
               placeholder="Contoh: Logo naga merah flat vector untuk sablon kaos"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 min-h-[100px] resize-none" />
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#982598] focus:ring-2 focus:ring-[#982598]/20 min-h-[100px] resize-none" />
           </div>
           <button onClick={generateDesign} disabled={generating || !prompt.trim()}
-            className="w-full inline-flex items-center justify-center gap-2 bg-[#FF6B35] text-white font-semibold py-3 rounded-lg hover:bg-[#E55A26] transition-colors disabled:opacity-50">
+            className="w-full inline-flex items-center justify-center gap-2 bg-[#982598] text-white font-semibold py-3 rounded-lg hover:bg-[#7a1f7a] transition-colors disabled:opacity-50">
             {generating ? <><Spinner size="sm" /> Generating...</> : <><Icon name="zap" size={20} /> Generate Desain</>}
           </button>
         </div>
@@ -161,11 +161,11 @@ export default function Step3DesignUpload() {
       )}
 
       <div className="flex gap-4 mt-6">
-        <button onClick={prevStep} className="flex items-center gap-2 border-2 border-[#FF6B35] text-[#FF6B35] font-semibold py-3 px-6 rounded-lg hover:bg-[#FF6B35] hover:text-white transition-colors">
+        <button onClick={prevStep} className="flex items-center gap-2 border-2 border-[#982598] text-[#982598] font-semibold py-3 px-6 rounded-lg hover:bg-[#982598] hover:text-white transition-colors">
           <Icon name="arrow-left" size={20} /> Kembali
         </button>
         <button onClick={nextStep} disabled={!design.id}
-          className="flex items-center gap-2 flex-1 justify-center bg-[#FF6B35] text-white font-semibold py-3 px-6 rounded-lg hover:bg-[#E55A26] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          className="flex items-center gap-2 flex-1 justify-center bg-[#982598] text-white font-semibold py-3 px-6 rounded-lg hover:bg-[#7a1f7a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
           Lanjut <Icon name="arrow-right" size={20} />
         </button>
       </div>

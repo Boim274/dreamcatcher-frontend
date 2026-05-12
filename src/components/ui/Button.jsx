@@ -2,9 +2,9 @@ import { forwardRef } from 'react';
 import { Loader2 } from 'lucide-react';
 
 const variants = {
-  primary: 'bg-[#FF6B35] text-white hover:bg-[#E55A26] active:scale-[0.98]',
-  secondary: 'border-2 border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white',
-  ghost: 'text-[#6B7280] hover:text-[#FF6B35] hover:bg-gray-100',
+  primary: 'bg-[#982598] text-white hover:bg-[#7a1f7a] active:scale-[0.98]',
+  secondary: 'border-2 border-[#982598] text-[#982598] hover:bg-[#982598] hover:text-white',
+  ghost: 'text-[#6B7280] hover:text-[#982598] hover:bg-gray-100',
   danger: 'bg-[#EF4444] text-white hover:bg-red-600',
   success: 'bg-[#22C55E] text-white hover:bg-green-600',
 };

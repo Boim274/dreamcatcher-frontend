@@ -9,7 +9,11 @@ import Step5CustomerData from './Step5_CustomerData';
 import Step6Checkout from './Step6_Checkout';
 
 export default function OrderPage() {
-  const { currentStep, selectedService } = useOrderStore();
+  const { currentStep, selectedService, resetForm } = useOrderStore();
+
+  useEffect(() => {
+    resetForm();
+  }, []);
 
   const renderStep = () => {
     switch (currentStep) {

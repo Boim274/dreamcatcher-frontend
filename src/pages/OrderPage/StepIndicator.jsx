@@ -24,13 +24,13 @@ export default function StepIndicator() {
             <div key={step.num} className="flex items-center">
               <div className="flex flex-col items-center">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
-                  isCompleted ? 'bg-[#22C55E] text-white' : isCurrent ? 'bg-[#FF6B35] text-white' : 'bg-gray-200 text-[#6B7280]'
+                  isCompleted ? 'bg-[#22C55E] text-white' : isCurrent ? 'bg-[#982598] text-white' : 'bg-gray-200 text-[#6B7280]'
                 }`}>
                   {isCompleted ? (
                     <Icon name="check" size={20} />
                   ) : step.num}
                 </div>
-                <span className={`text-xs mt-2 font-medium ${isCurrent ? 'text-[#FF6B35]' : 'text-[#6B7280]'}`}>
+                <span className={`text-xs mt-2 font-medium ${isCurrent ? 'text-[#982598]' : 'text-[#6B7280]'}`}>
                   {step.label}
                 </span>
               </div>
