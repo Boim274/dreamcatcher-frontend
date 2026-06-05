@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { Search, Filter, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { formatRupiah } from '../../utils/formatRupiah';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -50,19 +51,19 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-3xl font-bold mb-8">Kelola Pesanan</h1>
+      <h1 className="font-heading text-[28px] text-white tracking-[1px] mb-8">Kelola Pesanan</h1>
 
-      <div className="card mb-6">
+      <div className="bg-card border border-border p-6 mb-6">
         <div className="flex flex-wrap gap-4">
           <div className="flex-1 min-w-[200px]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
               <input
                 type="text"
                 value={filters.search}
                 onChange={(e) => handleFilter('search', e.target.value)}
                 placeholder="Cari kode/nama/HP..."
-                className="input-field pl-10"
+                className="input-dark pl-10"
               />
             </div>
           </div>
@@ -70,7 +71,7 @@ export default function OrdersPage() {
           <select
             value={filters.status}
             onChange={(e) => handleFilter('status', e.target.value)}
-            className="input-field w-auto"
+            className="input-dark w-auto"
           >
             <option value="">Semua Status</option>
             <option value="pending">Pending</option>
@@ -85,57 +86,57 @@ export default function OrdersPage() {
             type="date"
             value={filters.date_from}
             onChange={(e) => handleFilter('date_from', e.target.value)}
-            className="input-field w-auto"
+            className="input-dark w-auto"
           />
 
           <input
             type="date"
             value={filters.date_to}
             onChange={(e) => handleFilter('date_to', e.target.value)}
-            className="input-field w-auto"
+            className="input-dark w-auto"
           />
         </div>
       </div>
 
       {loading ? (
-        <div className="card py-20">
+        <div className="bg-card border border-border py-20">
           <LoadingSpinner size="lg" />
         </div>
       ) : (
-        <div className="card overflow-hidden">
+        <div className="bg-card border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-ink">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Kode</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Customer</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Layanan</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Total</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Tanggal</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Aksi</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Kode</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Customer</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Layanan</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Total</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Status</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Tanggal</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-border">
                 {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
+                  <tr key={order.id} className="hover:bg-ink">
                     <td className="px-4 py-3 font-mono font-semibold text-primary">
                       {order.order_code}
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-medium">{order.customer_name}</p>
-                      <p className="text-text-secondary text-sm">{order.phone}</p>
+                      <p className="font-medium text-white">{order.customer_name}</p>
+                      <p className="text-gray text-sm">{order.phone}</p>
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm text-[#ccc]">
                       {order.items?.map((i) => i.service?.name).filter(Boolean).join(', ') || '-'}
                     </td>
-                    <td className="px-4 py-3 font-bold">
-                      Rp {order.total_price.toLocaleString('id-ID')}
+                    <td className="px-4 py-3 font-bold text-white">
+                      {formatRupiah(order.total_price)}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={order.status} />
                     </td>
-                    <td className="px-4 py-3 text-sm text-text-secondary">
+                    <td className="px-4 py-3 text-sm text-gray">
                       {new Date(order.created_at).toLocaleDateString('id-ID')}
                     </td>
                     <td className="px-4 py-3">
@@ -154,25 +155,25 @@ export default function OrdersPage() {
           </div>
 
           {pagination && (
-            <div className="flex items-center justify-between p-4 border-t">
-              <p className="text-text-secondary text-sm">
+            <div className="flex items-center justify-between p-4 border-t border-border">
+              <p className="text-gray text-sm">
                 Menampilkan {orders.length} dari {pagination.total} pesanan
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => fetchOrders(pagination.current_page - 1)}
                   disabled={pagination.current_page === 1}
-                  className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50"
+                  className="p-2 rounded-lg hover:bg-border disabled:opacity-50 text-[#ccc]"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <span className="px-4 py-2 bg-gray-100 rounded-lg">
+                <span className="px-4 py-2 bg-ink border border-border rounded-lg text-[#ccc]">
                   Halaman {pagination.current_page} dari {pagination.last_page}
                 </span>
                 <button
                   onClick={() => fetchOrders(pagination.current_page + 1)}
                   disabled={pagination.current_page === pagination.last_page}
-                  className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50"
+                  className="p-2 rounded-lg hover:bg-border disabled:opacity-50 text-[#ccc]"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>

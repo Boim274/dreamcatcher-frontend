@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
-import { Card, Badge, Spinner } from '../../components/ui';
+import { Spinner } from '../../components/ui/Spinner';
 import {
   ShoppingBag,
   Clock,
   CreditCard,
   DollarSign,
-  TrendingUp,
   ArrowRight,
 } from 'lucide-react';
+import { formatRupiah } from '../../utils/formatRupiah';
 
 const statConfig = [
   { key: 'today_orders', label: 'Pesanan Hari Ini', icon: ShoppingBag, color: 'bg-blue-500' },
@@ -65,7 +65,7 @@ export default function DashboardPage() {
 
   const formatValue = (key, value) => {
     if (key === 'month_revenue') {
-      return `Rp ${value.toLocaleString('id-ID')}`;
+      return formatRupiah(value);
     }
     return value || 0;
   };
@@ -74,33 +74,33 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="font-heading text-3xl font-bold text-text-primary">Dashboard</h1>
-        <p className="text-text-secondary mt-1">Selamat datang di panel admin Dreamcatcher</p>
+        <h1 className="font-heading text-[28px] text-white tracking-[1px]">Dashboard</h1>
+        <p className="text-gray mt-1">Selamat datang di panel admin Dreamcatcher</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statConfig.map((stat) => (
-          <Card key={stat.key} className="flex items-center gap-4">
+          <div key={stat.key} className="bg-card border border-border p-4 flex items-center gap-4">
             <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center flex-shrink-0`}>
               <stat.icon className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-text-secondary text-sm">{stat.label}</p>
-              <p className="font-heading font-bold text-2xl">
+              <p className="text-gray text-sm">{stat.label}</p>
+              <p className="font-heading font-bold text-2xl text-white">
                 {formatValue(stat.key, stats?.stats?.[stat.key])}
               </p>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
 
       {/* Charts & Recent Orders */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Orders */}
-        <Card>
+        <div className="bg-card border border-border p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-heading text-xl font-semibold">Pesanan Terbaru</h2>
+            <h2 className="font-heading text-xl font-semibold text-white">Pesanan Terbaru</h2>
             <Link 
               to="/admin/pesanan" 
               className="text-primary text-sm font-medium hover:underline flex items-center gap-1"
@@ -116,15 +116,15 @@ export default function DashboardPage() {
                 <Link
                   key={order.id}
                   to={`/admin/pesanan/${order.id}`}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                  className="flex items-center justify-between p-4 bg-ink border border-border rounded-xl hover:border-gray-dark transition-colors no-underline"
                 >
                   <div>
-                    <p className="font-semibold text-text-primary">{order.order_code}</p>
-                    <p className="text-text-secondary text-sm">{order.customer_name}</p>
+                    <p className="font-semibold text-white">{order.order_code}</p>
+                    <p className="text-gray text-sm">{order.customer_name}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-primary">
-                      Rp {order.total_price.toLocaleString('id-ID')}
+                      {formatRupiah(order.total_price)}
                     </p>
                     <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusBadges[order.status]}`}>
                       {statusLabels[order.status]}
@@ -133,15 +133,15 @@ export default function DashboardPage() {
                 </Link>
               ))
             ) : (
-              <p className="text-center text-text-secondary py-8">Belum ada pesanan</p>
+              <p className="text-center text-gray py-8">Belum ada pesanan</p>
             )}
           </div>
-        </Card>
+        </div>
 
         {/* Chart */}
-        <Card>
+        <div className="bg-card border border-border p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-heading text-xl font-semibold">Statistik 7 Hari</h2>
+            <h2 className="font-heading text-xl font-semibold text-white">Statistik 7 Hari</h2>
             <Link 
               to="/admin/laporan" 
               className="text-primary text-sm font-medium hover:underline flex items-center gap-1"
@@ -159,8 +159,8 @@ export default function DashboardPage() {
 
               return (
                 <div key={label} className="flex items-center gap-4">
-                  <span className="text-text-secondary text-sm w-20">{label}</span>
-                  <div className="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
+                  <span className="text-gray text-sm w-20">{label}</span>
+                  <div className="flex-1 bg-border rounded-full h-6 overflow-hidden">
                     <div
                       className="h-full bg-primary rounded-full flex items-center justify-end pr-2 transition-all duration-500"
                       style={{ width: `${percentage}%` }}
@@ -174,23 +174,23 @@ export default function DashboardPage() {
               );
             })}
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Status Overview */}
-      <Card>
-        <h2 className="font-heading text-xl font-semibold mb-6">Status Pesanan</h2>
+      <div className="bg-card border border-border p-6">
+        <h2 className="font-heading text-xl font-semibold mb-6 text-white">Status Pesanan</h2>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
           {Object.entries(statusLabels).map(([key, label]) => (
-            <div key={key} className="text-center p-4 bg-gray-50 rounded-xl">
-              <p className="font-bold text-2xl text-text-primary">
+            <div key={key} className="text-center p-4 bg-ink border border-border rounded-xl">
+              <p className="font-bold text-2xl text-white">
                 {stats?.status_counts?.[key] || 0}
               </p>
-              <p className="text-text-secondary text-sm mt-1">{label}</p>
+              <p className="text-gray text-sm mt-1">{label}</p>
             </div>
           ))}
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

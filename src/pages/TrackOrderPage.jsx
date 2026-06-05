@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { orderService } from '../services/orderService';
-import { Search, CheckCircle, Clock, Package, Truck, Phone } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
+import { Search, CheckCircle, Clock, Package, Phone, ChevronRight } from 'lucide-react';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { StatusBadge } from '../components/common/StatusBadge';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
+import { formatRupiah } from '../utils/formatRupiah';
 
 const statusSteps = [
   { key: 'pending', label: 'Pending', icon: Clock },
@@ -17,8 +19,40 @@ const statusSteps = [
 
 const statusOrder = ['pending', 'waiting_payment', 'paid', 'processed', 'completed'];
 
-export default function TrackOrderPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+function Timeline({ status }) {
+  const currentIndex = statusOrder.indexOf(status);
+  return (
+    <div className="flex items-center gap-1">
+      {statusSteps.map((step, index) => {
+        const stepIndex = statusOrder.indexOf(step.key);
+        const isCompleted = stepIndex < currentIndex;
+        const isCurrent = stepIndex === currentIndex;
+        return (
+          <div key={step.key} className="flex items-center">
+            <div
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                isCompleted
+                  ? 'bg-green-600 text-white'
+                  : isCurrent
+                  ? 'bg-primary text-white'
+                  : 'bg-border text-gray'
+              }`}
+              title={step.label}
+            >
+              {isCompleted ? <CheckCircle className="w-3 h-3" /> : <step.icon className="w-3 h-3" />}
+            </div>
+            {index < statusSteps.length - 1 && (
+              <div className={`w-4 h-0.5 ${isCompleted ? 'bg-green-600' : 'bg-border'}`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function GuestTrackForm() {
+  const [searchParams] = useSearchParams();
   const [orderCode, setOrderCode] = useState(searchParams.get('code') || '');
   const [phone, setPhone] = useState('');
   const [order, setOrder] = useState(null);
@@ -39,188 +73,199 @@ export default function TrackOrderPage() {
       const response = await orderService.track(orderCode.trim(), phone.trim());
       setOrder(response.order);
     } catch (err) {
-      console.error('Track failed:', err);
       setError(err.response?.data?.message || 'Pesanan tidak ditemukan. Periksa kode dan nomor HP.');
     } finally {
       setLoading(false);
     }
   };
 
-  const getCurrentStep = () => {
-    if (!order) return 0;
-    return statusOrder.indexOf(order.status);
-  };
+  return (
+    <>
+      <div className="text-center mb-8">
+        <h1 className="font-heading text-[28px] text-white tracking-[1px] mb-2">Lacak Pesanan</h1>
+        <p className="text-gray">Masukkan kode pesanan dan nomor HP untuk melacak status pesanan Anda</p>
+      </div>
+
+      <form onSubmit={handleTrack} className="bg-card border border-border p-6 mb-8">
+        <div className="space-y-4">
+          <div>
+            <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Kode Pesanan</label>
+            <input
+              type="text"
+              value={orderCode}
+              onChange={(e) => setOrderCode(e.target.value.toUpperCase())}
+              placeholder="DC20241215XXXX"
+              className="input-dark text-lg font-mono tracking-wider"
+            />
+          </div>
+          <div>
+            <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Nomor HP</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="081234567890"
+              className="input-dark"
+            />
+          </div>
+        </div>
+
+        {error && (
+          <div className="mt-4 p-3 bg-danger/10 rounded-lg text-danger text-sm">{error}</div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <><LoadingSpinner size="sm" /> Mencari...</>
+          ) : (
+            <><Search className="w-5 h-5" /> Lacak Pesanan</>
+          )}
+        </button>
+      </form>
+
+      {order && (
+        <OrderCard order={order} expanded />
+      )}
+    </>
+  );
+}
+
+function OrderCard({ order, expanded = false }) {
+  const [showDetail, setShowDetail] = useState(expanded);
 
   return (
-    <div className="min-h-screen flex flex-col bg-bg-light">
-      <Navbar />
+    <div className="bg-card border border-border p-6 animate-fade-in mb-4">
+      <div
+        className="flex items-center justify-between cursor-pointer"
+        onClick={() => !expanded && setShowDetail(!showDetail)}
+      >
+        <div>
+          <p className="font-heading font-bold text-lg text-primary">{order.order_code}</p>
+          <p className="text-gray text-xs mt-1">
+            {new Date(order.created_at).toLocaleDateString('id-ID', {
+              day: 'numeric', month: 'long', year: 'numeric'
+            })}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <StatusBadge status={order.status} />
+          {!expanded && <ChevronRight className={`w-5 h-5 text-gray transition-transform ${showDetail ? 'rotate-90' : ''}`} />}
+        </div>
+      </div>
 
-      <main className="flex-1 py-12">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="text-center mb-8">
-            <h1 className="font-heading text-3xl font-bold mb-2">Lacak Pesanan</h1>
-            <p className="text-text-secondary">Masukkan kode pesanan dan nomor HP untuk melacak status pesanan Anda</p>
+      {!expanded && (
+        <div className="mt-3">
+          <Timeline status={order.status} />
+        </div>
+      )}
+
+      {showDetail && (
+        <div className="mt-6 animate-fade-in">
+          <div className="mb-6">
+            <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-chrome">Timeline</h3>
+            <Timeline status={order.status} />
           </div>
 
-          <form onSubmit={handleTrack} className="card mb-8">
-            <div className="space-y-4">
-              <div>
-                <label className="font-medium mb-2 block">Kode Pesanan</label>
-                <input
-                  type="text"
-                  value={orderCode}
-                  onChange={(e) => setOrderCode(e.target.value.toUpperCase())}
-                  placeholder="DC20241215XXXX"
-                  className="input-field text-lg font-mono tracking-wider"
-                />
-              </div>
-              <div>
-                <label className="font-medium mb-2 block">Nomor HP</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="081234567890"
-                  className="input-field"
-                />
+          <div className="border-t border-border pt-4">
+            <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-chrome">Detail Pesanan</h3>
+            <div className="space-y-2 text-sm">
+              {order.items?.map((item, idx) => (
+                <div key={idx} className="flex justify-between">
+                  <span className="text-gray">{item.service?.name || '-'} x{item.quantity}</span>
+                  <span className="text-white">{formatRupiah(item.subtotal)}</span>
+                </div>
+              ))}
+              <div className="flex justify-between font-bold text-lg pt-2 border-t border-border">
+                <span className="text-white">Total</span>
+                <span className="text-primary">{formatRupiah(order.total_price)}</span>
               </div>
             </div>
+          </div>
 
-            {error && (
-              <div className="mt-4 p-3 bg-danger/10 rounded-lg text-danger text-sm">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
+          {order.status === 'waiting_payment' && (
+            <Link
+              to={`/pesan/pembayaran/${order.order_code}`}
               className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
             >
-              {loading ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  Mencari...
-                </>
-              ) : (
-                <>
-                  <Search className="w-5 h-5" />
-                  Lacak Pesanan
-                </>
-              )}
-            </button>
-          </form>
-
-          {order && (
-            <div className="card animate-fade-in">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <p className="text-text-secondary text-sm">Kode Pesanan</p>
-                  <p className="font-heading font-bold text-2xl text-primary">{order.order_code}</p>
-                </div>
-                <StatusBadge status={order.status} />
-              </div>
-
-              <div className="mb-8">
-                <h3 className="font-semibold mb-4">Timeline Pesanan</h3>
-                <div className="space-y-4">
-                  {statusSteps.map((step, index) => {
-                    const currentIndex = getCurrentStep();
-                    const stepIndex = statusOrder.indexOf(step.key);
-                    const isCompleted = stepIndex < currentIndex;
-                    const isCurrent = stepIndex === currentIndex;
-                    const isPending = stepIndex > currentIndex;
-
-                    return (
-                      <div key={step.key} className="flex items-center gap-4">
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            isCompleted
-                              ? 'bg-success text-white'
-                              : isCurrent
-                              ? 'bg-primary text-white'
-                              : 'bg-gray-200 text-text-secondary'
-                          }`}
-                        >
-                          {isCompleted ? (
-                            <CheckCircle className="w-5 h-5" />
-                          ) : (
-                            <step.icon className="w-5 h-5" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <p className={`font-medium ${isPending ? 'text-text-secondary' : ''}`}>
-                            {step.label}
-                          </p>
-                          {isCurrent && (
-                            <p className="text-text-secondary text-sm">Sedang berlangsung</p>
-                          )}
-                        </div>
-                        {isCurrent && (
-                          <span className="badge badge-waiting">Sekarang</span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="border-t pt-6">
-                <h3 className="font-semibold mb-4">Detail Pesanan</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Nama</span>
-                    <span className="font-medium">{order.customer_name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">No. HP</span>
-                    <span>{order.phone}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Layanan</span>
-                    <span>{order.items?.[0]?.service?.name || '-'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Pengiriman</span>
-                    <span>{order.delivery_method === 'pickup' ? 'Ambil Sendiri' : 'Dikirim'}</span>
-                  </div>
-                  {order.delivery_method === 'delivery' && order.address && (
-                    <div className="flex justify-between">
-                      <span className="text-text-secondary">Alamat</span>
-                      <span>{order.address}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-bold text-lg pt-2 border-t">
-                    <span>Total</span>
-                    <span className="text-primary">Rp {order.total_price.toLocaleString('id-ID')}</span>
-                  </div>
-                </div>
-              </div>
-
-              {order.notes && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-text-secondary text-sm">Catatan:</p>
-                  <p className="font-medium">{order.notes}</p>
-                </div>
-              )}
-
-              <div className="mt-6 flex gap-4">
-                <a
-                  href="https://wa.me/6281234567890"
-                  className="btn-primary flex-1 flex items-center justify-center gap-2"
-                >
-                  <Phone className="w-5 h-5" />
-                  Hubungi Kami
-                </a>
-                <Link to="/pesan" className="btn-secondary flex-1 text-center">
-                  Pesan Lagi
-                </Link>
-              </div>
-            </div>
+              Bayar Sekarang
+            </Link>
           )}
         </div>
-      </main>
+      )}
+    </div>
+  );
+}
 
+function AuthenticatedTrack() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const data = await orderService.getAll();
+      const allOrders = data.orders?.data || data.orders || [];
+      const activeOrders = allOrders.filter(o => o.status !== 'completed' && o.status !== 'cancelled');
+      setOrders(activeOrders);
+    } catch (err) {
+      console.error('Failed to fetch orders:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-20">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="text-center mb-8">
+        <h1 className="font-heading text-[28px] text-white tracking-[1px] mb-2">Lacak Pesanan</h1>
+        <p className="text-gray">Pantau status pesanan Anda secara real-time</p>
+      </div>
+
+      {orders.length === 0 ? (
+        <div className="text-center py-16 bg-card border border-border">
+          <Package className="w-12 h-12 text-gray mx-auto mb-4" />
+          <p className="text-gray mb-4">Belum ada pesanan</p>
+          <Link to="/pesan" className="btn-primary inline-flex items-center gap-2">
+            Buat Pesanan
+          </Link>
+        </div>
+      ) : (
+        <div>
+          {orders.map((order) => (
+            <OrderCard key={order.id} order={order} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+export default function TrackOrderPage() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  return (
+    <div className="min-h-screen flex flex-col bg-cream">
+      <Navbar />
+      <main className="flex-1 py-12">
+        <div className="max-w-2xl mx-auto px-4">
+          {isAuthenticated ? <AuthenticatedTrack /> : <GuestTrackForm />}
+        </div>
+      </main>
       <Footer />
     </div>
   );

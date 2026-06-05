@@ -30,6 +30,7 @@ export const useOrderStore = create(
         address: '',
         deliveryMethod: 'pickup',
       },
+      paymentMethod: 'transfer_bank',
       orderResult: null,
 
       setStep: (step) => set({ currentStep: step }),
@@ -53,6 +54,8 @@ export const useOrderStore = create(
       setCustomerData: (data) => set((state) => ({
         customerData: { ...state.customerData, ...data },
       })),
+
+      setPaymentMethod: (method) => set({ paymentMethod: method }),
 
       setOrderResult: (result) => set({ orderResult: result }),
 
@@ -82,6 +85,7 @@ export const useOrderStore = create(
           address: '',
           deliveryMethod: 'pickup',
         },
+        paymentMethod: 'transfer_bank',
         orderResult: null,
       }),
 
@@ -112,7 +116,9 @@ export const useOrderStore = create(
           address: '',
           deliveryMethod: 'pickup',
         },
+        paymentMethod: 'transfer_bank',
         orderResult: null,
+        skippedStep1: false,
       }),
 
       getEstimatedPrice: () => {
@@ -133,6 +139,7 @@ export const useOrderStore = create(
       name: 'order-storage',
       partialize: (state) => ({
         selectedService: state.selectedService,
+        paymentMethod: state.paymentMethod,
       }),
     }
   )

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { Scissors, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 
 export default function AdminLoginPage() {
@@ -29,54 +29,54 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-secondary flex items-center justify-center px-4">
+    <div className="min-h-screen bg-ink flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Scissors className="w-10 h-10 text-white" />
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <img src="/logo.png" alt="Dreamcatcher" className="h-14" />
+            <span className="font-heading text-[36px] text-primary tracking-[2px]">
+              Dream<span className="text-[#ea6fab]">catcher</span>
+            </span>
           </div>
-          <h1 className="font-heading text-3xl font-bold text-white mb-2">Dreamcatcher</h1>
-          <span className="text-primary font-bold text-xl">.id</span>
-          <p className="text-gray-400 mt-4">Admin Dashboard</p>
+          <h1 className="font-heading text-[32px] text-white tracking-[1px] mt-4">ADMIN DASHBOARD</h1>
+          <p className="text-gray text-[14px] mt-2">Masuk ke panel administrasi</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-8 shadow-xl">
-          <h2 className="font-heading text-2xl font-bold mb-6 text-center">Login</h2>
-
+        <div className="bg-card border border-border p-8">
           {error && (
-            <div className="mb-4 p-3 bg-danger/10 border border-danger/20 rounded-lg text-danger text-sm">
+            <div className="mb-4 p-3 bg-[#ea6fab]/10 border border-[#ea6fab]/20 text-[#ea6fab] text-[13px]">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="font-medium mb-2 block">Email</label>
+              <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@dreamcatcher.id"
-                className="input-field"
+                className="input-dark"
                 required
               />
             </div>
 
             <div>
-              <label className="font-medium mb-2 block">Password</label>
+              <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="input-field pr-12"
+                  className="input-dark pr-12"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-dark"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -86,7 +86,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2"
+              className="w-full bg-primary text-white font-bold py-3 px-6 hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-[13px] tracking-[2px] uppercase"
             >
               {loading ? (
                 <>
@@ -99,13 +99,13 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-text-secondary text-sm mt-6">
+          <p className="text-center text-gray text-[13px] mt-6">
             Demo: admin@dreamcatcher.id / password123
           </p>
         </div>
 
-        <Link to="/" className="block text-center text-gray-400 hover:text-white mt-6">
-          ← Kembali ke Beranda
+        <Link to="/" className="block text-center text-gray-dark hover:text-primary mt-6 no-underline text-[13px]">
+          &larr; Kembali ke Beranda
         </Link>
       </div>
     </div>

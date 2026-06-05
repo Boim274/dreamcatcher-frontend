@@ -13,9 +13,3 @@ export function LoadingSpinner({ size = 'md' }) {
     </div>
   );
 }
-
-export function LoadingSkeleton({ className = '' }) {
-  return (
-    <div className={`animate-pulse bg-gray-200 rounded ${className}`} />
-  );
-}

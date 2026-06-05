@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import api from '../services/api';
 import { orderService } from '../services/orderService';
 import { CreditCard, Upload, CheckCircle, AlertCircle, Phone, MapPin } from 'lucide-react';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
+import { formatRupiah } from '../utils/formatRupiah';
 
 export default function PaymentPage() {
   const { orderCode } = useParams();
@@ -95,7 +97,7 @@ export default function PaymentPage() {
   const dpAmount = Math.round(order.total_price * 0.5);
 
   return (
-    <div className="min-h-screen flex flex-col bg-bg-light">
+    <div className="min-h-screen flex flex-col bg-cream">
       <Navbar />
 
       <main className="flex-1 py-8">
@@ -104,62 +106,62 @@ export default function PaymentPage() {
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <CreditCard className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="font-heading text-3xl font-bold mb-2">Pembayaran</h1>
-            <p className="text-text-secondary">Kode Pesanan: <span className="font-bold text-primary">{order.order_code}</span></p>
+            <h1 className="font-heading text-[28px] text-white tracking-[1px] mb-2">Pembayaran</h1>
+            <p className="text-gray">Kode Pesanan: <span className="font-bold text-primary">{order.order_code}</span></p>
           </div>
 
-          <div className="card mb-6">
-            <h3 className="font-semibold mb-4">Detail Pesanan</h3>
+          <div className="bg-card border border-border p-6 mb-6">
+            <h3 className="font-semibold mb-4 text-white">Detail Pesanan</h3>
             <div className="space-y-3 text-sm">
               {order.items?.map((item, i) => (
-                <div key={i} className="flex justify-between">
+                <div key={i} className="flex justify-between text-[#ccc]">
                   <span>{item.product_name}</span>
-                  <span>{item.quantity} x Rp {(item.unit_price).toLocaleString('id-ID')}</span>
+                  <span>{item.quantity} x {formatRupiah(item.unit_price)}</span>
                 </div>
               ))}
-              <div className="flex justify-between font-bold pt-3 border-t">
-                <span>Total</span>
-                <span className="text-primary">Rp {order.total_price.toLocaleString('id-ID')}</span>
+              <div className="flex justify-between font-bold pt-3 border-t border-border">
+                <span className="text-white">Total</span>
+                <span className="text-primary">{formatRupiah(order.total_price)}</span>
               </div>
             </div>
           </div>
 
-          <div className="card mb-6">
-            <h3 className="font-semibold mb-4">Instruksi Pembayaran DP 50%</h3>
-            <div className="bg-gray-50 rounded-xl p-4 mb-4">
+          <div className="bg-card border border-border p-6 mb-6">
+            <h3 className="font-semibold mb-4 text-white">Instruksi Pembayaran DP 50%</h3>
+            <div className="bg-ink border border-border rounded-xl p-4 mb-4">
               <p className="text-lg text-center font-bold text-primary mb-2">
-                Rp {dpAmount.toLocaleString('id-ID')}
+                {formatRupiah(dpAmount)}
               </p>
-              <p className="text-center text-text-secondary text-sm">Jumlah yang harus dibayar</p>
+              <p className="text-center text-gray text-sm">Jumlah yang harus dibayar</p>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center flex-shrink-0">1</div>
                 <div>
-                  <p className="font-medium">Transfer ke Rekening</p>
-                  <p className="text-text-secondary text-sm">Bank BCA - 1234567890 a.n. Dreamcatcher.id</p>
+                  <p className="font-medium text-white">Transfer ke Rekening</p>
+                  <p className="text-gray text-sm">Bank BCA - 1234567890 a.n. Dreamcatcher.id</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center flex-shrink-0">2</div>
                 <div>
-                  <p className="font-medium">Upload Bukti Bayar</p>
-                  <p className="text-text-secondary text-sm">Foto/screenshot bukti transfer di bawah ini</p>
+                  <p className="font-medium text-white">Upload Bukti Bayar</p>
+                  <p className="text-gray text-sm">Foto/screenshot bukti transfer di bawah ini</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center flex-shrink-0">3</div>
                 <div>
-                  <p className="font-medium">Tunggu Verifikasi</p>
-                  <p className="text-text-secondary text-sm">Admin akan memverifikasi dalam 1x24 jam</p>
+                  <p className="font-medium text-white">Tunggu Verifikasi</p>
+                  <p className="text-gray text-sm">Admin akan memverifikasi dalam 1x24 jam</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="card">
-            <h3 className="font-semibold mb-4">Upload Bukti Pembayaran</h3>
+          <div className="bg-card border border-border p-6">
+            <h3 className="font-semibold mb-4 text-white">Upload Bukti Pembayaran</h3>
 
             {order.payments?.some(p => p.payment_status === 'verified') ? (
               <div className="p-6 bg-success/10 rounded-xl text-center">
@@ -175,7 +177,7 @@ export default function PaymentPage() {
               </div>
             ) : (
               <>
-                <label className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center block cursor-pointer hover:border-primary transition-colors">
+                <label className="border-2 border-dashed border-[#444] rounded-xl p-8 text-center block cursor-pointer hover:border-primary transition-colors">
                   {uploading ? (
                     <div>
                       <LoadingSpinner size="lg" />
@@ -184,8 +186,8 @@ export default function PaymentPage() {
                   ) : (
                     <>
                       <Upload className="w-12 h-12 mx-auto text-text-secondary mb-4" />
-                      <p className="text-text-secondary mb-2">Klik atau drag file di sini</p>
-                      <p className="text-text-secondary text-sm">Format: JPG, PNG (maks. 5MB)</p>
+                      <p className="text-gray mb-2">Klik atau drag file di sini</p>
+                      <p className="text-gray text-sm">Format: JPG, PNG (maks. 5MB)</p>
                       <input
                         type="file"
                         accept="image/*"
@@ -214,20 +216,20 @@ export default function PaymentPage() {
           </div>
 
           <div className="mt-6 text-center">
-            <Link to={`/lacak-pesanan?code=${order.order_code}`} className="btn-secondary">
+            <Link to={`/lacak-pesanan?code=${order.order_code}`} className="border-2 border-primary text-primary font-semibold py-3 px-6 hover:bg-primary hover:text-white transition-colors">
               Lacak Pesanan Saya
             </Link>
           </div>
 
-          <div className="mt-8 p-4 bg-secondary/5 rounded-xl">
-            <h4 className="font-semibold mb-3">Butuh Bantuan?</h4>
+          <div className="mt-8 p-4 bg-card border border-border rounded-xl">
+            <h4 className="font-semibold mb-3 text-white">Butuh Bantuan?</h4>
             <div className="flex items-center gap-4 text-sm">
               <a href="https://wa.me/6281234567890" className="flex items-center gap-2 text-primary hover:underline">
                 <Phone className="w-4 h-4" />
                 WhatsApp: 0812 3456 7890
               </a>
-              <span className="text-text-secondary">|</span>
-              <div className="flex items-center gap-2 text-text-secondary">
+              <span className="text-gray">|</span>
+              <div className="flex items-center gap-2 text-gray">
                 <MapPin className="w-4 h-4" />
                 Jl. Sudirman No. 123, Jakarta
               </div>

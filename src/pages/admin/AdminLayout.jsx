@@ -6,9 +6,9 @@ import {
   ShoppingBag,
   CreditCard,
   Package,
+  Image,
   BarChart3,
   LogOut,
-  Scissors,
 } from 'lucide-react';
 
 const adminNav = [
@@ -16,6 +16,7 @@ const adminNav = [
   { to: '/admin/pesanan', label: 'Pesanan', icon: ShoppingBag },
   { to: '/admin/pembayaran', label: 'Pembayaran', icon: CreditCard },
   { to: '/admin/layanan', label: 'Layanan', icon: Package },
+  { to: '/admin/portfolio', label: 'Portfolio', icon: Image },
   { to: '/admin/laporan', label: 'Laporan', icon: BarChart3 },
 ];
 
@@ -38,17 +39,14 @@ export default function AdminLayout() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-bg-light">
-      <aside className="fixed left-0 top-0 h-full w-64 bg-secondary text-white shadow-xl">
+    <div className="min-h-screen bg-cream">
+      <aside className="fixed left-0 top-0 h-full w-64 bg-ink text-white shadow-xl">
         <div className="p-6">
-          <Link to="/admin" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <Scissors className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="font-heading font-bold text-xl">Dreamcatcher</span>
-              <span className="text-primary font-bold">.id</span>
-            </div>
+          <Link to="/admin" className="flex items-center gap-2 no-underline">
+            <img src="/logo.png" alt="Dreamcatcher" className="h-10" />
+            <span className="font-heading text-[22px] text-primary tracking-[2px]">
+              Dream<span className="text-[#ea6fab]">catcher</span>
+            </span>
           </Link>
         </div>
 
@@ -59,10 +57,10 @@ export default function AdminLayout() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors no-underline ${
                   isActive
                     ? 'bg-primary text-white'
-                    : 'hover:bg-white/10'
+                    : 'text-[#ccc] hover:bg-white/10'
                 }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -74,12 +72,12 @@ export default function AdminLayout() {
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
           <div className="mb-4 px-4">
-            <p className="font-medium">{user?.name || 'Admin'}</p>
-            <p className="text-sm text-gray-400">{user?.email}</p>
+            <p className="font-medium text-white">{user?.name || 'Admin'}</p>
+            <p className="text-sm text-gray">{user?.email}</p>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 w-full rounded-lg hover:bg-white/10 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 w-full rounded-lg hover:bg-white/10 transition-colors text-[#ccc]"
           >
             <LogOut className="w-5 h-5" />
             Logout

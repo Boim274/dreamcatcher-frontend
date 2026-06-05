@@ -4,6 +4,7 @@ import { authService } from '../services/authService';
 export const useAuthStore = create((set) => ({
   user: null,
   isAuthenticated: false,
+  isInitialized: false,
   isLoading: false,
 
   setUser: (user) => set({ user, isAuthenticated: !!user }),
@@ -20,19 +21,31 @@ export const useAuthStore = create((set) => ({
     }
   },
 
+  register: async (formData) => {
+    set({ isLoading: true });
+    try {
+      const data = await authService.register(formData);
+      set({ user: data.user, isAuthenticated: true, isLoading: false });
+      return data;
+    } catch (error) {
+      set({ isLoading: false });
+      throw error;
+    }
+  },
+
   logout: async () => {
     set({ isLoading: true });
     try {
       await authService.logout();
-      set({ user: null, isAuthenticated: false, isLoading: false });
-    } catch (error) {
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      set({ user: null, isAuthenticated: false, isInitialized: true, isLoading: false });
+    } catch {
+      set({ user: null, isAuthenticated: false, isInitialized: true, isLoading: false });
     }
   },
 
   checkAuth: () => {
     const user = authService.getUser();
     const isAuth = authService.isAuthenticated();
-    set({ user, isAuthenticated: isAuth });
+    set({ user, isAuthenticated: isAuth, isInitialized: true });
   },
 }));

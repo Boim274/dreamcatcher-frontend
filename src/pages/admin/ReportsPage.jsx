@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
-import { Calendar, Download, TrendingUp, Package, DollarSign } from 'lucide-react';
+import { Download, TrendingUp, Package, DollarSign } from 'lucide-react';
+import { formatRupiah } from '../../utils/formatRupiah';
 
 export default function ReportsPage() {
   const [stats, setStats] = useState(null);
@@ -47,7 +48,7 @@ export default function ReportsPage() {
     },
     {
       label: 'Total Pendapatan',
-      value: `Rp ${(stats?.stats?.month_revenue || 0).toLocaleString('id-ID')}`,
+      value: formatRupiah(stats?.stats?.month_revenue || 0),
       icon: DollarSign,
       color: 'bg-primary',
     },
@@ -62,7 +63,7 @@ export default function ReportsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="font-heading text-3xl font-bold">Laporan Penjualan</h1>
+        <h1 className="font-heading text-[28px] text-white tracking-[1px]">Laporan Penjualan</h1>
 
         <div className="flex gap-2">
           {['day', 'week', 'month'].map((p) => (
@@ -72,7 +73,7 @@ export default function ReportsPage() {
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 period === p
                   ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
+                  : 'bg-card border border-border text-gray hover:bg-border'
               }`}
             >
               {p === 'day' ? 'Hari Ini' : p === 'week' ? 'Minggu Ini' : 'Bulan Ini'}
@@ -83,14 +84,14 @@ export default function ReportsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {reportStats.map((stat) => (
-          <div key={stat.label} className="card">
+          <div key={stat.label} className="bg-card border border-border p-4">
             <div className="flex items-center gap-4">
               <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
                 <stat.icon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-text-secondary text-sm">{stat.label}</p>
-                <p className="font-heading font-bold text-2xl">{stat.value}</p>
+                <p className="text-gray text-sm">{stat.label}</p>
+                <p className="font-heading font-bold text-2xl text-white">{stat.value}</p>
               </div>
             </div>
           </div>
@@ -98,8 +99,8 @@ export default function ReportsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card">
-          <h2 className="font-heading text-xl font-semibold mb-6">Grafik Pesanan 7 Hari</h2>
+        <div className="bg-card border border-border p-6">
+          <h2 className="font-heading text-xl font-semibold mb-6 text-white">Grafik Pesanan 7 Hari</h2>
           <div className="space-y-4">
             {stats?.chart_data?.labels?.map((label, i) => {
               const value = stats.chart_data.datasets[0].data[i];
@@ -108,8 +109,8 @@ export default function ReportsPage() {
 
               return (
                 <div key={label} className="flex items-center gap-4">
-                  <span className="text-text-secondary text-sm w-20">{label}</span>
-                  <div className="flex-1 bg-gray-100 rounded-full h-8 overflow-hidden">
+                  <span className="text-gray text-sm w-20">{label}</span>
+                  <div className="flex-1 bg-border rounded-full h-8 overflow-hidden">
                     <div
                       className="h-full bg-primary rounded-full flex items-center justify-end pr-3 transition-all duration-500"
                       style={{ width: `${percentage}%` }}
@@ -125,8 +126,8 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        <div className="card">
-          <h2 className="font-heading text-xl font-semibold mb-6">Distribusi Status Pesanan</h2>
+        <div className="bg-card border border-border p-6">
+          <h2 className="font-heading text-xl font-semibold mb-6 text-white">Distribusi Status Pesanan</h2>
           <div className="space-y-4">
             {[
               { key: 'pending', label: 'Pending', color: 'bg-gray-400' },
@@ -143,9 +144,9 @@ export default function ReportsPage() {
               return (
                 <div key={status.key} className="flex items-center gap-4">
                   <div className={`w-4 h-4 ${status.color} rounded`} />
-                  <span className="flex-1 text-sm">{status.label}</span>
-                  <span className="font-bold">{count}</span>
-                  <div className="w-24 bg-gray-100 rounded-full h-2">
+                  <span className="flex-1 text-sm text-[#ccc]">{status.label}</span>
+                  <span className="font-bold text-white">{count}</span>
+                  <div className="w-24 bg-border rounded-full h-2">
                     <div
                       className={`h-full ${status.color} rounded-full`}
                       style={{ width: `${percentage}%` }}
@@ -158,9 +159,9 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="card mt-6">
+      <div className="bg-card border border-border p-6 mt-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-heading text-xl font-semibold">Ringkasan per Hari</h2>
+          <h2 className="font-heading text-xl font-semibold text-white">Ringkasan per Hari</h2>
           <button className="btn-secondary flex items-center gap-2">
             <Download className="w-5 h-5" />
             Export CSV
@@ -169,22 +170,22 @@ export default function ReportsPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-ink">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Tanggal</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold">Jumlah Pesanan</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold">Total Penjualan</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Tanggal</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-gray">Jumlah Pesanan</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-gray">Total Penjualan</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-border">
               {stats?.chart_data?.labels?.map((label, i) => (
                 <tr key={label}>
-                  <td className="px-4 py-3">{label}</td>
-                  <td className="px-4 py-3 text-right font-medium">
+                  <td className="px-4 py-3 text-[#ccc]">{label}</td>
+                  <td className="px-4 py-3 text-right font-medium text-white">
                     {stats.chart_data.datasets[0].data[i]} pesanan
                   </td>
-                  <td className="px-4 py-3 text-right font-bold">
-                    Rp {(stats.chart_data.datasets[0].data[i] * 350000).toLocaleString('id-ID')}
+                  <td className="px-4 py-3 text-right font-bold text-white">
+                    {formatRupiah(stats.chart_data.datasets[0].data[i] * 350000)}
                   </td>
                 </tr>
               ))}

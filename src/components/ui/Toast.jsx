@@ -1,77 +1,65 @@
-import { createContext, useContext, useState, useCallback } from 'react';
-import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
+import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import Icon from './Icon';
 
 const ToastContext = createContext(null);
 
-const icons = {
-  success: CheckCircle,
-  error: XCircle,
-  warning: AlertCircle,
-  info: Info,
-};
-
-const styles = {
-  success: 'bg-green-50 border-green-200 text-green-800',
-  error: 'bg-red-50 border-red-200 text-red-800',
-  warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-  info: 'bg-blue-50 border-blue-200 text-blue-800',
-};
-
-const iconStyles = {
-  success: 'text-success',
-  error: 'text-danger',
-  warning: 'text-warning',
-  info: 'text-blue-500',
-};
+let toastId = 0;
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = useCallback((message, type = 'info', duration = 4000) => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
-    
+  const addToast = useCallback((message, type = 'info', duration = 3000) => {
+    const id = ++toastId;
+    setToasts((prev) => [...prev, { id, message, type }]);
     if (duration > 0) {
       setTimeout(() => {
-        setToasts(prev => prev.filter(t => t.id !== id));
+        setToasts((prev) => prev.filter((t) => t.id !== id));
       }, duration);
     }
-    
     return id;
   }, []);
 
   const removeToast = useCallback((id) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
   const toast = {
-    success: (msg) => addToast(msg, 'success'),
-    error: (msg) => addToast(msg, 'error'),
-    warning: (msg) => addToast(msg, 'warning'),
-    info: (msg) => addToast(msg, 'info'),
+    success: (msg, dur) => addToast(msg, 'success', dur),
+    error: (msg, dur) => addToast(msg, 'error', dur),
+    warning: (msg, dur) => addToast(msg, 'warning', dur),
+    info: (msg, dur) => addToast(msg, 'info', dur),
+  };
+
+  const iconMap = {
+    success: { name: 'check-circle', color: 'text-success' },
+    error: { name: 'alert-circle', color: 'text-danger' },
+    warning: { name: 'alert-triangle', color: 'text-warning' },
+    info: { name: 'info', color: 'text-primary' },
+  };
+
+  const bgMap = {
+    success: 'border-success/30',
+    error: 'border-danger/30',
+    warning: 'border-warning/30',
+    info: 'border-primary/30',
   };
 
   return (
     <ToastContext.Provider value={toast}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+      <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
         {toasts.map((t) => {
-          const Icon = icons[t.type];
+          const icon = iconMap[t.type] || iconMap.info;
           return (
             <div
               key={t.id}
-              className={`
-                flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg
-                animate-slide-up ${styles[t.type]}
-              `}
+              onClick={() => removeToast(t.id)}
+              className={`pointer-events-auto flex items-center gap-3 px-4 py-3 bg-card border ${bgMap[t.type] || bgMap.info} shadow-lg cursor-pointer animate-slide-in-right min-w-[280px] max-w-[400px]`}
             >
-              <Icon className={`w-5 h-5 flex-shrink-0 ${iconStyles[t.type]}`} />
-              <p className="font-medium text-sm">{t.message}</p>
-              <button
-                onClick={() => removeToast(t.id)}
-                className="p-1 hover:bg-black/10 rounded"
-              >
-                <X className="w-4 h-4" />
+              <Icon name={icon.name} size={20} className={icon.color} />
+              <span className="text-white text-sm flex-1">{t.message}</span>
+              <button onClick={(e) => { e.stopPropagation(); removeToast(t.id); }} className="text-gray hover:text-white transition-colors">
+                <Icon name="x" size={16} />
               </button>
             </div>
           );
@@ -81,8 +69,8 @@ export function ToastProvider({ children }) {
   );
 }
 
-export const useToast = () => {
-  const context = useContext(ToastContext);
-  if (!context) throw new Error('useToast must be used within ToastProvider');
-  return context;
-};
+export function useToast() {
+  const ctx = useContext(ToastContext);
+  if (!ctx) throw new Error('useToast must be used within ToastProvider');
+  return ctx;
+}
