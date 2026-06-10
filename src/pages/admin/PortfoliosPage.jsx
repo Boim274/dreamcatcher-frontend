@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { useToast } from '../../components/ui/Toast';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Plus, Edit2, Trash2, X, Upload, Link as LinkIcon, Star, GripVertical } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
@@ -12,6 +14,7 @@ const getImageUrl = (url) => {
 };
 
 export default function PortfoliosPage() {
+  const toast = useToast();
   const [portfolios, setPortfolios] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +32,7 @@ export default function PortfoliosPage() {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState({ show: false, id: null });
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -137,21 +141,27 @@ export default function PortfoliosPage() {
 
       setShowModal(false);
       fetchData();
+      toast.success(editingId ? 'Portfolio berhasil diperbarui' : 'Portfolio berhasil ditambahkan');
     } catch (error) {
-      alert(error.response?.data?.message || 'Gagal menyimpan portfolio');
+      toast.error(error.response?.data?.message || 'Gagal menyimpan portfolio');
     } finally {
       setSaving(false);
     }
   };
 
   const deletePortfolio = async (id) => {
-    if (!confirm('Hapus portfolio ini?')) return;
+    setConfirmDelete({ show: true, id });
+  };
 
+  const handleConfirmDelete = async () => {
+    const id = confirmDelete.id;
+    setConfirmDelete({ show: false, id: null });
     try {
       await api.delete(`/admin/portfolios/${id}`);
+      toast.success('Portfolio berhasil dihapus');
       fetchData();
     } catch (error) {
-      alert(error.response?.data?.message || 'Gagal menghapus portfolio');
+      toast.error(error.response?.data?.message || 'Gagal menghapus portfolio');
     }
   };
 
@@ -405,6 +415,16 @@ export default function PortfoliosPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDelete.show}
+        onClose={() => setConfirmDelete({ show: false, id: null })}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Portfolio"
+        message="Apakah Anda yakin ingin menghapus portfolio ini? Tindakan ini tidak dapat dibatalkan."
+        confirmLabel="Ya, Hapus"
+        variant="danger"
+      />
     </div>
   );
 }

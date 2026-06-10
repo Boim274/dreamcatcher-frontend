@@ -110,7 +110,7 @@ export default function AuthModal() {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-[#ea6fab]/10 border border-[#ea6fab]/20 text-[#ea6fab] text-[13px] flex items-center gap-2">
+          <div className="mb-4 p-3 bg-[#ff4a1c]/10 border border-[#ff4a1c]/20 text-[#ff4a1c] text-[13px] flex items-center gap-2">
             <Icon name="alert-circle" size={16} /> {error}
           </div>
         )}
@@ -169,30 +169,30 @@ export default function AuthModal() {
               value={registerForm.name}
               onChange={(e) => handleRegisterChange('name', e.target.value)}
               placeholder="Nama Lengkap"
-              className={`auth-modal-input ${errors.name ? '!border-[#ea6fab]' : ''}`}
+              className={`auth-modal-input ${errors.name ? '!border-[#ff4a1c]' : ''}`}
               required
             />
-            {errors.name && <p className="text-[#ea6fab] text-[12px] mt-1 mb-2">{errors.name[0]}</p>}
+            {errors.name && <p className="text-[#ff4a1c] text-[12px] mt-1 mb-2">{errors.name[0]}</p>}
 
             <input
               type="email"
               value={registerForm.email}
               onChange={(e) => handleRegisterChange('email', e.target.value)}
               placeholder="Email"
-              className={`auth-modal-input ${errors.email ? '!border-[#ea6fab]' : ''}`}
+              className={`auth-modal-input ${errors.email ? '!border-[#ff4a1c]' : ''}`}
               required
             />
-            {errors.email && <p className="text-[#ea6fab] text-[12px] mt-1 mb-2">{errors.email[0]}</p>}
+            {errors.email && <p className="text-[#ff4a1c] text-[12px] mt-1 mb-2">{errors.email[0]}</p>}
 
             <input
               type="tel"
               value={registerForm.phone}
               onChange={(e) => handleRegisterChange('phone', e.target.value)}
               placeholder="Nomor HP"
-              className={`auth-modal-input ${errors.phone ? '!border-[#ea6fab]' : ''}`}
+              className={`auth-modal-input ${errors.phone ? '!border-[#ff4a1c]' : ''}`}
               required
             />
-            {errors.phone && <p className="text-[#ea6fab] text-[12px] mt-1 mb-2">{errors.phone[0]}</p>}
+            {errors.phone && <p className="text-[#ff4a1c] text-[12px] mt-1 mb-2">{errors.phone[0]}</p>}
 
             <div className="relative mb-1">
               <input
@@ -200,7 +200,7 @@ export default function AuthModal() {
                 value={registerForm.password}
                 onChange={(e) => handleRegisterChange('password', e.target.value)}
                 placeholder="Password"
-                className={`auth-modal-input pr-12 ${errors.password ? '!border-[#ea6fab]' : ''}`}
+                className={`auth-modal-input pr-12 ${errors.password ? '!border-[#ff4a1c]' : ''}`}
                 required
               />
               <button
@@ -211,7 +211,7 @@ export default function AuthModal() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            {errors.password && <p className="text-[#ea6fab] text-[12px] mt-1 mb-2">{errors.password[0]}</p>}
+            {errors.password && <p className="text-[#ff4a1c] text-[12px] mt-1 mb-2">{errors.password[0]}</p>}
 
             <input
               type={showPassword ? 'text' : 'password'}

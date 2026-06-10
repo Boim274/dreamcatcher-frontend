@@ -1,138 +1,66 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useOrderStore } from '../../store/orderStore';
-import { useToast } from '../../components/ui/Toast';
-import api from '../../services/api';
 import Icon from '../../components/ui/Icon';
-import { formatRupiah } from '../../utils/formatRupiah';
-import { getServiceIcon } from '../../utils/serviceIcon';
-
-function SkeletonCard() {
-  return (
-    <div className="p-5 border-2 border-border bg-ink">
-      <div className="flex items-start gap-4">
-        <div className="w-12 h-12 skeleton rounded" />
-        <div className="flex-1 space-y-3">
-          <div className="h-5 skeleton rounded w-2/3" />
-          <div className="h-3 skeleton rounded w-full" />
-          <div className="h-4 skeleton rounded w-1/3" />
-        </div>
-      </div>
-    </div>
-  );
-}
+import { useToast } from '../../components/ui/Toast';
 
 export default function Step1ServiceSelect() {
-  const { setSelectedService, nextStep, selectedService, resetForm } = useOrderStore();
+  const { services, selectedService, selectService, fetchServices, nextStep } = useOrderStore();
   const toast = useToast();
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [selectingId, setSelectingId] = useState(null);
-
-  const fetchServices = useCallback(() => {
-    setLoading(true);
-    setError(false);
-    api.get('/services')
-      .then(res => setServices(res.data.services || []))
-      .catch(() => {
-        setError(true);
-        toast.error('Gagal memuat layanan');
-      })
-      .finally(() => setLoading(false));
-  }, [toast]);
 
   useEffect(() => {
     fetchServices();
   }, [fetchServices]);
 
-  const handleSelect = (service) => {
-    if (selectedService?.id !== service.id) {
-      resetForm();
-    }
-    setSelectingId(service.id);
-    setSelectedService(service);
-    setTimeout(() => nextStep(), 400);
+  const handleNext = () => {
+    if (!selectedService) { toast.warning('Pilih layanan'); return; }
+    nextStep();
   };
 
-  if (loading) {
-    return (
-      <div className="bg-card border border-border p-6">
-        <div className="h-7 skeleton rounded w-48 mb-6" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <SkeletonCard />
-          <SkeletonCard />
-        </div>
-      </div>
-    );
-  }
-
-  if (error || services.length === 0) {
-    return (
-      <div className="bg-card border border-border p-6 py-16 text-center">
-        <Icon name="alert-circle" size={48} className="text-gray mb-4 mx-auto" />
-        <p className="text-gray mb-4">
-          {error ? 'Gagal memuat layanan. Periksa koneksi internet anda.' : 'Tidak ada layanan tersedia.'}
-        </p>
-        <button
-          onClick={fetchServices}
-          className="inline-flex items-center gap-2 bg-primary text-white font-semibold py-2 px-6 rounded-xl hover:bg-primary-dark transition-colors"
-        >
-          <Icon name="refresh-cw" size={16} /> Coba Lagi
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-card border border-border p-6">
+    <div className="bg-card border border-border p-6 rounded-xl">
       <h2 className="font-heading text-[28px] text-white tracking-[1px] mb-6">PILIH LAYANAN</h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {services.map((service, index) => {
-          const isSelected = selectedService?.id === service.id;
-          const isSelecting = selectingId === service.id;
-
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        {services.filter(s => s.is_active).map((service) => {
+          const isActive = selectedService?.id === service.id;
           return (
             <button
               key={service.id}
-              onClick={() => handleSelect(service)}
-              style={{ animationDelay: `${index * 80}ms` }}
-              className={`p-5 border-2 text-left transition-all duration-300 animate-fade-in ${
-                isSelecting
-                  ? 'border-primary bg-primary/15 scale-[1.02] shadow-lg shadow-primary/10'
-                  : isSelected
-                  ? 'border-primary bg-primary/10'
-                  : 'border-border hover:border-primary/50 bg-ink hover:bg-dark'
+              onClick={() => selectService(service)}
+              className={`p-5 rounded-xl border-2 text-left transition-all duration-200 ${
+                isActive
+                  ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10'
+                  : 'border-border hover:border-primary/50'
               }`}
             >
-              <div className="flex items-start gap-4">
-                <div className={`w-12 h-12 flex items-center justify-center transition-all duration-300 ${
-                  isSelected || isSelecting ? 'bg-primary text-white' : 'bg-border text-gray'
-                }`} style={{ clipPath: 'polygon(0 0, 100% 0, 90% 100%, 0 100%)' }}>
-                  <Icon name={getServiceIcon(service.name)} size={24} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-heading text-[22px] text-white tracking-[1px] mb-1">{service.name}</h3>
-                  <p className="text-gray text-[13px] mb-3 line-clamp-2">{service.description}</p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-primary font-bold text-lg">
-                      {formatRupiah(service.price_per_unit || service.base_price)}
-                    </span>
-                    <span className="text-gray text-[11px]">/pcs</span>
-                  </div>
-                  <p className="text-gray text-[11px] mt-1">Min. order: {service.minimum_order} pcs</p>
-                </div>
-                {isSelecting ? (
-                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                ) : isSelected ? (
-                  <Icon name="check-circle" size={22} className="text-primary" />
-                ) : (
-                  <Icon name="arrow-right" size={20} className="text-gray" />
+              <div className="flex items-start justify-between mb-3">
+                <p className={`font-semibold text-sm ${isActive ? 'text-primary' : 'text-white'}`}>
+                  {service.name}
+                </p>
+                {service.pricing_type === 'tiered' && (
+                  <span className="px-2 py-0.5 bg-fire/20 text-fire text-[10px] font-semibold rounded uppercase tracking-wider">
+                    Tiered
+                  </span>
                 )}
+              </div>
+              <p className="text-gray text-[13px] mb-3 line-clamp-2">{service.description}</p>
+              <div className="flex items-center justify-between">
+                <p className="text-primary font-bold text-lg">
+                  Rp {Number(service.base_price).toLocaleString('id-ID')}
+                  {service.pricing_type === 'flat' && <span className="text-gray text-xs font-normal">/pcs</span>}
+                </p>
+                <p className="text-gray text-[11px]">Min. {service.minimum_order} pcs</p>
               </div>
             </button>
           );
         })}
+      </div>
+
+      <div className="flex gap-4">
+        <button onClick={handleNext}
+          className="flex items-center gap-2 flex-1 justify-center bg-primary text-white font-semibold py-3 px-6 rounded-xl hover:bg-primary-dark transition-colors text-[13px] uppercase tracking-[1px]">
+          Lanjut <Icon name="arrow-right" size={20} />
+        </button>
       </div>
     </div>
   );

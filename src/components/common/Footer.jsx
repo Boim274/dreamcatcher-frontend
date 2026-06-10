@@ -10,21 +10,22 @@ export default function Footer() {
             <Link to="/" className="flex items-center gap-2 no-underline">
               <img src="/logo.png" alt="Dreamcatcher" className="h-10" />
               <span className="font-heading text-[22px] text-primary tracking-[2px]">
-                Dream<span className="text-[#ea6fab]">catcher</span>
+                Dream<span className="text-[#ef69a9]">catcher</span>
               </span>
             </Link>
             <p className="text-gray text-[13px] mt-4 leading-relaxed">
-              Solusi sablon dan printing dengan teknologi AI modern. Dari kaos custom, banner, stiker, hingga bordir.
+              Solusi sablon kaos custom dengan teknologi AI modern. Kaos, Hoodie, Polo, Jaket — Plastisol, DTF, Polyflex, Sublim.
             </p>
           </div>
 
           <div>
-            <h3 className="font-heading text-[18px] text-chrome tracking-[1px] mb-4">LAYANAN</h3>
+            <h3 className="font-heading text-[18px] text-chrome tracking-[1px] mb-4">NAVIGASI</h3>
             <ul className="space-y-2 list-none">
-              <li><Link to="/layanan" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Sablon Kaos</Link></li>
-              <li><Link to="/layanan" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Printing Banner</Link></li>
-              <li><Link to="/layanan" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Cetak Stiker</Link></li>
-              <li><Link to="/layanan" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Bordir</Link></li>
+              <li><Link to="/layanan" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Layanan</Link></li>
+              <li><Link to="/design-studio" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Design Studio</Link></li>
+              <li><Link to="/pricelist" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Daftar Harga</Link></li>
+              <li><Link to="/size-chart" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Size Chart</Link></li>
+              <li><Link to="/about" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Tentang Kami</Link></li>
             </ul>
           </div>
 
@@ -33,11 +34,11 @@ export default function Footer() {
             <ul className="space-y-3 list-none">
               <li className="flex items-start gap-2 text-gray text-[13px]">
                 <Icon name="map-pin" size={14} className="mt-1 flex-shrink-0" />
-                <span>Jl. Kreasi No.88, Bandung, Jawa Barat 40123</span>
+                <span>Perum. Mutiara Bekasi Jaya Blok A2 No.6, RT 001/RW 008, Kec. Cibarusah, Kab. Bekasi, Jawa Barat</span>
               </li>
               <li className="flex items-center gap-2 text-gray text-[13px]">
                 <Icon name="phone" size={14} className="flex-shrink-0" />
-                <span>+62 812-3456-7890</span>
+                <span>+62 878-7729-4587</span>
               </li>
               <li className="flex items-center gap-2 text-gray text-[13px]">
                 <Icon name="mail" size={14} className="flex-shrink-0" />
@@ -56,8 +57,8 @@ export default function Footer() {
                 <Icon name="clock" size={14} /> Minggu: Tutup
               </li>
             </ul>
-            <a href="https://instagram.com/dreamcatcher.id" className="inline-flex items-center gap-2 mt-4 text-primary hover:text-primary-light transition-colors text-[13px] no-underline">
-              <Icon name="instagram" size={14} /> @dreamcatcher.id
+            <a target="_blank" href="https://www.instagram.com/dcservice.png/"  className="inline-flex items-center gap-2 mt-4 text-primary hover:text-primary-light transition-colors text-[13px] no-underline">
+              <Icon name="instagram" size={14} /> @dcservice.png
             </a>
           </div>
         </div>

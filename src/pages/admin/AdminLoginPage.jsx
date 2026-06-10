@@ -35,7 +35,7 @@ export default function AdminLoginPage() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <img src="/logo.png" alt="Dreamcatcher" className="h-14" />
             <span className="font-heading text-[36px] text-primary tracking-[2px]">
-              Dream<span className="text-[#ea6fab]">catcher</span>
+              Dream<span className="text-[#ff4a1c]">catcher</span>
             </span>
           </div>
           <h1 className="font-heading text-[32px] text-white tracking-[1px] mt-4">ADMIN DASHBOARD</h1>
@@ -44,7 +44,7 @@ export default function AdminLoginPage() {
 
         <div className="bg-card border border-border p-8">
           {error && (
-            <div className="mb-4 p-3 bg-[#ea6fab]/10 border border-[#ea6fab]/20 text-[#ea6fab] text-[13px]">
+            <div className="mb-4 p-3 bg-[#ff4a1c]/10 border border-[#ff4a1c]/20 text-[#ff4a1c] text-[13px]">
               {error}
             </div>
           )}

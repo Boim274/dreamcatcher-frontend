@@ -1,15 +1,21 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { useToast } from '../../components/ui/Toast';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+
 export default function PaymentsPage() {
+  const toast = useToast();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [rejectNotes, setRejectNotes] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(null);
+  const [confirmVerify, setConfirmVerify] = useState({ show: false, id: null });
 
   useEffect(() => {
     fetchPayments();
@@ -29,14 +35,19 @@ export default function PaymentsPage() {
   };
 
   const verifyPayment = async (id) => {
-    if (!confirm('Verifikasi pembayaran ini?')) return;
+    setConfirmVerify({ show: true, id });
+  };
 
+  const handleConfirmVerify = async () => {
+    const id = confirmVerify.id;
+    setConfirmVerify({ show: false, id: null });
     setActionLoading(id);
     try {
       await api.patch(`/admin/payments/${id}/verify`);
+      toast.success('Pembayaran berhasil diverifikasi');
       await fetchPayments();
     } catch (error) {
-      alert('Gagal memverifikasi pembayaran');
+      toast.error('Gagal memverifikasi pembayaran');
     } finally {
       setActionLoading(null);
     }
@@ -44,7 +55,7 @@ export default function PaymentsPage() {
 
   const rejectPayment = async (id) => {
     if (!rejectNotes.trim()) {
-      alert('Masukkan alasan penolakan');
+      toast.warning('Masukkan alasan penolakan');
       return;
     }
 
@@ -53,9 +64,10 @@ export default function PaymentsPage() {
       await api.patch(`/admin/payments/${id}/reject`, { notes: rejectNotes });
       setShowRejectModal(null);
       setRejectNotes('');
+      toast.success('Pembayaran ditolak');
       await fetchPayments();
     } catch (error) {
-      alert('Gagal menolak pembayaran');
+      toast.error('Gagal menolak pembayaran');
     } finally {
       setActionLoading(null);
     }
@@ -108,10 +120,10 @@ export default function PaymentsPage() {
                 <div className="flex gap-4">
                   {payment.payment_proof && (
                     <img
-                      src={`http://localhost:8000/${payment.payment_proof}`}
+                      src={`${API_BASE}/${payment.payment_proof}`}
                       alt="Bukti"
                       className="w-32 h-32 object-cover rounded-xl cursor-pointer hover:opacity-80"
-                      onClick={() => window.open(`http://localhost:8000/${payment.payment_proof}`, '_blank')}
+                      onClick={() => window.open(`${API_BASE}/${payment.payment_proof}`, '_blank')}
                     />
                   )}
                   <div>
@@ -223,6 +235,15 @@ export default function PaymentsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmVerify.show}
+        onClose={() => setConfirmVerify({ show: false, id: null })}
+        onConfirm={handleConfirmVerify}
+        title="Verifikasi Pembayaran"
+        message="Apakah Anda yakin ingin memverifikasi pembayaran ini? Status pembayaran akan diubah menjadi terverifikasi."
+        confirmLabel="Ya, Verifikasi"
+      />
     </div>
   );
 }

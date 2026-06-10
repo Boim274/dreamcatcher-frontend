@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../../services/api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { StatusBadge } from '../../components/common/StatusBadge';
+import { useToast } from '../../components/ui/Toast';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { ArrowLeft, CheckCircle, XCircle, Clock, Package, Truck } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 
@@ -25,9 +27,11 @@ const statusOptions = [
 
 export default function OrderDetailPage() {
   const { id } = useParams();
+  const toast = useToast();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [confirmStatus, setConfirmStatus] = useState({ show: false, status: null, label: '' });
 
   useEffect(() => {
     fetchOrder();
@@ -45,14 +49,20 @@ export default function OrderDetailPage() {
   };
 
   const updateStatus = async (newStatus) => {
-    if (!confirm('Update status pesanan ini?')) return;
+    const label = statusOptions.find((o) => o.value === newStatus)?.label || newStatus;
+    setConfirmStatus({ show: true, status: newStatus, label });
+  };
 
+  const handleConfirmStatus = async () => {
+    const newStatus = confirmStatus.status;
+    setConfirmStatus({ show: false, status: null, label: '' });
     setUpdating(true);
     try {
       await api.patch(`/admin/orders/${id}/status`, { status: newStatus });
+      toast.success(`Status pesanan diubah menjadi "${confirmStatus.label}"`);
       await fetchOrder();
     } catch (error) {
-      alert('Gagal update status');
+      toast.error('Gagal update status');
     } finally {
       setUpdating(false);
     }
@@ -256,6 +266,15 @@ export default function OrderDetailPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmStatus.show}
+        onClose={() => setConfirmStatus({ show: false, status: null, label: '' })}
+        onConfirm={handleConfirmStatus}
+        title="Update Status Pesanan"
+        message={`Apakah Anda yakin ingin mengubah status pesanan menjadi "${confirmStatus.label}"?`}
+        confirmLabel="Ya, Ubah Status"
+      />
     </div>
   );
 }

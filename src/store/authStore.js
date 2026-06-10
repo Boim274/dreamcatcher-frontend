@@ -43,6 +43,16 @@ export const useAuthStore = create((set) => ({
     }
   },
 
+  updateProfile: async (data) => {
+    const result = await authService.updateProfile(data);
+    set({ user: result.user });
+    return result;
+  },
+
+  changePassword: async (data) => {
+    return await authService.changePassword(data);
+  },
+
   checkAuth: () => {
     const user = authService.getUser();
     const isAuth = authService.isAuthenticated();

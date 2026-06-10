@@ -33,6 +33,19 @@ export const authService = {
     return response.data;
   },
 
+  updateProfile: async (data) => {
+    const response = await api.put('/auth/profile', data);
+    if (response.data.user) {
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+
+  changePassword: async (data) => {
+    const response = await api.put('/auth/password', data);
+    return response.data;
+  },
+
   getUser: () => {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;

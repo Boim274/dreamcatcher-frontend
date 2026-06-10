@@ -72,7 +72,7 @@ export default function LandingPage() {
       {/* ==================== HERO ==================== */}
       <section className="min-h-screen bg-ink flex items-center relative overflow-hidden pt-16">
         <div className="graffiti-deco" style={{ top: '10%', left: '-2%', transform: 'rotate(-8deg)' }}>DREAMCATCHER</div>
-        <div className="graffiti-deco" style={{ bottom: '5%', right: '-1%', transform: 'rotate(6deg)', color: '#ea6fab' }}>SABLON</div>
+        <div className="graffiti-deco" style={{ bottom: '5%', right: '-1%', transform: 'rotate(6deg)', color: '#ef69a9' }}>SABLON</div>
         <div className="graffiti-deco" style={{ top: '40%', right: '5%', fontSize: 'clamp(40px, 6vw, 90px)', transform: 'rotate(-15deg)', opacity: 0.08 }}>PRINT</div>
 
         <div className="relative z-[2] w-full max-w-7xl mx-auto px-[5%]">
@@ -80,7 +80,7 @@ export default function LandingPage() {
             {/* KIRI: Teks */}
             <div className="max-w-[600px]">
               <ScrollReveal direction="up" delay={200}>
-                <div className="inline-block bg-[#ea6fab] text-white text-[11px] font-bold tracking-[3px] uppercase py-[6px] px-[14px] mb-6" style={{ clipPath: 'polygon(0 0, 100% 0, 97% 100%, 0 100%)' }}>
+                <div className="inline-block bg-[#ef69a9] text-white text-[11px] font-bold tracking-[3px] uppercase py-[6px] px-[14px] mb-6" style={{ clipPath: 'polygon(0 0, 100% 0, 97% 100%, 0 100%)' }}>
                   Konveksi & Sablon Premium
                 </div>
               </ScrollReveal>
@@ -188,7 +188,7 @@ export default function LandingPage() {
                       </span>
                       <span className="text-gray-dark text-[11px]">/pcs</span>
                     </div>
-                    <span className="inline-block bg-[#ea6fab] text-white text-[10px] font-bold tracking-[2px] px-2 py-[3px] mt-4 uppercase">
+                    <span className="inline-block bg-[#ef69a9] text-white text-[10px] font-bold tracking-[2px] px-2 py-[3px] mt-4 uppercase">
                       {index === 0 ? 'Most Popular' : index === 1 ? 'Fast Delivery' : index === 2 ? 'Custom Shape' : 'Premium Quality'}
                     </span>
                     <Link to={`/pesan?service=${service.id}`} className="block w-full text-center border-2 border-primary text-primary font-semibold py-2 mt-4 hover:bg-primary hover:text-white transition-colors no-underline text-[13px] uppercase tracking-[1px]">
@@ -348,7 +348,7 @@ export default function LandingPage() {
 
       {/* ==================== CONTACT ==================== */}
       <section id="kontak" className="bg-ink px-[5%] py-20 relative overflow-hidden">
-        <div className="font-tag text-[100px] absolute bottom-[-20px] right-[5%] text-[#ea6fab] opacity-[0.08] rotate-[-5deg] whitespace-nowrap pointer-events-none select-none">
+        <div className="font-tag text-[100px] absolute bottom-[-20px] right-[5%] text-[#ef69a9] opacity-[0.08] rotate-[-5deg] whitespace-nowrap pointer-events-none select-none">
           HIT US UP
         </div>
 
@@ -366,12 +366,12 @@ export default function LandingPage() {
                 <strong>
                   <Icon name="map-pin" size={16} className="inline mr-2" />Alamat
                 </strong>
-                <p>Jl. Kreasi No.88, Bandung, Jawa Barat 40123</p>
+                <p>Perum. Mutiara Bekasi Jaya Blok A2 No.6, RT 001/RW 008, Kec. Cibarusah, Kab. Bekasi, Jawa Barat</p>
 
                 <strong>
                   <Icon name="phone" size={16} className="inline mr-2" />WhatsApp
                 </strong>
-                <p>+62 812-3456-7890</p>
+                <p>+62 878-7729-4587</p>
 
                 <strong>
                   <Icon name="mail" size={16} className="inline mr-2" />Email
@@ -417,7 +417,7 @@ export default function LandingPage() {
             <p className="text-white/80 text-[16px] mb-8">
               Pesan sekarang dan dapatkan hasil sablon berkualitas tinggi
             </p>
-            <Link to="/pesan" className="inline-flex items-center gap-2 bg-white text-primary font-bold py-4 px-8 hover:bg-cream transition-colors no-underline uppercase tracking-[1px] text-[14px]" style={{ clipPath: 'polygon(0 0, 100% 0, 96% 100%, 0 100%)' }}>
+            <Link to="/pesan" className="inline-flex items-center gap-2 bg-white text-primary font-bold py-4 px-8 hover:bg-gray transition-colors no-underline uppercase tracking-[1px] text-[14px]" style={{ clipPath: 'polygon(0 0, 100% 0, 96% 100%, 0 100%)' }}>
               <Icon name="arrow-right" size={20} /> Mulai Pesan
             </Link>
           </div>

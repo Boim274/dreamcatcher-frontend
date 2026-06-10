@@ -7,7 +7,10 @@ import Icon from '../ui/Icon';
 const navLinks = [
   { to: '/', label: 'Beranda' },
   { to: '/layanan', label: 'Layanan' },
-  { to: '/kontak', label: 'Kontak' },
+  { to: '/design-studio', label: 'Design Studio' },
+  { to: '/pricelist', label: 'Harga' },
+  { to: '/size-chart', label: 'Size Chart' },
+  { to: '/about', label: 'Tentang' },
 ];
 
 export default function Navbar() {
@@ -42,16 +45,8 @@ export default function Navbar() {
     setShowDropdown(false);
   };
 
-  const handleNavClick = (e, link) => {
-    if (link.to === '/kontak') {
-      e.preventDefault();
-      const el = document.getElementById('kontak');
-      if (el && location.pathname === '/') {
-        el.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        window.location.href = '/#kontak';
-      }
-    }
+  const handleNavClick = (e) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -60,7 +55,7 @@ export default function Navbar() {
         <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2 no-underline">
           <img src="/logo.png" alt="Dreamcatcher" className="h-10" />
           <span className="font-heading text-[24px] text-primary tracking-[2px]">
-            Dream<span className="text-[#ea6fab]">catcher</span>
+            Dream<span className="text-[#ef69a9]">catcher</span>
           </span>
         </Link>
 
@@ -70,7 +65,7 @@ export default function Navbar() {
               <li key={link.to}>
                 <Link
                   to={link.to}
-                  onClick={(e) => handleNavClick(e, link)}
+                  onClick={handleNavClick}
                   className={`text-[13px] font-medium tracking-[1px] uppercase no-underline transition-colors ${
                     location.pathname === link.to
                       ? 'text-primary'
@@ -84,10 +79,10 @@ export default function Navbar() {
           </ul>
 
           <a
-            href="https://wa.me/6281234567890"
+            href="https://wa.me/6287877294587"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-[#ea6fab] hover:bg-[#4bc278] text-white font-semibold py-2 px-4 text-[13px] tracking-[1px] uppercase no-underline transition-colors"
+            className="bg-[#c8f000] hover:bg-[#4bc278] text-white font-semibold py-2 px-4 text-[13px] tracking-[1px] uppercase no-underline transition-colors"
             style={{ clipPath: 'polygon(0 0, 100% 0, 97% 100%, 0 100%)' }}
           >
             WhatsApp
@@ -131,7 +126,7 @@ export default function Navbar() {
                   <hr className="my-1 border-border" />
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-2 text-[#ea6fab] hover:bg-[#1a0000] transition-colors w-full text-left text-[13px]"
+                    className="flex items-center gap-2 px-4 py-2 text-[#ec4a96] hover:bg-[#1a0000] transition-colors w-full text-left text-[13px]"
                   >
                     <Icon name="log-out" size={16} /> Keluar
                   </button>
@@ -170,7 +165,7 @@ export default function Navbar() {
               <Link
                 key={link.to}
                 to={link.to}
-                onClick={(e) => { handleNavClick(e, link); setIsOpen(false); }}
+                onClick={() => { handleNavClick(); setIsOpen(false); }}
                 className={`font-medium py-2 text-[14px] tracking-[1px] uppercase no-underline ${
                   location.pathname === link.to ? 'text-primary' : 'text-chrome'
                 }`}
@@ -204,7 +199,7 @@ export default function Navbar() {
                 </Link>
                 <div className="border-t border-border pt-3 mt-1">
                   <p className="text-[13px] text-gray mb-2">Masuk sebagai: {user?.name}</p>
-                  <button onClick={handleLogout} className="text-[#ea6fab] font-medium py-2 text-[14px]">
+                  <button onClick={handleLogout} className="text-[#c8f000] font-medium py-2 text-[14px]">
                     Keluar
                   </button>
                 </div>
@@ -226,7 +221,7 @@ export default function Navbar() {
               </div>
             )}
 
-            <a href="https://wa.me/6281234567890" className="bg-[#ea6fab] text-white font-semibold py-3 text-center mt-2 no-underline uppercase tracking-[1px] text-[14px]">
+            <a href="https://wa.me/6281234567890" className="bg-[#c8f000] text-white font-semibold py-3 text-center mt-2 no-underline uppercase tracking-[1px] text-[14px]">
               WhatsApp
             </a>
           </div>

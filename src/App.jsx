@@ -11,6 +11,10 @@ import OrderPage from './pages/OrderPage';
 import PaymentPage from './pages/PaymentPage';
 import TrackOrderPage from './pages/TrackOrderPage';
 import MyOrdersPage from './pages/MyOrdersPage';
+import PricelistPage from './pages/PricelistPage';
+import DesignStudioPage from './pages/DesignStudio';
+import SizeChartPage from './pages/SizeChartPage';
+import AboutPage from './pages/AboutPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import DashboardPage from './pages/admin/DashboardPage';
@@ -96,6 +100,10 @@ function AppContent() {
             <PaymentPage />
           </CustomerProtectedRoute>
         } />
+        <Route path="/pricelist" element={<PricelistPage />} />
+        <Route path="/design-studio" element={<DesignStudioPage />} />
+        <Route path="/size-chart" element={<SizeChartPage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/lacak-pesanan" element={<TrackOrderPage />} />
         <Route path="/pesanan-saya" element={
           <CustomerProtectedRoute>

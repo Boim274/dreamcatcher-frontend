@@ -94,7 +94,7 @@ export default function CatalogPage() {
             <div className="mt-16 bg-ink p-8 text-center">
               <h3 className="font-heading text-[28px] text-white tracking-[1px] mb-4">BUTUH BANTUAN MEMILIH LAYANAN?</h3>
               <p className="text-gray text-[14px] mb-6">Tim kami siap membantu Anda menemukan solusi terbaik</p>
-              <a href="https://wa.me/6281234567890" className="btn-acid">
+              <a target='_blank' href="https://wa.me/6287877294587" className="btn-acid">
                 Konsultasi via WhatsApp
               </a>
             </div>
