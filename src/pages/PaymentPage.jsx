@@ -13,6 +13,14 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { formatRupiah } from '../utils/formatRupiah';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+
+const getImageUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `${API_BASE}/${url}`;
+};
+
 const PAYMENT_TYPES = [
   { id: 'dp', label: 'Bayar DP (50%)', desc: 'Bayar uang muka, pelunasan setelah produksi', icon: Wallet },
   { id: 'pelunasan', label: 'Bayar Cicilan', desc: 'Bayar sebagian, sisa dibayar nanti', icon: CircleDollarSign },
@@ -463,7 +471,7 @@ export default function PaymentPage() {
                         <span>{new Date(payment.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                       {payment.payment_proof && (
-                        <a href={`/${payment.payment_proof}`} target="_blank" rel="noopener noreferrer"
+                        <a href={getImageUrl(payment.payment_proof)} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-primary text-xs mt-2 hover:underline">
                           Lihat Bukti Bayar
                         </a>

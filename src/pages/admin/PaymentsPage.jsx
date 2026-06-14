@@ -8,6 +8,12 @@ import { formatRupiah } from '../../utils/formatRupiah';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
 
+const getImageUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `${API_BASE}/${url}`;
+};
+
 export default function PaymentsPage() {
   const toast = useToast();
   const [payments, setPayments] = useState([]);
@@ -120,10 +126,10 @@ export default function PaymentsPage() {
                 <div className="flex gap-4">
                   {payment.payment_proof && (
                     <img
-                      src={`${API_BASE}/${payment.payment_proof}`}
+                      src={getImageUrl(payment.payment_proof)}
                       alt="Bukti"
                       className="w-32 h-32 object-cover rounded-xl cursor-pointer hover:opacity-80"
-                      onClick={() => window.open(`${API_BASE}/${payment.payment_proof}`, '_blank')}
+                      onClick={() => window.open(getImageUrl(payment.payment_proof), '_blank')}
                     />
                   )}
                   <div>

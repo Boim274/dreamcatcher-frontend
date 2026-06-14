@@ -1,3 +1,11 @@
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+
+const getImageUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `${API_BASE}/${url}`;
+};
+
 export default function PortfolioCarousel({ portfolios }) {
   if (!portfolios || portfolios.length === 0) {
     return (
@@ -12,7 +20,7 @@ export default function PortfolioCarousel({ portfolios }) {
       {portfolios.map((portfolio) => (
         <div key={portfolio.id} className="port-item">
           <img
-            src={portfolio.image_url}
+            src={getImageUrl(portfolio.image_url)}
             alt={portfolio.title}
             className="port-thumb"
           />
