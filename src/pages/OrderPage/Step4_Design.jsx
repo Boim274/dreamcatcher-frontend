@@ -48,6 +48,17 @@ export default function Step4Design() {
     }
   };
 
+  const handleRemoveDesign = async () => {
+    if (design.id) {
+      try {
+        await designService.delete(design.id);
+      } catch (err) {
+        console.error('Failed to delete design from Cloudinary:', err);
+      }
+    }
+    setDesign({ id: null, imageUrl: null, isValid: false, validationMessage: null, type: null });
+  };
+
   const handleNext = () => {
     if (!design.imageUrl) { toast.warning('Upload desain terlebih dahulu'); return; }
     nextStep();
@@ -66,7 +77,7 @@ export default function Step4Design() {
               className="w-full max-h-80 object-contain bg-ink rounded-xl border border-border"
             />
             <button
-              onClick={() => setDesign({ id: null, imageUrl: null, isValid: false, validationMessage: null, type: null })}
+              onClick={handleRemoveDesign}
               className="absolute top-3 right-3 bg-ink/80 text-white p-2 rounded-full hover:bg-fire transition-colors"
             >
               <Icon name="x" size={16} />

@@ -27,4 +27,9 @@ export const designService = {
     const response = await api.post(`/designs/${id}/validate`);
     return response.data;
   },
+
+  delete: async (id) => {
+    const response = await api.delete(`/designs/${id}`);
+    return response.data;
+  },
 };

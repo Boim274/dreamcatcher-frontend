@@ -46,6 +46,7 @@ export default function AdminLayout() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [pendingOrders, setPendingOrders] = useState(0);
+  const [cancelRequests, setCancelRequests] = useState(0);
   const [recentNotifications, setRecentNotifications] = useState([]);
 
   const dropdownRef = useRef(null);
@@ -78,10 +79,17 @@ export default function AdminLayout() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await api.get('/admin/orders?status=pending&per_page=5');
-      const orders = response.data.orders?.data || [];
-      setPendingOrders(response.data.orders?.total || orders.length);
-      setRecentNotifications(orders.slice(0, 5));
+      const [pendingRes, cancelRes] = await Promise.all([
+        api.get('/admin/orders?status=pending&per_page=5'),
+        api.get('/admin/orders?status=cancel_requested&per_page=5'),
+      ]);
+      const pendingOrdersList = pendingRes.data.orders?.data || [];
+      const cancelOrdersList = cancelRes.data.orders?.data || [];
+      setPendingOrders(pendingRes.data.orders?.total || pendingOrdersList.length);
+      setCancelRequests(cancelRes.data.orders?.total || cancelOrdersList.length);
+
+      const combined = [...cancelOrdersList.map(o => ({ ...o, _type: 'cancel' })), ...pendingOrdersList];
+      setRecentNotifications(combined.slice(0, 5));
     } catch (error) {
       // silent
     }
@@ -128,9 +136,9 @@ export default function AdminLayout() {
               >
                 <item.icon className="w-5 h-5" />
                 <span>{item.label}</span>
-                {item.to === '/admin/pesanan' && pendingOrders > 0 && (
+                {item.to === '/admin/pesanan' && (pendingOrders + cancelRequests) > 0 && (
                   <span className="ml-auto bg-fire text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    {pendingOrders > 99 ? '99+' : pendingOrders}
+                    {(pendingOrders + cancelRequests) > 99 ? '99+' : (pendingOrders + cancelRequests)}
                   </span>
                 )}
               </Link>
@@ -165,9 +173,9 @@ export default function AdminLayout() {
               className="relative p-2 rounded-lg hover:bg-white/10 transition-colors text-[#ccc]"
             >
               <Bell className="w-5 h-5" />
-              {pendingOrders > 0 && (
+              {(pendingOrders + cancelRequests) > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 bg-fire text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                  {pendingOrders > 99 ? '99+' : pendingOrders}
+                  {(pendingOrders + cancelRequests) > 99 ? '99+' : (pendingOrders + cancelRequests)}
                 </span>
               )}
             </button>
@@ -193,10 +201,15 @@ export default function AdminLayout() {
                         onClick={() => setShowNotifications(false)}
                         className="flex items-start gap-3 p-3 hover:bg-ink transition-colors no-underline border-b border-border/50 last:border-0"
                       >
-                        <div className="w-2 h-2 bg-fire rounded-full mt-2 flex-shrink-0" />
+                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${order._type === 'cancel' ? 'bg-orange-400' : 'bg-fire'}`} />
                         <div>
                           <p className="text-white text-sm font-medium">{order.order_code}</p>
-                          <p className="text-gray text-xs">{order.customer_name} — pesanan baru masuk</p>
+                          <p className="text-gray text-xs">
+                            {order._type === 'cancel'
+                              ? `${order.customer_name} — meminta pembatalan`
+                              : `${order.customer_name} — pesanan baru masuk`
+                            }
+                          </p>
                           <p className="text-gray text-[10px] mt-0.5">
                             {new Date(order.created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                           </p>

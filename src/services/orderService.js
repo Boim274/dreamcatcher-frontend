@@ -27,4 +27,9 @@ export const orderService = {
     const response = await api.get(`/orders/${id}`);
     return response.data;
   },
+
+  requestCancel: async (id, reason) => {
+    const response = await api.post(`/orders/${id}/request-cancel`, { reason });
+    return response.data;
+  },
 };

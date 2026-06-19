@@ -9,7 +9,6 @@ import LandingPage from './pages/LandingPage';
 import CatalogPage from './pages/CatalogPage';
 import OrderPage from './pages/OrderPage';
 import PaymentPage from './pages/PaymentPage';
-import TrackOrderPage from './pages/TrackOrderPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import PricelistPage from './pages/PricelistPage';
 import DesignStudioPage from './pages/DesignStudio';
@@ -101,10 +100,13 @@ function AppContent() {
           </CustomerProtectedRoute>
         } />
         <Route path="/pricelist" element={<PricelistPage />} />
-        <Route path="/design-studio" element={<DesignStudioPage />} />
+        <Route path="/design-studio" element={
+          <CustomerProtectedRoute>
+            <DesignStudioPage />
+          </CustomerProtectedRoute>
+        } />
         <Route path="/size-chart" element={<SizeChartPage />} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/lacak-pesanan" element={<TrackOrderPage />} />
         <Route path="/pesanan-saya" element={
           <CustomerProtectedRoute>
             <MyOrdersPage />

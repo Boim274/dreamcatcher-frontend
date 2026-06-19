@@ -3,6 +3,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useAuthModalStore } from '../../store/authModalStore';
 import Icon from '../ui/Icon';
+import ConfirmDialog from '../ui/ConfirmDialog';
+import { useToast } from '../ui/Toast';
+import CustomerProfileModal from './CustomerProfileModal';
 
 const navLinks = [
   { to: '/', label: 'Beranda' },
@@ -16,9 +19,12 @@ const navLinks = [
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuthStore();
   const { openLogin, openRegister } = useAuthModalStore();
+  const toast = useToast();
   const dropdownRef = useRef(null);
   const prevLocationRef = useRef(location.pathname);
 
@@ -43,6 +49,8 @@ export default function Navbar() {
   const handleLogout = async () => {
     await logout();
     setShowDropdown(false);
+    setShowLogoutConfirm(false);
+    toast.success('Berhasil logout. Sampai jumpa!');
   };
 
   const handleNavClick = (e) => {
@@ -50,6 +58,7 @@ export default function Navbar() {
   };
 
   return (
+    <>
     <nav className="bg-ink border-b-[3px] border-primary px-[5%] sticky top-0 z-50">
       <div className="flex items-center justify-between h-16">
         <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2 no-underline">
@@ -112,20 +121,20 @@ export default function Navbar() {
                     <Icon name="package" size={16} /> Pesanan Saya
                   </Link>
                   <Link
-                    to="/lacak-pesanan"
-                    className="flex items-center gap-2 px-4 py-2 text-chrome hover:bg-card hover:text-primary transition-colors text-[13px]"
-                  >
-                    <Icon name="search" size={16} /> Lacak Pesanan
-                  </Link>
-                  <Link
                     to="/pesan"
                     className="flex items-center gap-2 px-4 py-2 text-chrome hover:bg-card hover:text-primary transition-colors text-[13px]"
                   >
                     <Icon name="edit-3" size={16} /> Buat Pesanan
                   </Link>
+                  <button
+                    onClick={() => { setShowProfileModal(true); setShowDropdown(false); }}
+                    className="flex items-center gap-2 px-4 py-2 text-chrome hover:bg-card hover:text-primary transition-colors text-[13px] w-full text-left"
+                  >
+                    <Icon name="user" size={16} /> Profil Saya
+                  </button>
                   <hr className="my-1 border-border" />
                   <button
-                    onClick={handleLogout}
+                    onClick={() => setShowLogoutConfirm(true)}
                     className="flex items-center gap-2 px-4 py-2 text-[#ec4a96] hover:bg-[#1a0000] transition-colors w-full text-left text-[13px]"
                   >
                     <Icon name="log-out" size={16} /> Keluar
@@ -184,22 +193,21 @@ export default function Navbar() {
                   Pesanan Saya
                 </Link>
                 <Link
-                  to="/lacak-pesanan"
-                  onClick={() => setIsOpen(false)}
-                  className="font-medium py-2 text-chrome text-[14px] tracking-[1px] uppercase no-underline"
-                >
-                  Lacak Pesanan
-                </Link>
-                <Link
                   to="/pesan"
                   onClick={() => setIsOpen(false)}
                   className="font-medium py-2 text-chrome text-[14px] tracking-[1px] uppercase no-underline"
                 >
                   Buat Pesanan
                 </Link>
+                <button
+                  onClick={() => { setShowProfileModal(true); setIsOpen(false); }}
+                  className="font-medium py-2 text-chrome text-[14px] tracking-[1px] uppercase no-underline text-left"
+                >
+                  Profil Saya
+                </button>
                 <div className="border-t border-border pt-3 mt-1">
                   <p className="text-[13px] text-gray mb-2">Masuk sebagai: {user?.name}</p>
-                  <button onClick={handleLogout} className="text-[#c8f000] font-medium py-2 text-[14px]">
+                  <button onClick={() => setShowLogoutConfirm(true)} className="text-[#c8f000] font-medium py-2 text-[14px]">
                     Keluar
                   </button>
                 </div>
@@ -228,5 +236,17 @@ export default function Navbar() {
         </div>
       )}
     </nav>
+    <CustomerProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+    <ConfirmDialog
+      isOpen={showLogoutConfirm}
+      onClose={() => setShowLogoutConfirm(false)}
+      onConfirm={handleLogout}
+      title="Keluar?"
+      message="Yakin ingin logout dari akun Anda?"
+      confirmText="Ya, Keluar"
+      cancelText="Batal"
+      variant="danger"
+    />
+    </>
   );
 }

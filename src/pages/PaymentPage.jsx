@@ -497,7 +497,7 @@ export default function PaymentPage() {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <Link
-              to={`/lacak-pesanan?code=${order.order_code}`}
+              to={`/pesanan-saya?filter=all`}
               className="flex-1 flex items-center justify-center gap-2 border-2 border-primary text-primary font-semibold py-3 px-6 rounded-xl hover:bg-primary hover:text-ink transition-colors text-[13px] uppercase tracking-[1px]"
             >
               <ArrowRight size={16} /> Lacak Pesanan

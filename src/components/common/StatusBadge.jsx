@@ -5,6 +5,7 @@ const statusConfig = {
   processed: { label: 'Diproses', className: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
   completed: { label: 'Selesai', className: 'bg-[#c8f000]/20 text-[#c8f000] border border-[#c8f000]/30' },
   cancelled: { label: 'Batal', className: 'bg-red-500/20 text-red-400 border border-red-500/30' },
+  cancel_requested: { label: 'Menunggu Pembatalan', className: 'bg-orange-500/20 text-orange-400 border border-orange-500/30' },
   confirmed: { label: 'Dikonfirmasi', className: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
   processing: { label: 'Diproses', className: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
   ready: { label: 'Siap Diambil', className: 'bg-[#c8f000]/20 text-[#c8f000] border border-[#c8f000]/30' },

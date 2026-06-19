@@ -4,6 +4,7 @@ import { useAuthModalStore } from '../../store/authModalStore';
 import { Eye, EyeOff } from 'lucide-react';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import Icon from './Icon';
+import { useToast } from './Toast';
 
 export default function AuthModal() {
   const { login, register } = useAuthStore();
@@ -17,6 +18,7 @@ export default function AuthModal() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
+  const toast = useToast();
 
   const handleEscape = useCallback((e) => {
     if (e.key === 'Escape') closeModal();
@@ -52,6 +54,7 @@ export default function AuthModal() {
     try {
       await login(loginForm.email, loginForm.password);
       closeModal();
+      toast.success('Berhasil login! Selamat datang');
     } catch (err) {
       setError(err.response?.data?.message || 'Login gagal. Periksa email dan password Anda.');
     } finally {
@@ -67,6 +70,7 @@ export default function AuthModal() {
     try {
       await register(registerForm);
       closeModal();
+      toast.success('Berhasil daftar! Selamat datang, ' + registerForm.name);
     } catch (err) {
       if (err.response?.status === 422 && err.response?.data?.errors) {
         setErrors(err.response.data.errors);

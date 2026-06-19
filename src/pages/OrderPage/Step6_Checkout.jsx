@@ -164,7 +164,12 @@ export default function Step6Checkout() {
               <Icon name="map-pin" size={24} className={`mx-auto mb-2 ${form.deliveryMethod === 'pickup' ? 'text-primary' : 'text-gray'}`} />
               <p className="font-medium text-white text-center text-sm">Ambil Sendiri</p>
             </button>
-            <button type="button" onClick={() => handleChange('deliveryMethod', 'delivery')}
+            <button type="button" onClick={() => {
+              handleChange('deliveryMethod', 'delivery');
+              if (!form.address && user?.address) {
+                setForm(prev => ({ ...prev, deliveryMethod: 'delivery', address: user.address }));
+              }
+            }}
               className={`p-4 rounded-xl border-2 transition-all duration-200 ${form.deliveryMethod === 'delivery' ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10' : 'border-border hover:border-primary/50'}`}>
               <Icon name="truck" size={24} className={`mx-auto mb-2 ${form.deliveryMethod === 'delivery' ? 'text-primary' : 'text-gray'}`} />
               <p className="font-medium text-white text-center text-sm">Dikirim</p>

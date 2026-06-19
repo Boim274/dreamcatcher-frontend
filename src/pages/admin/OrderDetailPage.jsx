@@ -5,7 +5,7 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { useToast } from '../../components/ui/Toast';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { ArrowLeft, CheckCircle, XCircle, Clock, Package, Truck } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Clock, Package, Truck, Ban } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
@@ -23,6 +23,7 @@ const statusOptions = [
   { value: 'processed', label: 'Diproses', icon: Package, color: 'purple' },
   { value: 'completed', label: 'Selesai', icon: CheckCircle, color: 'green' },
   { value: 'cancelled', label: 'Batal', icon: XCircle, color: 'red' },
+  { value: 'cancel_requested', label: 'Menunggu Pembatalan', icon: Ban, color: 'orange' },
 ];
 
 export default function OrderDetailPage() {
@@ -32,6 +33,7 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState({ show: false, status: null, label: '' });
+  const [confirmCancelAction, setConfirmCancelAction] = useState({ show: false, action: null });
 
   useEffect(() => {
     fetchOrder();
@@ -63,6 +65,34 @@ export default function OrderDetailPage() {
       await fetchOrder();
     } catch (error) {
       toast.error('Gagal update status');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleApproveCancel = async () => {
+    setConfirmCancelAction({ show: false, action: null });
+    setUpdating(true);
+    try {
+      await api.patch(`/admin/orders/${id}/status`, { status: 'cancelled', notes: 'Pembatalan disetujui oleh admin' });
+      toast.success('Pembatalan pesanan disetujui');
+      await fetchOrder();
+    } catch (error) {
+      toast.error('Gagal memproses pembatalan');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleRejectCancel = async () => {
+    setConfirmCancelAction({ show: false, action: null });
+    setUpdating(true);
+    try {
+      await api.patch(`/admin/orders/${id}/status`, { status: 'waiting_payment', notes: 'Pembatalan ditolak oleh admin' });
+      toast.success('Pembatalan pesanan ditolak, kembali ke status menunggu pembayaran');
+      await fetchOrder();
+    } catch (error) {
+      toast.error('Gagal memproses penolakan');
     } finally {
       setUpdating(false);
     }
@@ -135,6 +165,36 @@ export default function OrderDetailPage() {
 
         <div className="bg-card border border-border p-6">
           <h2 className="font-semibold mb-4 text-white">Update Status</h2>
+
+          {/* Cancel Request Alert */}
+          {order.status === 'cancel_requested' && (
+            <div className="mb-4 p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <Ban className="w-5 h-5 text-orange-400" />
+                <p className="text-orange-400 font-semibold text-sm">Permintaan Pembatalan</p>
+              </div>
+              <p className="text-orange-400/70 text-xs mb-4">
+                Customer meminta pembataran pesanan ini. Pilih tindakan:
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmCancelAction({ show: true, action: 'approve' })}
+                  disabled={updating}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors text-[13px] disabled:opacity-50"
+                >
+                  <XCircle className="w-4 h-4" /> Setujui Pembatalan
+                </button>
+                <button
+                  onClick={() => setConfirmCancelAction({ show: true, action: 'reject' })}
+                  disabled={updating}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors text-[13px] disabled:opacity-50"
+                >
+                  <CheckCircle className="w-4 h-4" /> Tolak Pembatalan
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             {statusOptions.map((option) => (
               <button
@@ -274,6 +334,21 @@ export default function OrderDetailPage() {
         title="Update Status Pesanan"
         message={`Apakah Anda yakin ingin mengubah status pesanan menjadi "${confirmStatus.label}"?`}
         confirmLabel="Ya, Ubah Status"
+      />
+
+      <ConfirmDialog
+        isOpen={confirmCancelAction.show}
+        onClose={() => setConfirmCancelAction({ show: false, action: null })}
+        onConfirm={confirmCancelAction.action === 'approve' ? handleApproveCancel : handleRejectCancel}
+        title={confirmCancelAction.action === 'approve' ? 'Setujui Pembatalan' : 'Tolak Pembatalan'}
+        message={
+          confirmCancelAction.action === 'approve'
+            ? 'Apakah Anda yakin ingin menyetujui pembatalan pesanan ini? Status akan berubah menjadi "Dibatalkan".'
+            : 'Apakah Anda yakin ingin menolak pembatalan pesanan ini? Status akan kembali ke "Menunggu Pembayaran".'
+        }
+        confirmLabel={confirmCancelAction.action === 'approve' ? 'Ya, Setujui' : 'Ya, Tolak'}
+        variant={confirmCancelAction.action === 'approve' ? 'danger' : 'default'}
+        loading={updating}
       />
     </div>
   );
