@@ -56,14 +56,14 @@ export default function OrdersPage() {
       <div className="bg-card border border-border p-6 mb-6">
         <div className="flex flex-wrap gap-4">
           <div className="flex-1 min-w-[200px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+            <div className="input-icon-wrapper">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
               <input
                 type="text"
                 value={filters.search}
                 onChange={(e) => handleFilter('search', e.target.value)}
                 placeholder="Cari kode/nama/HP..."
-                className="input-dark pl-10"
+                className="input-dark"
               />
             </div>
           </div>

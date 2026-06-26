@@ -9,7 +9,7 @@ import Icon from '../../components/ui/Icon';
 
 export default function Step6Checkout() {
   const navigate = useNavigate();
-  const { selectedService, config, sizeQuantities, design, customerData, setCustomerData, getSizePrice, getSubtotal, getShippingCost, getTotalPrice, getDpAmount, prevStep, resetAll } = useOrderStore();
+  const { selectedService, config, sizeQuantities, design, printAreas, customerData, setCustomerData, getSizePrice, getSubtotal, getShippingCost, getTotalPrice, getDpAmount, getAreaSurcharge, prevStep, resetAll } = useOrderStore();
   const { user, isAuthenticated } = useAuthStore();
   const toast = useToast();
   const [submitting, setSubmitting] = useState(false);
@@ -21,12 +21,14 @@ export default function Step6Checkout() {
     phone: customerData.phone || (isAuthenticated ? user?.phone : '') || '',
     address: customerData.address || '',
     deliveryMethod: customerData.deliveryMethod || 'pickup',
+    description: customerData.description || '',
   });
   const [errors, setErrors] = useState({});
 
   const total = getTotalPrice();
   const dp = getDpAmount();
   const breakdown = useOrderStore.getState().getPriceBreakdown();
+  const areaSurcharge = getAreaSurcharge();
 
   const validate = () => {
     const errs = {};
@@ -52,19 +54,26 @@ export default function Step6Checkout() {
         .map(([, val]) => val)
         .join(' / ');
 
-      const items = breakdown.map(({ size, qty, unitPrice }) => ({
-        service_id: selectedService.id,
-        product_name: selectedService.name,
-        size: size,
-        quantity: qty,
-        unit_price: unitPrice,
-        selected_color: config.color || config.material || null,
-        sablon_type: config.sablonType || null,
-        service_option: configSummary || null,
-        design_type: design.type || null,
-        design_id: design.id || null,
-        design_notes: null,
-      }));
+      const items = [];
+      breakdown.forEach(({ size, qty, unitPrice }) => {
+        printAreas.forEach((area, areaIndex) => {
+          const areaPrice = areaIndex > 0 ? unitPrice + areaSurcharge : unitPrice;
+          items.push({
+            service_id: selectedService.id,
+            product_name: selectedService.name,
+            size: size,
+            quantity: qty,
+            unit_price: areaPrice,
+            selected_color: config.color || config.material || null,
+            sablon_type: config.sablonType || null,
+            print_area: area.position || null,
+            print_size: area.printSize || null,
+            design_type: area.design?.type || null,
+            design_id: area.design?.id || null,
+            design_notes: null,
+          });
+        });
+      });
 
       const result = await orderService.create({
         customer_name: form.name,
@@ -72,6 +81,7 @@ export default function Step6Checkout() {
         phone: form.phone,
         address: form.address,
         delivery_method: form.deliveryMethod,
+        description: form.description || null,
         notes: configSummary || null,
         items,
       });
@@ -117,6 +127,17 @@ export default function Step6Checkout() {
           <span className="text-gray">{selectedService?.name}</span>
           {configSummary && <span className="text-gray text-right">{configSummary}</span>}
         </div>
+        {/* Print Areas */}
+        {printAreas.length > 0 && (
+          <div className="mb-2">
+            {printAreas.map((area, idx) => (
+              <div key={idx} className="text-xs text-gray flex items-center gap-2">
+                <span className="text-primary font-semibold">Area {idx + 1}:</span>
+                <span>{area.position} ({area.printSize})</span>
+              </div>
+            ))}
+          </div>
+        )}
         {/* Per-size breakdown */}
         <div className="space-y-1 mb-2">
           {breakdown.map(({ size, qty, unitPrice, subtotal }) => (
@@ -187,6 +208,16 @@ export default function Step6Checkout() {
             {errors.address && <p className="text-danger text-sm mt-1">{errors.address}</p>}
           </div>
         )}
+      </div>
+
+      {/* Deskripsi Pesanan */}
+      <div className="mb-6">
+        <label className="text-fire text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Deskripsi Pesanan (opsional)</label>
+        <textarea value={form.description} onChange={(e) => handleChange('description', e.target.value)}
+          placeholder="Contoh: Kaos komunitas warna hitam, sablon plastisol, logo di dada kiri, tulisan di belakang"
+          rows={3}
+          className="w-full px-4 py-3 border border-border rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 min-h-[80px] resize-none bg-ink text-white transition-colors" />
+        <p className="text-gray text-[11px] mt-1">Deskripsi ini akan ditampilkan saat Anda melacak pesanan.</p>
       </div>
 
       {/* Actions */}

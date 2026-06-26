@@ -160,6 +160,12 @@ export default function OrderDetailPage() {
                 <p className="font-medium text-white">{order.notes}</p>
               </div>
             )}
+            {order.description && (
+              <div className="col-span-2">
+                <p className="text-gray text-sm">Deskripsi Pesanan</p>
+                <p className="font-medium text-white whitespace-pre-wrap">{order.description}</p>
+              </div>
+            )}
           </div>
         </div>
 

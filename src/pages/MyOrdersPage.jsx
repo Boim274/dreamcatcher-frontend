@@ -18,6 +18,13 @@ import {
   ChevronDown, ChevronUp, Image as ImageIcon, Ban
 } from 'lucide-react';
 
+const getImageUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('data:') || path.startsWith('http')) return path;
+  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+  return `${baseUrl}/${path}`;
+};
+
 const statusSteps = [
   { key: 'pending', label: 'Pesanan Diterima', description: 'Pesanan Anda sudah diterima dan menunggu konfirmasi dari admin.', icon: ClipboardList },
   { key: 'waiting_payment', label: 'Menunggu Pembayaran', description: 'Silakan lakukan pembayaran dalam 24 jam.', icon: CreditCard },
@@ -95,7 +102,7 @@ function VerticalTimeline({ status }) {
               <p className={`text-[15px] font-semibold ${isCurrent ? 'text-primary' : isCompleted ? 'text-white' : 'text-gray'}`}>
                 {step.label}
               </p>
-              <p className={`text-[12px] mt-1 leading-relaxed ${isCurrent ? 'text-gray-light' : isFuture ? 'text-gray/60' : 'text-gray'}`}>
+              <p className={`text-[12px] mt-1 leading-relaxed ${isCurrent ? 'text-gray-light' : isFuture ? 'text-gray-medium/80' : 'text-gray-light'}`}>
                 {step.description}
               </p>
             </div>
@@ -116,13 +123,13 @@ function ProgressBar({ status }) {
   return (
     <div className="mb-4">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-[13px] text-gray">Step {currentIndex + 1} dari {statusSteps.length}</p>
+        <p className="text-[13px] text-gray-light">Step {currentIndex + 1} dari {statusSteps.length}</p>
         <p className="text-[13px] text-primary font-semibold">{percent}%</p>
       </div>
       <div className="track-progress-bar">
         <div className="track-progress-bar-fill" style={{ width: `${percent}%` }} />
       </div>
-      {currentStep && <p className="text-[12px] text-gray mt-2">{currentStep.label}</p>}
+      {currentStep && <p className="text-[12px] text-gray-light mt-2">{currentStep.label}</p>}
     </div>
   );
 }
@@ -158,26 +165,40 @@ function OrderDetailSection({ order }) {
         </div>
       </div>
 
+      {order.description && (
+        <div>
+          <h4 className="text-fire text-[11px] tracking-[1px] uppercase mb-3 font-medium">Deskripsi Pesanan</h4>
+          <div className="bg-ink rounded-lg p-3">
+            <p className="text-gray-light text-[13px] leading-relaxed whitespace-pre-wrap">{order.description}</p>
+          </div>
+        </div>
+      )}
+
       <div>
         <h4 className="text-fire text-[11px] tracking-[1px] uppercase mb-3 font-medium">Item Pesanan</h4>
         <div className="space-y-2">
           {items.map((item, idx) => (
             <div key={idx} className="bg-ink rounded-lg p-3">
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start gap-3">
+                {item.design?.image_url && (
+                  <img
+                    src={getImageUrl(item.design.image_url)}
+                    alt="Desain"
+                    className="w-14 h-14 object-contain bg-ink rounded-lg border border-border flex-shrink-0"
+                  />
+                )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-[13px] font-medium truncate">{item.product_name || item.service?.name || '-'}</p>
-                  <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {item.size && (
-                      <span className="inline-flex items-center px-2 py-0.5 bg-fire/10 text-fire text-[11px] font-semibold rounded">{item.size}</span>
-                    )}
-                    {item.selected_color && (
-                      <span className="inline-flex items-center px-2 py-0.5 bg-primary/10 text-primary text-[11px] font-semibold rounded">{item.selected_color}</span>
-                    )}
-                    {item.sablon_type && (
-                      <span className="inline-flex items-center px-2 py-0.5 bg-border/30 text-gray text-[11px] rounded">{item.sablon_type}</span>
-                    )}
-                    <span className="inline-flex items-center px-2 py-0.5 bg-ink text-gray text-[11px] rounded border border-border">× {item.quantity}</span>
-                  </div>
+                  <p className="text-white text-[13px] font-medium mb-1">{item.product_name || item.service?.name || '-'}</p>
+                  <p className="text-gray-light text-[11px] leading-relaxed">
+                    {[
+                      item.size && `Ukuran ${item.size}`,
+                      item.selected_color && `Warna ${item.selected_color}`,
+                      item.sablon_type && `Sablon ${item.sablon_type}`,
+                      item.print_area && `Posisi ${item.print_area.replace(/_/g, ' ')}`,
+                      item.print_size && item.print_size,
+                      item.quantity && `${item.quantity} pcs`,
+                    ].filter(Boolean).join(' · ')}
+                  </p>
                 </div>
                 <p className="text-primary font-semibold text-[13px] whitespace-nowrap">{formatRupiah(item.subtotal)}</p>
               </div>
@@ -304,18 +325,25 @@ function GuestTrackForm() {
         <ProgressBar status={order.status} />
         <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-start gap-4">
-            <div className="w-20 h-20 rounded-[14px] bg-ink border border-border flex items-center justify-center flex-shrink-0">
-              <ImageIcon className="w-8 h-8 text-gray/40" />
+            <div className="w-20 h-20 rounded-[14px] bg-ink border border-border flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {(() => {
+                const items = order.items || [];
+                const firstDesign = items.find(i => i.design?.image_url)?.design?.image_url;
+                if (firstDesign) {
+                  return <img src={getImageUrl(firstDesign)} alt="Desain" className="w-full h-full object-contain" />;
+                }
+                return <ImageIcon className="w-8 h-8 text-gray/40" />;
+              })()}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <span className="font-mono text-[16px] text-primary font-bold tracking-wider">#{order.order_code}</span>
                 <StatusBadge status={order.status} />
               </div>
-              <p className="text-[12px] text-gray mb-2">
+              <p className="text-[12px] text-gray-light mb-2">
                 {new Date(order.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </p>
-              <div className="flex items-center gap-3 text-[12px] text-gray flex-wrap">
+              <div className="flex items-center gap-3 text-[12px] text-gray-light flex-wrap">
                 <span className="flex items-center gap-1"><ShoppingBag size={12} /> {(order.items || []).length} item</span>
               </div>
             </div>
@@ -345,7 +373,7 @@ function GuestTrackForm() {
               <Search className="w-7 h-7 text-primary" />
             </div>
             <h2 className="font-heading text-[24px] text-white tracking-[1px] mb-1">LACAK PESANAN</h2>
-            <p className="text-gray text-[13px]">Masukkan kode pesanan dan nomor HP Anda</p>
+            <p className="text-gray-light text-[13px]">Masukkan kode pesanan dan nomor HP Anda</p>
           </div>
           <form onSubmit={handleTrack} className="space-y-4">
             <div>
@@ -425,42 +453,59 @@ function OrderCard({ order, onRefresh }) {
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden transition-all duration-300 hover:border-primary/30">
       <div className="p-5 cursor-pointer select-none" onClick={() => setShowDetail(!showDetail)}>
-        <div className="flex items-start justify-between gap-4 mb-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono text-[15px] text-primary font-bold tracking-wider">#{order.order_code}</span>
-            <StatusBadge status={order.status} />
+        <div className="flex items-start gap-3">
+          {(() => {
+            const firstDesign = items.find(i => i.design?.image_url)?.design?.image_url;
+            if (!firstDesign) return null;
+            return (
+              <img
+                src={getImageUrl(firstDesign)}
+                alt="Desain"
+                className="w-12 h-12 object-contain bg-ink rounded-lg border border-border flex-shrink-0 mt-0.5"
+              />
+            );
+          })()}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-4 mb-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-mono text-[15px] text-primary font-bold tracking-wider">#{order.order_code}</span>
+                <StatusBadge status={order.status} />
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="font-bold text-primary text-lg whitespace-nowrap">{formatRupiah(order.total_price)}</p>
+                {showDetail ? <ChevronUp className="w-5 h-5 text-gray" /> : <ChevronDown className="w-5 h-5 text-gray" />}
+              </div>
+            </div>
+            {order.description && (
+              <p className="text-[12px] text-gray-light leading-relaxed mb-2 line-clamp-2">{order.description}</p>
+            )}
+            <div className="flex items-center gap-3 text-[12px] text-gray-light mb-3 flex-wrap">
+              <span className="flex items-center gap-1"><Icon name="calendar" size={12} />{new Date(order.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              <span className="flex items-center gap-1"><ShoppingBag size={12} />{itemCount} item · {totalQty} pcs</span>
+              {sizes.length > 0 && <span className="flex items-center gap-1"><Icon name="tag" size={12} />{sizes.join(', ')}</span>}
+              {colors.length > 0 && <span className="flex items-center gap-1"><Icon name="palette" size={12} />{colors.join(', ')}</span>}
+            </div>
+            <div className="flex items-center gap-1">
+              {order.status === 'cancel_requested' ? (
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse" /><span className="text-orange-400 text-[11px] font-medium">Menunggu Pembatalan</span></div>
+              ) : order.status === 'cancelled' ? (
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-400" /><span className="text-red-400 text-[11px] font-medium">Dibatalkan</span></div>
+              ) : (
+                statusSteps.map((step, i) => {
+                  const stepIdx = statusOrder.indexOf(step.key);
+                  const curIdx = statusOrder.indexOf(order.status);
+                  const done = stepIdx < curIdx;
+                  const cur = stepIdx === curIdx;
+                  return (
+                    <div key={step.key} className="flex items-center">
+                      <div className={`w-2.5 h-2.5 rounded-full ${done ? 'bg-primary' : cur ? 'bg-primary animate-pulse' : 'bg-border/50'}`} title={step.label} />
+                      {i < statusSteps.length - 1 && <div className={`w-4 h-0.5 ${done ? 'bg-primary' : 'bg-border/30'}`} />}
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <p className="font-bold text-primary text-lg whitespace-nowrap">{formatRupiah(order.total_price)}</p>
-            {showDetail ? <ChevronUp className="w-5 h-5 text-gray" /> : <ChevronDown className="w-5 h-5 text-gray" />}
-          </div>
-        </div>
-        <div className="flex items-center gap-3 text-[12px] text-gray mb-3 flex-wrap">
-          <span className="flex items-center gap-1"><Icon name="calendar" size={12} />{new Date(order.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-          <span className="flex items-center gap-1"><ShoppingBag size={12} />{itemCount} item · {totalQty} pcs</span>
-          {sizes.length > 0 && <span className="flex items-center gap-1"><Icon name="tag" size={12} />{sizes.join(', ')}</span>}
-          {colors.length > 0 && <span className="flex items-center gap-1"><Icon name="palette" size={12} />{colors.join(', ')}</span>}
-        </div>
-        {/* Mini timeline */}
-        <div className="flex items-center gap-1">
-          {order.status === 'cancel_requested' ? (
-            <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse" /><span className="text-orange-400 text-[11px] font-medium">Menunggu Pembatalan</span></div>
-          ) : order.status === 'cancelled' ? (
-            <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-400" /><span className="text-red-400 text-[11px] font-medium">Dibatalkan</span></div>
-          ) : (
-            statusSteps.map((step, i) => {
-              const stepIdx = statusOrder.indexOf(step.key);
-              const curIdx = statusOrder.indexOf(order.status);
-              const done = stepIdx < curIdx;
-              const cur = stepIdx === curIdx;
-              return (
-                <div key={step.key} className="flex items-center">
-                  <div className={`w-2.5 h-2.5 rounded-full ${done ? 'bg-primary' : cur ? 'bg-primary animate-pulse' : 'bg-border/50'}`} title={step.label} />
-                  {i < statusSteps.length - 1 && <div className={`w-4 h-0.5 ${done ? 'bg-primary' : 'bg-border/30'}`} />}
-                </div>
-              );
-            })
-          )}
         </div>
       </div>
 
@@ -593,7 +638,7 @@ export default function MyOrdersPage() {
                 <Package className="w-10 h-10 text-primary" />
               </div>
               <h3 className="font-heading text-[24px] text-white tracking-[1px] mb-2">Belum Ada Pesanan</h3>
-              <p className="text-gray mb-6 text-[13px]">Mulai pesan sekarang untuk melihat pesanan Anda di sini</p>
+              <p className="text-gray-light mb-6 text-[13px]">Mulai pesan sekarang untuk melihat pesanan Anda di sini</p>
               <Link to="/pesan" className="inline-flex items-center justify-center gap-2 bg-primary text-white font-semibold py-3 px-8 rounded-xl hover:bg-primary-dark transition-colors text-[13px] uppercase tracking-[1px]">
                 <Icon name="plus" size={18} /> Buat Pesanan
               </Link>
@@ -626,7 +671,7 @@ export default function MyOrdersPage() {
             {filteredOrders.length === 0 ? (
               <div className="text-center py-16 bg-card border border-border rounded-xl">
                 <Filter className="w-10 h-10 text-gray mx-auto mb-3" />
-                <p className="text-gray text-[13px]">Tidak ada pesanan ditemukan</p>
+                <p className="text-gray-light text-[13px]">Tidak ada pesanan ditemukan</p>
               </div>
             ) : (
               <div className="space-y-4">

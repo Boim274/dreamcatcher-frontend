@@ -13,12 +13,19 @@ const getImageUrl = (path) => {
 };
 
 export default function Step4Design() {
-  const { design, setDesign, nextStep, prevStep } = useOrderStore();
+  const { printAreas, setAreaDesign, nextStep, prevStep, selectedService } = useOrderStore();
   const toast = useToast();
-  const fileInputRef = useRef(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingIndex, setUploadingIndex] = useState(null);
+  const fileInputRefs = useRef([]);
 
-  const handleFileUpload = async (e) => {
+  const options = selectedService?.options_config || {};
+  const printPositions = options.print_positions || [];
+  const printSizes = options.print_sizes || [];
+
+  const getPositionLabel = (value) => printPositions.find((p) => p.value === value)?.label || value;
+  const getSizeLabel = (value) => printSizes.find((s) => s.value === value)?.label || value;
+
+  const handleFileUpload = async (e, areaIndex) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -27,40 +34,49 @@ export default function Step4Design() {
       return;
     }
 
-    setUploading(true);
+    setUploadingIndex(areaIndex);
     try {
       const session = localStorage.getItem('user_session') || crypto.randomUUID();
       localStorage.setItem('user_session', session);
 
       const result = await designService.upload(file, session);
-      setDesign({
+      setAreaDesign(areaIndex, {
         id: result.design?.id,
         imageUrl: result.design?.image_url,
         isValid: result.design?.is_valid,
         validationMessage: result.design?.validation_message,
         type: 'uploaded',
       });
-      toast.success('Desain berhasil diupload!');
+      toast.success(`Desain Area ${areaIndex + 1} berhasil diupload!`);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Gagal upload desain');
     } finally {
-      setUploading(false);
+      setUploadingIndex(null);
+      if (fileInputRefs.current[areaIndex]) {
+        fileInputRefs.current[areaIndex].value = '';
+      }
     }
   };
 
-  const handleRemoveDesign = async () => {
-    if (design.id) {
+  const handleRemoveDesign = async (areaIndex) => {
+    const area = printAreas[areaIndex];
+    if (area.design?.id) {
       try {
-        await designService.delete(design.id);
+        await designService.delete(area.design.id);
       } catch (err) {
         console.error('Failed to delete design from Cloudinary:', err);
       }
     }
-    setDesign({ id: null, imageUrl: null, isValid: false, validationMessage: null, type: null });
+    setAreaDesign(areaIndex, { id: null, imageUrl: null, isValid: false, validationMessage: null, type: null });
   };
 
   const handleNext = () => {
-    if (!design.imageUrl) { toast.warning('Upload desain terlebih dahulu'); return; }
+    const allUploaded = printAreas.every((area) => area.design?.imageUrl);
+    if (!allUploaded) {
+      const missing = printAreas.findIndex((area) => !area.design?.imageUrl);
+      toast.warning(`Upload desain untuk Area ${missing + 1} terlebih dahulu`);
+      return;
+    }
     nextStep();
   };
 
@@ -68,50 +84,65 @@ export default function Step4Design() {
     <div className="bg-card border border-border p-6 rounded-xl">
       <h2 className="font-heading text-[28px] text-white tracking-[1px] mb-6">UPLOAD DESAIN</h2>
 
-      <div className="mb-6">
-        {design.imageUrl ? (
-          <div className="relative">
-            <img
-              src={getImageUrl(design.imageUrl)}
-              alt="Desain"
-              className="w-full max-h-80 object-contain bg-ink rounded-xl border border-border"
-            />
-            <button
-              onClick={handleRemoveDesign}
-              className="absolute top-3 right-3 bg-ink/80 text-white p-2 rounded-full hover:bg-fire transition-colors"
-            >
-              <Icon name="x" size={16} />
-            </button>
-            {design.validationMessage && (
-              <div className={`mt-3 p-3 rounded-xl text-sm ${design.isValid ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
-                {design.validationMessage}
+      <div className="space-y-6 mb-6">
+        {printAreas.map((area, index) => (
+          <div key={index} className="bg-ink border border-border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-fire text-[11px] tracking-[1px] uppercase font-medium">
+                  Area {index + 1}
+                </p>
+                <p className="text-white text-sm font-medium">
+                  {getPositionLabel(area.position)} ({getSizeLabel(area.printSize)})
+                </p>
               </div>
-            )}
-          </div>
-        ) : (
-          <label className="border-2 border-dashed border-border rounded-xl p-12 text-center block cursor-pointer hover:border-primary transition-colors">
-            {uploading ? (
-              <div className="flex flex-col items-center">
-                <Loader2 className="w-10 h-10 text-primary animate-spin mb-3" />
-                <p className="text-gray text-sm">Mengupload...</p>
+              {area.design?.imageUrl && (
+                <button onClick={() => handleRemoveDesign(index)}
+                  className="text-gray hover:text-fire transition-colors">
+                  <Icon name="trash-2" size={16} />
+                </button>
+              )}
+            </div>
+
+            {area.design?.imageUrl ? (
+              <div className="relative">
+                <img
+                  src={getImageUrl(area.design.imageUrl)}
+                  alt={`Desain Area ${index + 1}`}
+                  className="w-full max-h-60 object-contain bg-ink rounded-xl border border-border"
+                />
+                {area.design.validationMessage && (
+                  <div className={`mt-3 p-3 rounded-xl text-sm ${area.design.isValid ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
+                    {area.design.validationMessage}
+                  </div>
+                )}
               </div>
             ) : (
-              <>
-                <Upload className="w-10 h-10 mx-auto text-gray mb-3" />
-                <p className="text-white font-semibold text-sm mb-1">Klik untuk upload desain</p>
-                <p className="text-gray text-xs">Format: JPG, PNG (maks. 5MB)</p>
-              </>
+              <label className="border-2 border-dashed border-border rounded-xl p-8 text-center block cursor-pointer hover:border-primary transition-colors">
+                {uploadingIndex === index ? (
+                  <div className="flex flex-col items-center">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" />
+                    <p className="text-gray text-sm">Mengupload...</p>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="w-8 h-8 mx-auto text-gray mb-2" />
+                    <p className="text-white font-semibold text-sm mb-1">Klik untuk upload desain</p>
+                    <p className="text-gray text-xs">Format: JPG, PNG, SVG (maks. 5MB)</p>
+                  </>
+                )}
+                <input
+                  ref={(el) => { fileInputRefs.current[index] = el; }}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e, index)}
+                  className="hidden"
+                  disabled={uploadingIndex === index}
+                />
+              </label>
             )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              className="hidden"
-              disabled={uploading}
-            />
-          </label>
-        )}
+          </div>
+        ))}
       </div>
 
       <div className="flex gap-4">

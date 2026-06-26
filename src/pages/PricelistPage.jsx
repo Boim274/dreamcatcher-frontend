@@ -54,9 +54,14 @@ export default function PricelistPage() {
                     </span>
                   ))
                 ) : Array.isArray(items) ? (
-                  items.map((item) => (
-                    <span key={item} className="px-2.5 py-1 bg-fire/10 text-fire text-[12px] font-semibold rounded-lg">{item}</span>
-                  ))
+                  items.map((item, idx) => {
+                    const isObj = typeof item === 'object' && item !== null;
+                    const label = isObj ? item.label : item;
+                    const value = isObj ? (item.value || idx) : item;
+                    return (
+                      <span key={value || idx} className="px-2.5 py-1 bg-fire/10 text-fire text-[12px] font-semibold rounded-lg">{label}</span>
+                    );
+                  })
                 ) : typeof items === 'object' ? (
                   Object.entries(items).map(([k, v]) => (
                     <span key={k} className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary text-[12px] font-semibold rounded-lg">

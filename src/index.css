@@ -210,20 +210,34 @@
   background: var(--color-card);
   border: 1px solid var(--color-border);
   color: #fff;
-  padding: 12px 16px;
   font-family: var(--font-body);
   font-size: 14px;
   outline: none;
   width: 100%;
-  transition: border 0.2s;
+  border-radius: 12px;
+  transition: border 0.2s, box-shadow 0.2s;
+  padding: 12px 16px;
 }
 
 .input-dark:focus {
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(236, 74, 150, 0.15);
 }
 
 .input-dark::placeholder {
-  color: var(--color-gray-dark);
+  color: var(--color-gray-medium);
+}
+
+.input-icon-wrapper {
+  position: relative;
+}
+
+.input-icon-wrapper .input-dark {
+  padding-left: 44px;
+}
+
+.input-icon-wrapper .input-dark.pr-12 {
+  padding-right: 48px;
 }
 
 /* ===================== MARQUEE ===================== */

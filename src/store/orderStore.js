@@ -12,6 +12,7 @@ const initialDesign = {
   type: null,
   prompt: null,
 };
+const initialPrintArea = { position: null, printSize: null, design: { ...initialDesign } };
 const initialCustomer = {
   name: '',
   email: '',
@@ -30,6 +31,7 @@ export const useOrderStore = create(
       sizeQuantities: {},
       quantity: 0,
       design: { ...initialDesign },
+      printAreas: [{ ...initialPrintArea }],
       mockupImage: null,
       customerData: { ...initialCustomer },
       paymentMethod: 'transfer_bank',
@@ -69,6 +71,45 @@ export const useOrderStore = create(
         design: { ...state.design, ...data },
       })),
 
+      setPrintAreaPosition: (index, position) => set((state) => {
+        const newAreas = [...state.printAreas];
+        newAreas[index] = { ...newAreas[index], position };
+        return { printAreas: newAreas };
+      }),
+
+      setPrintAreaSize: (index, printSize) => set((state) => {
+        const newAreas = [...state.printAreas];
+        newAreas[index] = { ...newAreas[index], printSize };
+        return { printAreas: newAreas };
+      }),
+
+      setAreaDesign: (index, designData) => set((state) => {
+        const newAreas = [...state.printAreas];
+        newAreas[index] = { ...newAreas[index], design: { ...newAreas[index].design, ...designData } };
+        return { printAreas: newAreas };
+      }),
+
+      addPrintArea: () => set((state) => {
+        if (state.printAreas.length >= 2) return state;
+        return { printAreas: [...state.printAreas, { ...initialPrintArea }] };
+      }),
+
+      removePrintArea: (index) => set((state) => {
+        if (state.printAreas.length <= 1) return state;
+        const newAreas = state.printAreas.filter((_, i) => i !== index);
+        return { printAreas: newAreas };
+      }),
+
+      getAreaCount: () => {
+        return get().printAreas.length;
+      },
+
+      getAreaSurcharge: () => {
+        const { selectedService, printAreas } = get();
+        if (printAreas.length <= 1) return 0;
+        return selectedService?.options_config?.area_surcharge || 15000;
+      },
+
       setMockupImage: (image) => set({ mockupImage: image }),
 
       setCustomerData: (data) => set((state) => ({
@@ -85,6 +126,7 @@ export const useOrderStore = create(
         sizeQuantities: {},
         quantity: 0,
         design: { ...initialDesign },
+        printAreas: [{ ...initialPrintArea }],
         mockupImage: null,
         customerData: { ...initialCustomer },
         paymentMethod: 'transfer_bank',
@@ -98,6 +140,7 @@ export const useOrderStore = create(
         sizeQuantities: {},
         quantity: 0,
         design: { ...initialDesign },
+        printAreas: [{ ...initialPrintArea }],
         mockupImage: null,
         customerData: { ...initialCustomer },
         paymentMethod: 'transfer_bank',
@@ -118,6 +161,8 @@ export const useOrderStore = create(
 
         if (quantity >= 24) {
           return parseFloat(typeConfig.lusin_2_6 || typeConfig.lusin_1 || selectedService.base_price) || 0;
+        } else if (quantity >= 12) {
+          return parseFloat(typeConfig.lusin_1 || selectedService.base_price) || 0;
         } else {
           return parseFloat(typeConfig.satuan || selectedService.base_price) || 0;
         }
@@ -171,6 +216,16 @@ export const useOrderStore = create(
         return Math.round(get().getTotalPrice() * 0.5);
       },
 
+      getLusinanValidation: () => {
+        const { config, quantity } = get();
+        if (config.purchaseMethod !== 'Lusinan') return null;
+        if (quantity === 0) return null;
+        if (quantity < 12) return 'Minimal pemesanan lusinan adalah 12 pcs.';
+        if (quantity % 12 !== 0) return 'Jumlah pemesanan lusinan harus kelipatan 12 pcs.';
+        if (quantity > 72) return 'Maksimal pemesanan lusinan adalah 72 pcs (6 lusin).';
+        return null;
+      },
+
       fetchServices: async () => {
         try {
           const response = await api.get('/services');
@@ -203,6 +258,7 @@ export const useOrderStore = create(
         sizeQuantities: state.sizeQuantities,
         quantity: state.quantity,
         design: state.design,
+        printAreas: state.printAreas,
         mockupImage: state.mockupImage,
         customerData: state.customerData,
         paymentMethod: state.paymentMethod,

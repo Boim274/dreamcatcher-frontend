@@ -2,8 +2,15 @@ import { useOrderStore } from '../../store/orderStore';
 import Icon from '../../components/ui/Icon';
 import { formatRupiah } from '../../utils/formatRupiah';
 
+const getImageUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('data:') || path.startsWith('http')) return path;
+  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+  return `${baseUrl}/${path}`;
+};
+
 export default function Step5PricePreview() {
-  const { selectedService, config, getTotalQuantity, getPriceBreakdown, getSubtotal, getShippingCost, getTotalPrice, getDpAmount, nextStep, prevStep } = useOrderStore();
+  const { selectedService, config, printAreas, getTotalQuantity, getPriceBreakdown, getSubtotal, getShippingCost, getTotalPrice, getDpAmount, getAreaSurcharge, nextStep, prevStep } = useOrderStore();
 
   if (!selectedService) return null;
 
@@ -11,8 +18,16 @@ export default function Step5PricePreview() {
   const breakdown = getPriceBreakdown();
   const subtotal = getSubtotal();
   const shipping = getShippingCost();
-  const total = getTotalPrice();
-  const dp = getDpAmount();
+  const areaSurcharge = getAreaSurcharge();
+  const totalAreaSurcharge = areaSurcharge * totalQty;
+  const total = subtotal + totalAreaSurcharge + shipping;
+  const dp = Math.round(total * 0.5);
+
+  const options = selectedService.options_config || {};
+  const printPositions = options.print_positions || [];
+  const printSizes = options.print_sizes || [];
+  const getPositionLabel = (value) => printPositions.find((p) => p.value === value)?.label || value;
+  const getSizeLabel = (value) => printSizes.find((s) => s.value === value)?.label || value;
 
   const configSummary = Object.entries(config)
     .filter(([key, val]) => val && key !== 'size')
@@ -41,8 +56,42 @@ export default function Step5PricePreview() {
             <span className="text-gray">Total Jumlah</span>
             <span>{totalQty} pcs</span>
           </div>
+          <div className="flex justify-between text-white">
+            <span className="text-gray">Area Cetak</span>
+            <span>{printAreas.length} area</span>
+          </div>
         </div>
       </div>
+
+      {/* Print Areas Detail */}
+      {printAreas.length > 0 && (
+        <div className="bg-ink border border-border rounded-xl p-4 mb-6">
+          <p className="text-fire text-[11px] tracking-[1px] uppercase mb-3 font-medium">Area Cetak</p>
+          <div className="space-y-3">
+            {printAreas.map((area, index) => (
+              <div key={index} className="flex items-start gap-3">
+                <span className="text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded text-xs mt-0.5">
+                  {index + 1}
+                </span>
+                <div className="flex-1">
+                  <p className="text-white text-sm font-medium">{getPositionLabel(area.position)}</p>
+                  <p className="text-gray text-xs">Ukuran: {getSizeLabel(area.printSize)}</p>
+                  {area.design?.imageUrl && (
+                    <img
+                      src={getImageUrl(area.design.imageUrl)}
+                      alt={`Desain Area ${index + 1}`}
+                      className="mt-2 w-16 h-16 object-contain bg-ink rounded border border-border"
+                    />
+                  )}
+                </div>
+                {index === 1 && areaSurcharge > 0 && (
+                  <span className="text-primary text-xs font-medium">+ {formatRupiah(areaSurcharge)}/pcs</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Per-Size Breakdown */}
       {breakdown.length > 0 && (
@@ -70,6 +119,12 @@ export default function Step5PricePreview() {
             <span className="text-gray">Subtotal ({totalQty} pcs)</span>
             <span>{formatRupiah(subtotal)}</span>
           </div>
+          {areaSurcharge > 0 && (
+            <div className="flex justify-between text-white">
+              <span className="text-gray">Surcharge Area 2 ({totalQty} × {formatRupiah(areaSurcharge)})</span>
+              <span>{formatRupiah(totalAreaSurcharge)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-white">
             <span className="text-gray">Ongkir</span>
             <span>{shipping > 0 ? formatRupiah(shipping) : 'Gratis'}</span>

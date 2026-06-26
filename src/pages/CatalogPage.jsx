@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
+import ScrollToTop from '../components/common/ScrollToTop';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import Icon from '../components/ui/Icon';
 import ServiceIcon from '../components/ui/ServiceIcons';
@@ -33,7 +34,8 @@ export default function CatalogPage() {
 
       <main className="flex-1 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 relative">
+            <div className="graffiti-deco">LAYANAN</div>
             <ScrollReveal>
               <div className="section-tag">&mdash; layanan kami</div>
               <h1 className="section-title">LAYANAN<br/>KAMI</h1>
@@ -55,7 +57,7 @@ export default function CatalogPage() {
                       {String(index + 1).padStart(2, '0')}
                     </div>
                     <div className="flex items-start gap-6">
-                      <div className="w-16 h-16 bg-primary flex items-center justify-center flex-shrink-0" style={{ clipPath: 'polygon(0 0, 100% 0, 90% 100%, 0 100%)' }}>
+                      <div className="w-16 h-16 bg-primary flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300" style={{ clipPath: 'polygon(0 0, 100% 0, 90% 100%, 0 100%)' }}>
                         <ServiceIcon name={service.name} size={32} className="text-white" />
                       </div>
                       <div className="flex-1">
@@ -103,6 +105,7 @@ export default function CatalogPage() {
       </main>
 
       <Footer />
+      <ScrollToTop />
     </div>
   );
 }
