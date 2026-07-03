@@ -3,7 +3,7 @@ import api from '../../services/api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useToast } from '../../components/ui/Toast';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { Plus, Edit2, Trash2, X, Upload, Link as LinkIcon, Star, GripVertical } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Upload, Link as LinkIcon, Star, GripVertical, ChevronLeft, ChevronRight, ImageIcon, Search } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
 
@@ -33,20 +33,45 @@ export default function PortfoliosPage() {
   const [imagePreview, setImagePreview] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState({ show: false, id: null });
-  const fileInputRef = useRef(null);
+  const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0, per_page: 15 });
+  const [page, setPage] = useState(1);
+  const fileRef = useRef(null);
+  const [filters, setFilters] = useState({ search: '', service_id: '', is_featured: '' });
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page, filters.service_id, filters.is_featured]);
 
-  const fetchData = async () => {
+  const handleFilter = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    if (key !== 'search') {
+      setPage(1);
+      fetchData(1, { ...filters, [key]: value });
+    }
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      setPage(1);
+      fetchData(1, filters);
+    }
+  };
+
+  const fetchData = async (pageArg, overrideFilters) => {
+    const p = pageArg || page;
+    const f = overrideFilters || filters;
     try {
+      const params = { page: p, per_page: 15 };
+      if (f.search) params.search = f.search;
+      if (f.service_id) params.service_id = f.service_id;
+      if (f.is_featured) params.is_featured = f.is_featured;
       const [portRes, svcRes] = await Promise.all([
-        api.get('/admin/portfolios'),
-        api.get('/admin/services'),
+        api.get('/admin/portfolios', { params }),
+        p === 1 ? api.get('/admin/services') : Promise.resolve(null),
       ]);
-      setPortfolios(portRes.data.portfolios);
-      setServices(svcRes.data.services);
+      setPortfolios(portRes.data.portfolios.data);
+      setPagination(portRes.data.portfolios);
+      if (svcRes) setServices(svcRes.data.services.data);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -169,8 +194,9 @@ export default function PortfoliosPage() {
     try {
       await api.put(`/admin/portfolios/${id}`, { is_featured: !current });
       fetchData();
+      toast.success(!current ? 'Ditandai sebagai featured' : 'Featured dibatalkan');
     } catch (error) {
-      console.error('Failed to toggle:', error);
+      toast.error('Gagal mengubah status featured');
     }
   };
 
@@ -184,7 +210,7 @@ export default function PortfoliosPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <h1 className="font-heading text-[28px] text-white tracking-[1px]">Kelola Portfolio</h1>
         <button onClick={() => openModal()} className="btn-primary flex items-center gap-2">
           <Plus className="w-5 h-5" />
@@ -192,11 +218,116 @@ export default function PortfoliosPage() {
         </button>
       </div>
 
-      <div className="bg-card border border-border overflow-hidden">
+      <div className="bg-card border border-border p-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="sm:col-span-2 lg:col-span-1">
+            <div className="input-icon-wrapper">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+              <input
+                type="text"
+                value={filters.search}
+                onChange={(e) => handleFilter('search', e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Cari judul portfolio..."
+                className="input-dark"
+              />
+            </div>
+          </div>
+
+          <select
+            value={filters.service_id}
+            onChange={(e) => handleFilter('service_id', e.target.value)}
+            className="input-dark"
+          >
+            <option value="">Semua Kategori</option>
+            {services.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={filters.is_featured}
+            onChange={(e) => handleFilter('is_featured', e.target.value)}
+            className="input-dark"
+          >
+            <option value="">Semua</option>
+            <option value="1">Featured</option>
+            <option value="0">Non-Featured</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Mobile: Card Layout */}
+      <div className="sm:hidden space-y-4">
+        {portfolios.map((item) => (
+          <div key={item.id} className="bg-card border border-border rounded-xl p-4">
+            <div className="flex gap-3">
+              <div className="w-20 h-20 rounded-lg overflow-hidden bg-dark border border-border flex-shrink-0">
+                {item.image_url ? (
+                  <img
+                    src={getImageUrl(item.image_url)}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImageIcon className="w-6 h-6 text-gray-dark" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-white truncate">{item.title}</p>
+                  <button
+                    onClick={() => toggleFeatured(item.id, item.is_featured)}
+                    className="flex-shrink-0 p-1"
+                  >
+                    <Star
+                      className={`w-5 h-5 ${item.is_featured ? 'text-amber-400' : 'text-gray-dark'}`}
+                      fill={item.is_featured ? 'currentColor' : 'none'}
+                    />
+                  </button>
+                </div>
+                <p className="text-gray-light text-sm line-clamp-1 mt-0.5">
+                  {item.description || '-'}
+                </p>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                    {item.service?.name || '-'}
+                  </span>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => openModal(item)}
+                      className="p-1.5 hover:bg-border rounded-lg"
+                    >
+                      <Edit2 className="w-4 h-4 text-gray-light" />
+                    </button>
+                    <button
+                      onClick={() => deletePortfolio(item.id)}
+                      className="p-1.5 hover:bg-danger/10 rounded-lg"
+                    >
+                      <Trash2 className="w-4 h-4 text-danger" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+        {portfolios.length === 0 && (
+          <div className="bg-card border border-border rounded-xl p-12 text-center text-gray-light">
+            Belum ada portfolio
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: Table Layout */}
+      <div className="hidden sm:block bg-card border border-border overflow-hidden rounded-xl">
         <table className="w-full">
           <thead className="bg-ink">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray w-12"></th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray w-10"></th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Gambar</th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Judul</th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Kategori</th>
@@ -206,52 +337,59 @@ export default function PortfoliosPage() {
           </thead>
           <tbody className="divide-y divide-border">
             {portfolios.map((item) => (
-              <tr key={item.id} className="hover:bg-ink">
-                <td className="px-4 py-3 text-border">
-                  <GripVertical className="w-4 h-4" />
+              <tr key={item.id} className="hover:bg-ink/50 transition-colors">
+                <td className="px-4 py-3">
+                  <GripVertical className="w-4 h-4 text-gray-dark" />
                 </td>
                 <td className="px-4 py-3">
-                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-dark border border-border">
-                    <img
-                      src={getImageUrl(item.image_url)}
-                      alt={item.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
+                  <div className="w-14 h-14 rounded-lg overflow-hidden bg-dark border border-border">
+                    {item.image_url ? (
+                      <img
+                        src={getImageUrl(item.image_url)}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ImageIcon className="w-5 h-5 text-gray-dark" />
+                      </div>
+                    )}
                   </div>
                 </td>
                 <td className="px-4 py-3">
                   <p className="font-semibold text-white">{item.title}</p>
-                  <p className="text-gray text-sm line-clamp-1">
+                  <p className="text-gray-light text-sm line-clamp-1">
                     {item.description || '-'}
                   </p>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                  <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                     {item.service?.name || '-'}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-center">
                   <button
                     onClick={() => toggleFeatured(item.id, item.is_featured)}
-                    className={`p-1 rounded-full transition-colors ${
-                      item.is_featured ? 'text-yellow' : 'text-border hover:text-gray'
-                    }`}
+                    className="p-1.5 rounded-full transition-colors"
                   >
-                    <Star className="w-5 h-5" fill={item.is_featured ? 'currentColor' : 'none'} />
+                    <Star
+                      className={`w-5 h-5 ${item.is_featured ? 'text-amber-400' : 'text-gray-dark hover:text-gray-light'}`}
+                      fill={item.is_featured ? 'currentColor' : 'none'}
+                    />
                   </button>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-end gap-1">
                     <button
                       onClick={() => openModal(item)}
-                      className="p-2 hover:bg-border rounded-lg"
+                      className="p-2 hover:bg-border rounded-lg transition-colors"
                     >
-                      <Edit2 className="w-4 h-4 text-gray" />
+                      <Edit2 className="w-4 h-4 text-gray-light" />
                     </button>
                     <button
                       onClick={() => deletePortfolio(item.id)}
-                      className="p-2 hover:bg-danger/10 rounded-lg"
+                      className="p-2 hover:bg-danger/10 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4 text-danger" />
                     </button>
@@ -261,7 +399,7 @@ export default function PortfoliosPage() {
             ))}
             {portfolios.length === 0 && (
               <tr>
-                <td colSpan="6" className="px-4 py-12 text-center text-gray">
+                <td colSpan="6" className="px-4 py-12 text-center text-gray-light">
                   Belum ada portfolio
                 </td>
               </tr>
@@ -270,15 +408,43 @@ export default function PortfoliosPage() {
         </table>
       </div>
 
+      {/* Pagination */}
+      {pagination.last_page > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <p className="text-gray-light text-sm">
+            Menampilkan {(pagination.current_page - 1) * pagination.per_page + 1}–{Math.min(pagination.current_page * pagination.per_page, pagination.total)} dari {pagination.total} portfolio
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={pagination.current_page === 1}
+              className="p-2 rounded-lg bg-card border border-border text-gray-light hover:text-white hover:bg-border disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-gray-light text-sm px-2">
+              {pagination.current_page} / {pagination.last_page}
+            </span>
+            <button
+              onClick={() => setPage(p => Math.min(pagination.last_page, p + 1))}
+              disabled={pagination.current_page === pagination.last_page}
+              className="p-2 rounded-lg bg-card border border-border text-gray-light hover:text-white hover:bg-border disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="bg-card border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl">
             <div className="flex items-center justify-between p-6 border-b border-border">
               <h3 className="font-heading text-xl font-bold text-white">
                 {editingId ? 'Edit Portfolio' : 'Tambah Portfolio'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-border rounded-lg">
-                <X className="w-5 h-5 text-gray" />
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-border rounded-xl">
+                <X className="w-5 h-5 text-gray-light" />
               </button>
             </div>
 
@@ -323,8 +489,8 @@ export default function PortfoliosPage() {
                   <button
                     type="button"
                     onClick={() => setImageMode('url')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      imageMode === 'url' ? 'bg-primary text-white' : 'bg-dark border border-border text-gray hover:text-white'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                      imageMode === 'url' ? 'bg-primary text-white' : 'bg-dark border border-border text-gray-light hover:text-white'
                     }`}
                   >
                     <LinkIcon className="w-4 h-4" />
@@ -333,8 +499,8 @@ export default function PortfoliosPage() {
                   <button
                     type="button"
                     onClick={() => setImageMode('upload')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      imageMode === 'upload' ? 'bg-primary text-white' : 'bg-dark border border-border text-gray hover:text-white'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                      imageMode === 'upload' ? 'bg-primary text-white' : 'bg-dark border border-border text-gray-light hover:text-white'
                     }`}
                   >
                     <Upload className="w-4 h-4" />
@@ -371,9 +537,9 @@ export default function PortfoliosPage() {
                       <img src={imagePreview} alt="Preview" className="max-h-40 mx-auto rounded-lg" />
                     ) : (
                       <>
-                        <Upload className="w-8 h-8 text-gray mx-auto mb-2" />
-                        <p className="text-gray text-sm">Klik atau seret gambar ke sini</p>
-                        <p className="text-border text-xs mt-1">JPG, PNG, WebP (max 5MB)</p>
+                        <Upload className="w-8 h-8 text-gray-light mx-auto mb-2" />
+                        <p className="text-gray-light text-sm">Klik atau seret gambar ke sini</p>
+                        <p className="text-gray-dark text-xs mt-1">JPG, PNG, WebP (max 5MB)</p>
                       </>
                     )}
                   </div>

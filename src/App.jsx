@@ -22,6 +22,10 @@ import OrderDetailPage from './pages/admin/OrderDetailPage';
 import PaymentsPage from './pages/admin/PaymentsPage';
 import ServicesPage from './pages/admin/ServicesPage';
 import PortfoliosPage from './pages/admin/PortfoliosPage';
+import ColorsPage from './pages/admin/ColorsPage';
+import SizesPage from './pages/admin/SizesPage';
+import TestimonialsPage from './pages/admin/TestimonialsPage';
+import SettingsPage from './pages/admin/SettingsPage';
 import ReportsPage from './pages/admin/ReportsPage';
 import AuthModal from './components/ui/AuthModal';
 import { ToastProvider } from './components/ui/Toast';
@@ -125,6 +129,10 @@ function AppContent() {
           <Route path="pembayaran" element={<PaymentsPage />} />
           <Route path="layanan" element={<ServicesPage />} />
           <Route path="portfolio" element={<PortfoliosPage />} />
+          <Route path="warna" element={<ColorsPage />} />
+          <Route path="ukuran" element={<SizesPage />} />
+          <Route path="testimoni" element={<TestimonialsPage />} />
+          <Route path="pengaturan" element={<SettingsPage />} />
           <Route path="laporan" element={<ReportsPage />} />
         </Route>
 

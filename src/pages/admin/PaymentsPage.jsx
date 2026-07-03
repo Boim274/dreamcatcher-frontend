@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { StatusBadge } from '../../components/common/StatusBadge';
 import { useToast } from '../../components/ui/Toast';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, CreditCard, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
@@ -22,16 +23,38 @@ export default function PaymentsPage() {
   const [rejectNotes, setRejectNotes] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(null);
   const [confirmVerify, setConfirmVerify] = useState({ show: false, id: null });
+  const [pagination, setPagination] = useState(null);
+  const [filters, setFilters] = useState({ search: '', status: '', date_from: '', date_to: '' });
 
   useEffect(() => {
-    fetchPayments();
-  }, []);
+    fetchPayments(1);
+  }, [filters.status]);
 
-  const fetchPayments = async () => {
+  const handleFilter = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    if (key !== 'search') fetchPayments(1, { ...filters, [key]: value });
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') fetchPayments(1, filters);
+  };
+
+  const fetchPayments = async (page = 1, overrideFilters) => {
     try {
-      const response = await api.get('/admin/payments');
+      const f = overrideFilters || filters;
+      const params = { page };
+      if (f.search) params.search = f.search;
+      if (f.status) params.status = f.status;
+      if (f.date_from) params.date_from = f.date_from;
+      if (f.date_to) params.date_to = f.date_to;
+      const response = await api.get('/admin/payments', { params });
       const data = response.data.payments;
-      setPayments(Array.isArray(data) ? data : (data?.data || []));
+      setPayments(data.data || data);
+      setPagination({
+        current_page: data.current_page,
+        last_page: data.last_page,
+        total: data.total,
+      });
     } catch (error) {
       console.error('Failed to fetch payments:', error);
       setPayments([]);
@@ -51,7 +74,7 @@ export default function PaymentsPage() {
     try {
       await api.patch(`/admin/payments/${id}/verify`);
       toast.success('Pembayaran berhasil diverifikasi');
-      await fetchPayments();
+      fetchPayments(pagination?.current_page || 1);
     } catch (error) {
       toast.error('Gagal memverifikasi pembayaran');
     } finally {
@@ -71,7 +94,7 @@ export default function PaymentsPage() {
       setShowRejectModal(null);
       setRejectNotes('');
       toast.success('Pembayaran ditolak');
-      await fetchPayments();
+      fetchPayments(pagination?.current_page || 1);
     } catch (error) {
       toast.error('Gagal menolak pembayaran');
     } finally {
@@ -103,6 +126,49 @@ export default function PaymentsPage() {
     <div>
       <h1 className="font-heading text-[28px] text-white tracking-[1px] mb-8">Kelola Pembayaran</h1>
 
+      <div className="bg-card border border-border p-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="sm:col-span-2 lg:col-span-1">
+            <div className="input-icon-wrapper">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+              <input
+                type="text"
+                value={filters.search}
+                onChange={(e) => handleFilter('search', e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Cari kode order / nama..."
+                className="input-dark"
+              />
+            </div>
+          </div>
+
+          <select
+            value={filters.status}
+            onChange={(e) => handleFilter('status', e.target.value)}
+            className="input-dark"
+          >
+            <option value="">Semua Status</option>
+            <option value="pending">Menunggu</option>
+            <option value="verified">Terverifikasi</option>
+            <option value="rejected">Ditolak</option>
+          </select>
+
+          <input
+            type="date"
+            value={filters.date_from}
+            onChange={(e) => handleFilter('date_from', e.target.value)}
+            className="input-dark"
+          />
+
+          <input
+            type="date"
+            value={filters.date_to}
+            onChange={(e) => handleFilter('date_to', e.target.value)}
+            className="input-dark"
+          />
+        </div>
+      </div>
+
       {pendingPayments.length > 0 && (
         <div className="bg-card border border-border p-4 mb-8">
           <div className="flex items-center gap-3">
@@ -116,13 +182,14 @@ export default function PaymentsPage() {
 
       {payments.length === 0 ? (
         <div className="bg-card border border-border py-20 text-center">
+          <CreditCard size={32} className="text-gray-medium mx-auto mb-3" />
           <p className="text-gray">Belum ada data pembayaran</p>
         </div>
       ) : (
         <div className="space-y-4">
           {payments.map((payment) => (
             <div key={payment.id} className="bg-card border border-border p-6">
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="flex gap-4">
                   {payment.payment_proof && (
                     <img
@@ -152,17 +219,13 @@ export default function PaymentsPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-2">
-                  <span className={`badge ${
-                    payment.payment_status === 'verified' ? 'badge-completed' :
-                    payment.payment_status === 'pending' ? 'badge-waiting' : 'badge-cancelled'
-                  }`}>
-                    {payment.payment_status === 'verified' ? 'Terverifikasi' :
-                     payment.payment_status === 'pending' ? 'Menunggu' : 'Ditolak'}
-                  </span>
+                <div className="flex flex-col sm:items-end gap-2">
+                  <StatusBadge
+                    status={payment.payment_status === 'verified' ? 'completed' : payment.payment_status === 'pending' ? 'waiting_payment' : 'cancelled'}
+                  />
 
                   {payment.payment_status === 'pending' && (
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex flex-col sm:flex-row gap-2 mt-4">
                       <button
                         onClick={() => verifyPayment(payment.id)}
                         disabled={actionLoading === payment.id}
@@ -203,6 +266,33 @@ export default function PaymentsPage() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {pagination && payments.length > 0 && (
+        <div className="flex items-center justify-between mt-4">
+          <p className="text-gray text-sm">
+            Menampilkan {payments.length} dari {pagination.total} pembayaran
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => fetchPayments(pagination.current_page - 1)}
+              disabled={pagination.current_page === 1}
+              className="p-2 rounded-lg hover:bg-border disabled:opacity-50 text-gray-light disabled:text-gray-medium"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <span className="px-4 py-2 bg-ink border border-border rounded-lg text-gray-light text-sm">
+              {pagination.current_page} / {pagination.last_page}
+            </span>
+            <button
+              onClick={() => fetchPayments(pagination.current_page + 1)}
+              disabled={pagination.current_page === pagination.last_page}
+              className="p-2 rounded-lg hover:bg-border disabled:opacity-50 text-gray-light disabled:text-gray-medium"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       )}
 

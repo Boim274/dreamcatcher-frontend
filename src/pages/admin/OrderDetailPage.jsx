@@ -21,6 +21,7 @@ const statusOptions = [
   { value: 'waiting_payment', label: 'Menunggu Pembayaran', icon: Clock, color: 'yellow' },
   { value: 'paid', label: 'Lunas', icon: CheckCircle, color: 'blue' },
   { value: 'processed', label: 'Diproses', icon: Package, color: 'purple' },
+  { value: 'delivered', label: 'Dikirim / Siap Diambil', icon: Truck, color: 'purple' },
   { value: 'completed', label: 'Selesai', icon: CheckCircle, color: 'green' },
   { value: 'cancelled', label: 'Batal', icon: XCircle, color: 'red' },
   { value: 'cancel_requested', label: 'Menunggu Pembatalan', icon: Ban, color: 'orange' },
@@ -109,20 +110,20 @@ export default function OrderDetailPage() {
   if (!order) {
     return (
       <div className="text-center py-20">
-        <p className="text-text-secondary">Pesanan tidak ditemukan</p>
-        <Link to="/admin/pesanan" className="btn-primary mt-4">Kembali</Link>
+        <p className="text-gray">Pesanan tidak ditemukan</p>
+        <Link to="/admin/pesanan" className="btn-primary mt-4 inline-block">Kembali</Link>
       </div>
     );
   }
 
   return (
     <div>
-      <Link to="/admin/pesanan" className="inline-flex items-center gap-2 text-text-secondary hover:text-primary mb-6">
+      <Link to="/admin/pesanan" className="inline-flex items-center gap-2 text-gray-light hover:text-primary mb-6">
         <ArrowLeft className="w-5 h-5" />
         Kembali ke Daftar Pesanan
       </Link>
 
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="font-heading text-[28px] text-white tracking-[1px]">Detail Pesanan</h1>
           <p className="text-gray">Kode: <span className="font-mono font-bold text-primary">{order.order_code}</span></p>
@@ -174,19 +175,19 @@ export default function OrderDetailPage() {
 
           {/* Cancel Request Alert */}
           {order.status === 'cancel_requested' && (
-            <div className="mb-4 p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+            <div className="mb-4 p-4 bg-warning/10 border border-warning/30 rounded-lg">
               <div className="flex items-center gap-2 mb-3">
-                <Ban className="w-5 h-5 text-orange-400" />
-                <p className="text-orange-400 font-semibold text-sm">Permintaan Pembatalan</p>
+                <Ban className="w-5 h-5 text-warning" />
+                <p className="text-warning font-semibold text-sm">Permintaan Pembatalan</p>
               </div>
-              <p className="text-orange-400/70 text-xs mb-4">
-                Customer meminta pembataran pesanan ini. Pilih tindakan:
+              <p className="text-warning/70 text-xs mb-4">
+                Customer meminta pembatalan pesanan ini. Pilih tindakan:
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setConfirmCancelAction({ show: true, action: 'approve' })}
                   disabled={updating}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors text-[13px] disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-danger hover:bg-danger/80 text-white font-semibold rounded-lg transition-colors text-[13px] disabled:opacity-50"
                 >
                   <XCircle className="w-4 h-4" /> Setujui Pembatalan
                 </button>
@@ -228,7 +229,8 @@ export default function OrderDetailPage() {
 
       <div className="bg-card border border-border p-6 mt-6">
         <h2 className="font-semibold mb-4 text-white">Item Pesanan</h2>
-        <table className="w-full">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[500px]">
           <thead className="bg-ink">
             <tr>
               <th className="px-4 py-3 text-left text-gray">Layanan</th>
@@ -242,11 +244,11 @@ export default function OrderDetailPage() {
           <tbody className="divide-y divide-border">
             {order.items?.map((item) => (
               <tr key={item.id}>
-                <td className="px-4 py-3 text-[#ccc]">{item.service?.name || '-'}</td>
+                <td className="px-4 py-3 text-gray-light">{item.service?.name || '-'}</td>
                 <td className="px-4 py-3 text-white">{item.product_name}</td>
-                <td className="px-4 py-3 text-[#ccc]">{item.size || '-'}</td>
-                <td className="px-4 py-3 text-right text-[#ccc]">{item.quantity}</td>
-                <td className="px-4 py-3 text-right text-[#ccc]">{formatRupiah(item.unit_price)}</td>
+                <td className="px-4 py-3 text-gray-light">{item.size || '-'}</td>
+                <td className="px-4 py-3 text-right text-gray-light">{item.quantity}</td>
+                <td className="px-4 py-3 text-right text-gray-light">{formatRupiah(item.unit_price)}</td>
                 <td className="px-4 py-3 text-right font-bold text-white">{formatRupiah(item.subtotal)}</td>
               </tr>
             ))}
@@ -268,6 +270,7 @@ export default function OrderDetailPage() {
             </tr>
           </tfoot>
         </table>
+        </div>
       </div>
 
       {order.payments?.length > 0 && (
@@ -285,12 +288,7 @@ export default function OrderDetailPage() {
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-lg text-white">{formatRupiah(payment.amount)}</p>
-                    <span className={`badge ${
-                      payment.payment_status === 'verified' ? 'badge-completed' :
-                      payment.payment_status === 'pending' ? 'badge-waiting' : 'badge-cancelled'
-                    }`}>
-                      {payment.payment_status}
-                    </span>
+                    <StatusBadge status={payment.payment_status === 'verified' ? 'completed' : payment.payment_status === 'pending' ? 'waiting_payment' : 'cancelled'} />
                   </div>
                 </div>
                 {payment.payment_proof && (
@@ -323,7 +321,7 @@ export default function OrderDetailPage() {
                   {item.design.is_valid ? 'Valid - Siap Produksi' : 'Perlu Revisi'}
                 </p>
                 {item.design.validation_message && (
-                  <p className="text-text-secondary text-sm mt-1 whitespace-pre-line">
+                  <p className="text-gray-light text-sm mt-1 whitespace-pre-line">
                     {item.design.validation_message}
                   </p>
                 )}

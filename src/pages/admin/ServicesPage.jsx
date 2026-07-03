@@ -3,7 +3,7 @@ import api from '../../services/api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useToast } from '../../components/ui/Toast';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { Plus, Edit2, Trash2, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 
 const defaultOptionsConfig = {
@@ -38,15 +38,37 @@ export default function ServicesPage() {
     options_config: { ...defaultOptionsConfig },
   });
   const [saving, setSaving] = useState(false);
+  const [pagination, setPagination] = useState(null);
+  const [filters, setFilters] = useState({ search: '', pricing_type: '', is_active: '' });
 
   const [confirmDelete, setConfirmDelete] = useState({ show: false, id: null });
 
-  useEffect(() => { fetchServices(); }, []);
+  useEffect(() => { fetchServices(1); }, [filters.pricing_type, filters.is_active]);
 
-  const fetchServices = async () => {
+  const handleFilter = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    if (key !== 'search') fetchServices(1, { ...filters, [key]: value });
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') fetchServices(1, filters);
+  };
+
+  const fetchServices = async (page = 1, overrideFilters) => {
     try {
-      const response = await api.get('/admin/services');
-      setServices(response.data.services);
+      const f = overrideFilters || filters;
+      const params = { page };
+      if (f.search) params.search = f.search;
+      if (f.pricing_type) params.pricing_type = f.pricing_type;
+      if (f.is_active) params.is_active = f.is_active;
+      const response = await api.get('/admin/services', { params });
+      const data = response.data.services;
+      setServices(data.data || data);
+      setPagination({
+        current_page: data.current_page,
+        last_page: data.last_page,
+        total: data.total,
+      });
     } catch (error) {
       console.error('Failed to fetch services:', error);
     } finally {
@@ -202,7 +224,7 @@ export default function ServicesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <h1 className="font-heading text-[28px] text-white tracking-[1px]">Kelola Layanan</h1>
         <button onClick={() => openModal()} className="btn-primary flex items-center gap-2">
           <Plus className="w-5 h-5" />
@@ -210,8 +232,46 @@ export default function ServicesPage() {
         </button>
       </div>
 
-      <div className="bg-card border border-border overflow-hidden">
-        <table className="w-full">
+      <div className="bg-card border border-border p-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="sm:col-span-2 lg:col-span-1">
+            <div className="input-icon-wrapper">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+              <input
+                type="text"
+                value={filters.search}
+                onChange={(e) => handleFilter('search', e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Cari nama layanan..."
+                className="input-dark"
+              />
+            </div>
+          </div>
+
+          <select
+            value={filters.pricing_type}
+            onChange={(e) => handleFilter('pricing_type', e.target.value)}
+            className="input-dark"
+          >
+            <option value="">Semua Tipe</option>
+            <option value="flat">Flat</option>
+            <option value="tiered">Tiered</option>
+          </select>
+
+          <select
+            value={filters.is_active}
+            onChange={(e) => handleFilter('is_active', e.target.value)}
+            className="input-dark"
+          >
+            <option value="">Semua Status</option>
+            <option value="1">Aktif</option>
+            <option value="0">Nonaktif</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="bg-card border border-border overflow-hidden overflow-x-auto">
+        <table className="w-full min-w-[600px]">
           <thead className="bg-ink">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Nama</th>
@@ -229,8 +289,8 @@ export default function ServicesPage() {
                   <p className="font-semibold text-white">{service.name}</p>
                   <p className="text-gray text-sm line-clamp-1">{service.description || '-'}</p>
                 </td>
-                <td className="px-4 py-3 text-[#ccc]">{formatRupiah(service.base_price)}</td>
-                <td className="px-4 py-3 text-[#ccc]">{service.minimum_order} pcs</td>
+                <td className="px-4 py-3 text-gray-light">{formatRupiah(service.base_price)}</td>
+                <td className="px-4 py-3 text-gray-light">{service.minimum_order} pcs</td>
                 <td className="px-4 py-3">
                   <span className={`px-2 py-1 text-[11px] font-semibold rounded uppercase ${
                     service.pricing_type === 'tiered' ? 'bg-fire/20 text-fire' : 'bg-primary/20 text-primary'
@@ -240,8 +300,8 @@ export default function ServicesPage() {
                 </td>
                 <td className="px-4 py-3">
                   <button onClick={() => toggleActive(service.id, service.is_active)}
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      service.is_active ? 'bg-green-500/10 text-green-400' : 'bg-border text-gray'
+                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                      service.is_active ? 'bg-success/20 text-success hover:bg-success/30' : 'bg-border text-gray hover:bg-border/80'
                     }`}>
                     {service.is_active ? 'Aktif' : 'Nonaktif'}
                   </button>
@@ -261,6 +321,33 @@ export default function ServicesPage() {
           </tbody>
         </table>
       </div>
+
+      {pagination && (
+        <div className="flex items-center justify-between mt-4">
+          <p className="text-gray text-sm">
+            Menampilkan {services.length} dari {pagination.total} layanan
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => fetchServices(pagination.current_page - 1)}
+              disabled={pagination.current_page === 1}
+              className="p-2 rounded-lg hover:bg-border disabled:opacity-50 text-gray-light disabled:text-gray-medium"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <span className="px-4 py-2 bg-ink border border-border rounded-lg text-gray-light text-sm">
+              {pagination.current_page} / {pagination.last_page}
+            </span>
+            <button
+              onClick={() => fetchServices(pagination.current_page + 1)}
+              disabled={pagination.current_page === pagination.last_page}
+              className="p-2 rounded-lg hover:bg-border disabled:opacity-50 text-gray-light disabled:text-gray-medium"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -287,7 +374,7 @@ export default function ServicesPage() {
                   className="input-dark min-h-[80px] resize-none" />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Harga Dasar (Rp)</label>
                   <input type="number" value={form.base_price} onChange={(e) => setForm({ ...form, base_price: e.target.value })}

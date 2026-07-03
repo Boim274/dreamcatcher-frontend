@@ -255,18 +255,18 @@ export default function PricelistPage() {
           <ScrollReveal direction="blur">
             <div className="mt-12 bg-card border border-border rounded-xl p-6">
               <h3 className="font-heading text-[22px] text-white tracking-[1px] mb-4">Catatan</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex flex-wrap gap-6">
                 {[
                   { icon: 'truck', text: 'Ongkos kirim Rp 15.000 untuk area Bekasi' },
                   { icon: 'credit-card', text: 'DP 50% diperlukan untuk memulai produksi' },
                   { icon: 'clock', text: 'Waktu produksi 3-7 hari kerja' },
                   { icon: 'alert-triangle', text: 'Harga dapat berubah sewaktu-waktu' },
                 ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Icon name={item.icon} size={16} className="text-fire" />
+                  <div key={i} className="flex items-center gap-3 w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Icon name={item.icon} size={18} className="text-fire" />
                     </div>
-                    <p className="text-gray text-[13px] leading-[1.6]">{item.text}</p>
+                    <p className="text-gray text-[14px] leading-[1.6]">{item.text}</p>
                   </div>
                 ))}
               </div>
@@ -275,10 +275,16 @@ export default function PricelistPage() {
 
           {/* CTA */}
           <ScrollReveal direction="blur">
-            <div className="mt-12 bg-ink p-8 text-center">
-              <h3 className="font-heading text-[28px] text-white tracking-[1px] mb-3">BUTUH KONSULTASI HARGA?</h3>
-              <p className="text-gray text-[14px] mb-6">Hubungi kami untuk harga custom, partai besar, dan pertanyaan lainnya</p>
-              <a target='_blank' href="https://wa.me/6287877294587" className="btn-acid">
+            <div className="mt-12 bg-ink p-8 text-center rounded-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="text-center sm:text-left">
+                <h3 className="font-heading text-[24px] sm:text-[28px] text-white tracking-[1px] mb-3">BUTUH KONSULTASI HARGA?</h3>
+                <p className="text-gray text-[14px]">Hubungi kami untuk harga custom, partai besar, dan pertanyaan lainnya</p>
+              </div>
+              <a
+                target="_blank"
+                href="https://wa.me/6287877294587"
+                className="btn-acid px-6 py-3 text-[14px] sm:text-[16px]"
+              >
                 Chat via WhatsApp
               </a>
             </div>

@@ -1,16 +1,17 @@
-import { useState } from 'react';
-import { X, User, Lock, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, User, Lock, Loader2, Pencil } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useToast } from '../ui/Toast';
 
-export default function AdminProfileModal({ isOpen, onClose }) {
+export default function AdminProfileModal({ isOpen, onClose, initialTab = 'profile' }) {
   const { user, updateProfile, changePassword } = useAuthStore();
   const toast = useToast();
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [profileForm, setProfileForm] = useState({
-    name: user?.name || '',
-    phone: user?.phone || '',
+    name: '',
+    phone: '',
   });
   const [profileLoading, setProfileLoading] = useState(false);
 
@@ -22,6 +23,24 @@ export default function AdminProfileModal({ isOpen, onClose }) {
   const [pwLoading, setPwLoading] = useState(false);
   const [pwErrors, setPwErrors] = useState({});
 
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        name: user.name || '',
+        phone: user.phone || '',
+      });
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(initialTab);
+      setIsEditing(false);
+      setPwForm({ current_password: '', password: '', password_confirmation: '' });
+      setPwErrors({});
+    }
+  }, [isOpen, initialTab]);
+
   if (!isOpen) return null;
 
   const handleProfileSubmit = async (e) => {
@@ -30,7 +49,7 @@ export default function AdminProfileModal({ isOpen, onClose }) {
     try {
       await updateProfile(profileForm);
       toast.success('Profil berhasil diperbarui');
-      onClose();
+      setIsEditing(false);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Gagal memperbarui profil');
     } finally {
@@ -96,44 +115,70 @@ export default function AdminProfileModal({ isOpen, onClose }) {
 
         <div className="p-6">
           {activeTab === 'profile' ? (
-            <form onSubmit={handleProfileSubmit} className="space-y-4">
-              <div>
-                <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Email</label>
-                <input
-                  type="email"
-                  value={user?.email || ''}
-                  disabled
-                  className="input-dark opacity-50 cursor-not-allowed"
-                />
-                <p className="text-gray text-xs mt-1">Email tidak dapat diubah</p>
-              </div>
-              <div>
-                <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Nama</label>
-                <input
-                  type="text"
-                  value={profileForm.name}
-                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                  className="input-dark"
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">No. HP</label>
-                <input
-                  type="text"
-                  value={profileForm.phone}
-                  onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                  className="input-dark"
-                />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={onClose} className="btn-secondary flex-1">Batal</button>
-                <button type="submit" disabled={profileLoading} className="btn-primary flex-1 flex items-center justify-center gap-2">
-                  {profileLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Simpan
+            isEditing ? (
+              <form onSubmit={handleProfileSubmit} className="space-y-4">
+                <div>
+                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Email</label>
+                  <input
+                    type="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="input-dark opacity-50 cursor-not-allowed"
+                  />
+                  <p className="text-gray text-xs mt-1">Email tidak dapat diubah</p>
+                </div>
+                <div>
+                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Nama</label>
+                  <input
+                    type="text"
+                    value={profileForm.name}
+                    onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                    className="input-dark"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">No. HP</label>
+                  <input
+                    type="text"
+                    value={profileForm.phone}
+                    onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                    className="input-dark"
+                    placeholder="081234567890"
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setIsEditing(false)} className="btn-secondary flex-1">Batal</button>
+                  <button type="submit" disabled={profileLoading} className="btn-primary flex-1 flex items-center justify-center gap-2">
+                    {profileLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Simpan
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-ink rounded-lg p-4 space-y-3">
+                  <div>
+                    <p className="text-gray text-[11px] uppercase tracking-[1px] mb-0.5">Nama</p>
+                    <p className="text-white text-[14px] font-medium">{user?.name || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray text-[11px] uppercase tracking-[1px] mb-0.5">Email</p>
+                    <p className="text-white text-[14px] font-medium">{user?.email || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray text-[11px] uppercase tracking-[1px] mb-0.5">No. HP</p>
+                    <p className="text-white text-[14px] font-medium">{user?.phone || <span className="text-gray italic">Belum diisi</span>}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="w-full flex items-center justify-center gap-2 bg-primary text-white font-semibold py-3 rounded-xl hover:bg-primary-dark transition-colors text-[13px] uppercase tracking-[1px]"
+                >
+                  <Pencil className="w-4 h-4" /> Edit Profil
                 </button>
               </div>
-            </form>
+            )
           ) : (
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div>

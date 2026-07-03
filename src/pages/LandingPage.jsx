@@ -9,6 +9,7 @@ import Icon from '../components/ui/Icon';
 import ServiceIcon from '../components/ui/ServiceIcons';
 import ScrollReveal from '../components/ui/ScrollReveal';
 import PortfolioCarousel from '../components/common/PortfolioCarousel';
+import TestimonialCarousel from '../components/common/TestimonialCarousel';
 import api from '../services/api';
 import { formatRupiah } from '../utils/formatRupiah';
 
@@ -54,15 +55,18 @@ function FAQItem({ question, answer }) {
 export default function LandingPage() {
   const [services, setServices] = useState([]);
   const [portfolios, setPortfolios] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       api.get('/services').catch(() => ({ data: { services: [] } })),
-      api.get('/portfolios').catch(() => ({ data: { portfolios: [] } })),
-    ]).then(([servicesRes, portfoliosRes]) => {
+      api.get('/portfolios/featured').catch(() => ({ data: { portfolios: [] } })),
+      api.get('/testimonials').catch(() => ({ data: { testimonials: [] } })),
+    ]).then(([servicesRes, portfoliosRes, testimonialsRes]) => {
       setServices(servicesRes.data?.services || []);
       setPortfolios(portfoliosRes.data?.portfolios || []);
+      setTestimonials(testimonialsRes.data?.testimonials || []);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -250,6 +254,27 @@ export default function LandingPage() {
               <ScrollReveal direction="blur" delay={200}>
                 <PortfolioCarousel portfolios={portfolios} />
               </ScrollReveal>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ==================== TESTIMONIALS ==================== */}
+      <section className="bg-[#f8f4ec] px-[5%] py-20 relative overflow-hidden">
+        <div className="font-heading text-[200px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#e0d8cc] opacity-50 whitespace-nowrap pointer-events-none select-none">
+          TRUST
+        </div>
+        <div className="relative z-[1] max-w-7xl mx-auto">
+          <ScrollReveal>
+            <div className="section-tag">&mdash; kata mereka</div>
+            <h2 className="section-title">TESTIMONI</h2>
+            <div className="divider"></div>
+            <p className="section-sub">Apa kata pelanggan kami tentang kualitas dan pelayanan kami.</p>
+          </ScrollReveal>
+
+          {testimonials.length > 0 && (
+            <div className="mt-12">
+              <TestimonialCarousel testimonials={testimonials} />
             </div>
           )}
         </div>

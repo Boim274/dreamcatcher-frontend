@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { Search, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Eye, ChevronLeft, ChevronRight, ShoppingBag } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 
 export default function OrdersPage() {
@@ -54,8 +54,8 @@ export default function OrdersPage() {
       <h1 className="font-heading text-[28px] text-white tracking-[1px] mb-8">Kelola Pesanan</h1>
 
       <div className="bg-card border border-border p-6 mb-6">
-        <div className="flex flex-wrap gap-4">
-          <div className="flex-1 min-w-[200px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="sm:col-span-2 lg:col-span-1">
             <div className="input-icon-wrapper">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
               <input
@@ -71,7 +71,7 @@ export default function OrdersPage() {
           <select
             value={filters.status}
             onChange={(e) => handleFilter('status', e.target.value)}
-            className="input-dark w-auto"
+            className="input-dark"
           >
             <option value="">Semua Status</option>
             <option value="pending">Pending</option>
@@ -86,14 +86,14 @@ export default function OrdersPage() {
             type="date"
             value={filters.date_from}
             onChange={(e) => handleFilter('date_from', e.target.value)}
-            className="input-dark w-auto"
+            className="input-dark"
           />
 
           <input
             type="date"
             value={filters.date_to}
             onChange={(e) => handleFilter('date_to', e.target.value)}
-            className="input-dark w-auto"
+            className="input-dark"
           />
         </div>
       </div>
@@ -101,6 +101,12 @@ export default function OrdersPage() {
       {loading ? (
         <div className="bg-card border border-border py-20">
           <LoadingSpinner size="lg" />
+        </div>
+      ) : orders.length === 0 ? (
+        <div className="bg-card border border-border py-20 text-center">
+          <ShoppingBag size={32} className="text-gray-medium mx-auto mb-3" />
+          <p className="text-gray">Tidak ada pesanan ditemukan</p>
+          <p className="text-gray-medium text-sm mt-1">Coba ubah filter pencarian Anda</p>
         </div>
       ) : (
         <div className="bg-card border border-border overflow-hidden">
@@ -127,7 +133,7 @@ export default function OrdersPage() {
                       <p className="font-medium text-white">{order.customer_name}</p>
                       <p className="text-gray text-sm">{order.phone}</p>
                     </td>
-                    <td className="px-4 py-3 text-sm text-[#ccc]">
+                    <td className="px-4 py-3 text-sm text-gray-light">
                       {order.items?.map((i) => i.service?.name).filter(Boolean).join(', ') || '-'}
                     </td>
                     <td className="px-4 py-3 font-bold text-white">
@@ -163,17 +169,17 @@ export default function OrdersPage() {
                 <button
                   onClick={() => fetchOrders(pagination.current_page - 1)}
                   disabled={pagination.current_page === 1}
-                  className="p-2 rounded-lg hover:bg-border disabled:opacity-50 text-[#ccc]"
+                  className="p-2 rounded-lg hover:bg-border disabled:opacity-50 text-gray-light disabled:text-gray-medium"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <span className="px-4 py-2 bg-ink border border-border rounded-lg text-[#ccc]">
-                  Halaman {pagination.current_page} dari {pagination.last_page}
+                <span className="px-4 py-2 bg-ink border border-border rounded-lg text-gray-light text-sm">
+                  {pagination.current_page} / {pagination.last_page}
                 </span>
                 <button
                   onClick={() => fetchOrders(pagination.current_page + 1)}
                   disabled={pagination.current_page === pagination.last_page}
-                  className="p-2 rounded-lg hover:bg-border disabled:opacity-50 text-[#ccc]"
+                  className="p-2 rounded-lg hover:bg-border disabled:opacity-50 text-gray-light disabled:text-gray-medium"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>

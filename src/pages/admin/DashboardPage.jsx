@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
-import { Spinner } from '../../components/ui/Spinner';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { StatusBadge } from '../../components/common/StatusBadge';
 import {
   ShoppingBag,
   Clock,
@@ -12,20 +13,11 @@ import {
 import { formatRupiah } from '../../utils/formatRupiah';
 
 const statConfig = [
-  { key: 'today_orders', label: 'Pesanan Hari Ini', icon: ShoppingBag, color: 'bg-blue-500' },
-  { key: 'pending_orders', label: 'Menunggu Konfirmasi', icon: Clock, color: 'bg-yellow-500' },
-  { key: 'pending_payments', label: 'Pembayaran Pending', icon: CreditCard, color: 'bg-orange-500' },
-  { key: 'month_revenue', label: 'Pendapatan Bulan Ini', icon: DollarSign, color: 'bg-green-500', format: 'currency' },
+  { key: 'today_orders', label: 'Pesanan Hari Ini', icon: ShoppingBag, color: 'bg-info' },
+  { key: 'pending_orders', label: 'Menunggu Konfirmasi', icon: Clock, color: 'bg-warning' },
+  { key: 'pending_payments', label: 'Pembayaran Pending', icon: CreditCard, color: 'bg-fire' },
+  { key: 'month_revenue', label: 'Pendapatan Bulan Ini', icon: DollarSign, color: 'bg-success', format: 'currency' },
 ];
-
-const statusBadges = {
-  pending: 'bg-gray-100 text-gray-700',
-  waiting_payment: 'bg-yellow-100 text-yellow-700',
-  paid: 'bg-blue-100 text-blue-700',
-  processed: 'bg-purple-100 text-purple-700',
-  completed: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
-};
 
 const statusLabels = {
   pending: 'Pending',
@@ -58,7 +50,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Spinner size="lg" />
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
@@ -79,7 +71,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {statConfig.map((stat) => (
           <div key={stat.key} className="bg-card border border-border p-4 flex items-center gap-4">
             <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center flex-shrink-0`}>
@@ -96,7 +88,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts & Recent Orders */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Recent Orders */}
         <div className="bg-card border border-border p-6">
           <div className="flex items-center justify-between mb-6">
@@ -126,14 +118,17 @@ export default function DashboardPage() {
                     <p className="font-bold text-primary">
                       {formatRupiah(order.total_price)}
                     </p>
-                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusBadges[order.status]}`}>
-                      {statusLabels[order.status]}
-                    </span>
+                    <div className="mt-1">
+                      <StatusBadge status={order.status} />
+                    </div>
                   </div>
                 </Link>
               ))
             ) : (
-              <p className="text-center text-gray py-8">Belum ada pesanan</p>
+              <div className="text-center py-8">
+                <ShoppingBag size={24} className="text-gray-medium mx-auto mb-2" />
+                <p className="text-gray text-sm">Belum ada pesanan</p>
+              </div>
             )}
           </div>
         </div>
@@ -180,7 +175,7 @@ export default function DashboardPage() {
       {/* Status Overview */}
       <div className="bg-card border border-border p-6">
         <h2 className="font-heading text-xl font-semibold mb-6 text-white">Status Pesanan</h2>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 md:gap-4">
           {Object.entries(statusLabels).map(([key, label]) => (
             <div key={key} className="text-center p-4 bg-ink border border-border rounded-xl">
               <p className="font-bold text-2xl text-white">

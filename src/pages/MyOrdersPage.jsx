@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { orderService } from '../services/orderService';
 import { useAuthStore } from '../store/authStore';
@@ -15,8 +15,9 @@ import {
   CheckCircle, Clock, Package, CreditCard, Search, Filter, ShoppingBag,
   ClipboardList, Loader, PartyPopper, XCircle, Phone, Hash, Lock,
   Truck, MapPin, MessageCircle, AlertTriangle, SearchX, Loader2,
-  ChevronDown, ChevronUp, Image as ImageIcon, Ban
+  ChevronDown, ChevronUp, Image as ImageIcon, Ban, Star, Upload, X
 } from 'lucide-react';
+import api from '../services/api';
 
 const getImageUrl = (path) => {
   if (!path) return '';
@@ -30,10 +31,11 @@ const statusSteps = [
   { key: 'waiting_payment', label: 'Menunggu Pembayaran', description: 'Silakan lakukan pembayaran dalam 24 jam.', icon: CreditCard },
   { key: 'paid', label: 'Pembayaran Terverifikasi', description: 'Pembayaran telah dikonfirmasi. Pesanan segera diproses.', icon: CheckCircle },
   { key: 'processed', label: 'Sedang Diproses', description: 'Tim sedang mengerjakan pesanan Anda. Estimasi 3-5 hari kerja.', icon: Loader },
-  { key: 'completed', label: 'Selesai', description: 'Pesanan siap untuk diambil atau sedang dalam pengiriman.', icon: PartyPopper },
+  { key: 'delivered', label: 'Dikirim / Siap Diambil', description: 'Pesanan sedang dikirim atau siap diambil di toko.', icon: Truck },
+  { key: 'completed', label: 'Selesai', description: 'Pesanan telah selesai dan diterima dengan baik.', icon: PartyPopper },
 ];
 
-const statusOrder = ['pending', 'waiting_payment', 'paid', 'processed', 'completed'];
+const statusOrder = ['pending', 'waiting_payment', 'paid', 'processed', 'delivered', 'completed'];
 
 function getProgressPercent(status) {
   const idx = statusOrder.indexOf(status);
@@ -41,7 +43,7 @@ function getProgressPercent(status) {
   return Math.round(((idx + 1) / statusSteps.length) * 100);
 }
 
-function VerticalTimeline({ status }) {
+function VerticalTimeline({ status, deliveryMethod }) {
   const currentIndex = statusOrder.indexOf(status);
 
   if (status === 'cancelled') {
@@ -103,7 +105,12 @@ function VerticalTimeline({ status }) {
                 {step.label}
               </p>
               <p className={`text-[12px] mt-1 leading-relaxed ${isCurrent ? 'text-gray-light' : isFuture ? 'text-gray-medium/80' : 'text-gray-light'}`}>
-                {step.description}
+                {step.key === 'delivered' && deliveryMethod
+                  ? deliveryMethod === 'pickup'
+                    ? 'Pesanan siap diambil di toko. Silakan datang ke toko kami.'
+                    : 'Pesanan sedang dikirim ke alamat Anda. Silakan pantau ekspedisi.'
+                  : step.description
+                }
               </p>
             </div>
           </div>
@@ -214,10 +221,113 @@ function OrderDetailSection({ order }) {
   );
 }
 
-function ActionButtons({ order, onCancelSuccess }) {
+function TestimonialForm({ order, onClose, onSuccess }) {
+  const [rating, setRating] = useState(5);
+  const [review, setReview] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const data = new FormData();
+      data.append('order_id', order.id);
+      data.append('rating', rating);
+      data.append('review', review);
+      if (imageFile) data.append('image', imageFile);
+
+      await api.post('/testimonials', data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      onSuccess();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Gagal mengirim testimoni');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-card border border-border w-full max-w-md rounded-2xl">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h3 className="font-heading text-xl font-bold text-white">Beri Testimoni</h3>
+          <button onClick={onClose} className="p-2 hover:bg-border rounded-xl">
+            <X className="w-5 h-5 text-gray-light" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <p className="text-gray-light text-sm">
+            Pesanan <span className="text-primary font-mono font-bold">#{order.order_code}</span>
+          </p>
+
+          <div>
+            <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Rating</label>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <button key={i} type="button" onClick={() => setRating(i)}>
+                  <Star
+                    className={`w-8 h-8 transition-colors ${i <= rating ? 'text-amber-400' : 'text-gray-dark hover:text-gray-light'}`}
+                    fill={i <= rating ? 'currentColor' : 'none'}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Review</label>
+            <textarea
+              value={review}
+              onChange={(e) => setReview(e.target.value)}
+              className="input-dark min-h-[100px] resize-none"
+              placeholder="Ceritakan pengalaman Anda..."
+            />
+          </div>
+
+          <div>
+            <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Foto (Opsional)</label>
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => {
+              const f = e.target.files[0];
+              if (f) { setImageFile(f); setImagePreview(URL.createObjectURL(f)); }
+            }} className="hidden" />
+            <div className="flex gap-3 items-center">
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="px-4 py-2 rounded-xl bg-dark border border-border text-gray-light hover:text-white text-sm font-medium flex items-center gap-2">
+                <Upload className="w-4 h-4" /> Pilih Foto
+              </button>
+              {imagePreview && <img src={imagePreview} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-border" />}
+            </div>
+          </div>
+
+          <p className="text-gray-dark text-xs">Testimoni akan ditinjau admin sebelum tampil di halaman utama.</p>
+
+          <div className="flex gap-4 pt-2">
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">Batal</button>
+            <button type="submit" disabled={saving} className="btn-primary flex-1">
+              {saving ? <LoadingSpinner size="sm" /> : 'Kirim'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ActionButtons({ order, onCancelSuccess, onTestimonialSuccess }) {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showTestimonial, setShowTestimonial] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const canCancel = ['pending', 'waiting_payment'].includes(order.status);
+
+  const totalPaid = order.payments
+    ?.filter(p => p.payment_status === 'verified')
+    .reduce((sum, p) => sum + parseFloat(p.amount), 0) || 0;
+  const remaining = Math.max(order.total_price - totalPaid, 0);
+  const hasDP = order.payments?.some(p => p.payment_type === 'dp' && p.payment_status === 'verified');
+  const needsPelunasan = order.status === 'completed' && hasDP && remaining > 0;
 
   const handleCancel = async () => {
     setCancelling(true);
@@ -259,7 +369,35 @@ function ActionButtons({ order, onCancelSuccess }) {
         >
           <MessageCircle className="w-4 h-4" /> Hubungi Admin
         </a>
+        {order.status === 'completed' && (
+          <button
+            onClick={() => setShowTestimonial(true)}
+            className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-amber-400/50 text-amber-400 font-semibold rounded-xl hover:bg-amber-400/10 transition-colors text-[13px] uppercase tracking-[1px]"
+          >
+            <Star className="w-4 h-4" /> Beri Testimoni
+          </button>
+        )}
       </div>
+
+      {needsPelunasan && (
+        <div className="bg-amber-400/10 border border-amber-400/30 rounded-xl p-4 mt-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-400/20 flex items-center justify-center flex-shrink-0">
+              <CreditCard className="w-5 h-5 text-amber-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-amber-400 font-semibold text-sm">Sisa Pembayaran: {formatRupiah(remaining)}</p>
+              <p className="text-gray-light text-xs mt-1">Pesanan sudah selesai. Silakan lunasi sisa pembayaran DP Anda.</p>
+              <Link
+                to={`/pesan/pembayaran/${order.order_code}`}
+                className="inline-flex items-center gap-2 mt-3 bg-amber-400 text-ink font-semibold py-2 px-4 rounded-lg hover:bg-amber-300 transition-colors text-[12px] uppercase tracking-[1px]"
+              >
+                <CreditCard className="w-3.5 h-3.5" /> Lunasi Sekarang
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog
         isOpen={showCancelDialog}
@@ -271,6 +409,17 @@ function ActionButtons({ order, onCancelSuccess }) {
         variant="danger"
         loading={cancelling}
       />
+
+      {showTestimonial && (
+        <TestimonialForm
+          order={order}
+          onClose={() => setShowTestimonial(false)}
+          onSuccess={() => {
+            setShowTestimonial(false);
+            if (onTestimonialSuccess) onTestimonialSuccess();
+          }}
+        />
+      )}
     </>
   );
 }
@@ -437,6 +586,7 @@ const filterTabs = [
   { key: 'pending', label: 'Pending' },
   { key: 'paid', label: 'Lunas' },
   { key: 'processed', label: 'Diproses' },
+  { key: 'delivered', label: 'Dikirim' },
   { key: 'completed', label: 'Selesai' },
   { key: 'cancel_requested', label: 'Pembatalan' },
   { key: 'cancelled', label: 'Dibatalkan' },
@@ -449,6 +599,13 @@ function OrderCard({ order, onRefresh }) {
   const totalQty = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
   const sizes = [...new Set(items.map(i => i.size).filter(Boolean))];
   const colors = [...new Set(items.map(i => i.selected_color).filter(Boolean))];
+
+  const totalPaid = order.payments
+    ?.filter(p => p.payment_status === 'verified')
+    .reduce((sum, p) => sum + parseFloat(p.amount), 0) || 0;
+  const remaining = Math.max(order.total_price - totalPaid, 0);
+  const isFullyPaid = remaining === 0;
+  const isCompleted = order.status === 'completed';
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden transition-all duration-300 hover:border-primary/30">
@@ -511,13 +668,45 @@ function OrderCard({ order, onRefresh }) {
 
       {showDetail && (
         <div className="px-5 pb-5 animate-fade-in border-t border-border pt-4">
+          {isCompleted && isFullyPaid && (
+            <div className="bg-success/10 border border-success/30 rounded-xl p-6 mb-4 text-center">
+              <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-4">
+                <PartyPopper className="w-8 h-8 text-success" />
+              </div>
+              <h3 className="font-heading text-[20px] text-white tracking-[1px] mb-2">PESANAN TELAH SELESAI</h3>
+              <p className="text-success text-[13px] mb-1">Pesanan telah diambil dan diterima dengan baik.</p>
+              <p className="text-success/80 text-[12px]">Pembayaran telah lunas. Terima kasih!</p>
+            </div>
+          )}
+          {order.status === 'delivered' && (
+            <div className="bg-info/10 border border-info/30 rounded-xl p-5 mb-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-lg bg-info/20 flex items-center justify-center flex-shrink-0">
+                  <Truck className="w-5 h-5 text-info" />
+                </div>
+                <div>
+                  {order.delivery_method === 'pickup' ? (
+                    <>
+                      <p className="text-info font-semibold text-[14px]">Pesanan Siap Diambil</p>
+                      <p className="text-gray-light text-[12px] mt-1">Silakan datang ke toko kami untuk mengambil pesanan. Bawa bukti kode pesanan.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-info font-semibold text-[14px]">Pesanan Sedang Dikirim</p>
+                      <p className="text-gray-light text-[12px] mt-1">Pesanan Anda sedang dalam perjalanan. Silakan pantau status pengiriman.</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           <ProgressBar status={order.status} />
           <div className="bg-card border border-border rounded-xl p-5 mb-4">
             <h3 className="text-fire text-[11px] tracking-[1px] uppercase mb-5 font-semibold">Status Pesanan</h3>
-            <VerticalTimeline status={order.status} />
+            <VerticalTimeline status={order.status} deliveryMethod={order.delivery_method} />
           </div>
           <OrderDetailSection order={order} />
-          <ActionButtons order={order} onCancelSuccess={onRefresh} />
+          <ActionButtons order={order} onCancelSuccess={onRefresh} onTestimonialSuccess={onRefresh} />
         </div>
       )}
     </div>
