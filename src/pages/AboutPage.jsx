@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import ScrollToTop from '../components/common/ScrollToTop';
 import ScrollReveal from '../components/ui/ScrollReveal';
 import Icon from '../components/ui/Icon';
+import { X } from 'lucide-react';
 
 const stats = [
   { value: '5+', label: 'Tahun Pengalaman', icon: 'award' },
@@ -18,7 +20,42 @@ const services = [
   { icon: 'layers', name: 'Bordir', desc: 'Polyester, Rayon, Katun' },
 ];
 
+const workshopImages = [
+  {
+    url: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800&q=80',
+    label: 'Mesin Sablon Manual',
+    span: 'lg:col-span-2',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800&q=80',
+    label: 'Workshop Produksi',
+    span: '',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80',
+    label: 'Proses Cetak Presisi',
+    span: '',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1558346648-9757f2e9e5e0?w=800&q=80',
+    label: 'Bahan Baku Berkualitas',
+    span: '',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1621609764095-bf94c1a4b272?w=800&q=80',
+    label: 'Riset & Pengembangan',
+    span: '',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
+    label: 'Tim Profesional',
+    span: '',
+  },
+];
+
 export default function AboutPage() {
+  const [lightbox, setLightbox] = useState(null);
+
   return (
     <div className="min-h-screen flex flex-col bg-cream">
       <Navbar />
@@ -65,6 +102,43 @@ export default function AboutPage() {
               </ScrollReveal>
             ))}
           </div>
+
+          {/* Workshop Gallery */}
+          <ScrollReveal direction="up" delay={400}>
+            <div className="mb-12">
+              <div className="text-center mb-8">
+                <div className="section-tag">&mdash; workshop</div>
+                <h2 className="font-heading text-[28px] text-fire tracking-[1px] mb-3">LIHAT WORKSHOP KAMI</h2>
+                <div className="divider mx-auto"></div>
+                <p className="text-gray text-[14px] mt-4 max-w-xl mx-auto">Mengintip langsung proses produksi dan suasana workshop Dreamcatcher.id — dari persiapan bahan hingga hasil jadi.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {workshopImages.map((img, i) => (
+                  <div
+                    key={i}
+                    className={`group relative overflow-hidden rounded-xl bg-card border border-border cursor-pointer ${img.span}`}
+                    onClick={() => setLightbox(img)}
+                  >
+                    <div className="aspect-[4/3] overflow-hidden">
+                      <img
+                        src={img.url}
+                        alt={img.label}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5">
+                      <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                        <p className="text-white font-semibold text-[14px] tracking-wide">{img.label}</p>
+                        <p className="text-white/60 text-[11px] mt-0.5">Klik untuk lihat</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </ScrollReveal>
 
           {/* Services */}
           <div className="mb-12">
@@ -151,6 +225,30 @@ export default function AboutPage() {
           </div>
 
         </div>
+
+        {/* Lightbox */}
+        {lightbox && (
+          <div
+            className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 cursor-zoom-out"
+            onClick={() => setLightbox(null)}
+          >
+            <button
+              onClick={() => setLightbox(null)}
+              className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <img
+              src={lightbox.url}
+              alt={lightbox.label}
+              className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <p className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/80 text-[14px] font-medium bg-black/40 px-6 py-2 rounded-full backdrop-blur-sm">
+              {lightbox.label}
+            </p>
+          </div>
+        )}
       </main>
       <Footer />
       <ScrollToTop />

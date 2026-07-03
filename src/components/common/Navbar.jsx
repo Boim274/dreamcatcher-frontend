@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useAuthModalStore } from '../../store/authModalStore';
+import { useCartStore } from '../../store/cartStore';
 import Icon from '../ui/Icon';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import { useToast } from '../ui/Toast';
@@ -10,6 +11,7 @@ import CustomerProfileModal from './CustomerProfileModal';
 const navLinks = [
   { to: '/', label: 'Beranda' },
   { to: '/layanan', label: 'Layanan' },
+  { to: '/produk', label: 'Produk' },
   { to: '/design-studio', label: 'Design Studio' },
   { to: '/pricelist', label: 'Harga' },
   { to: '/size-chart', label: 'Size Chart' },
@@ -24,6 +26,7 @@ export default function Navbar() {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuthStore();
   const { openLogin, openRegister } = useAuthModalStore();
+  const cartCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
   const toast = useToast();
   const dropdownRef = useRef(null);
   const prevLocationRef = useRef(location.pathname);
@@ -96,6 +99,18 @@ export default function Navbar() {
           >
             WhatsApp
           </a>
+
+          <Link
+            to="/keranjang"
+            className="relative p-2 text-chrome hover:text-primary transition-colors no-underline"
+          >
+            <Icon name="shopping-cart" size={20} />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-fire text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </Link>
 
           {isAuthenticated ? (
             <div className="relative" ref={dropdownRef}>

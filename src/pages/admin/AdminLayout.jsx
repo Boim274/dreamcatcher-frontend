@@ -25,6 +25,8 @@ import {
   Ruler,
   MessageSquare,
   Settings,
+  Shirt,
+  Tags,
 } from 'lucide-react';
 
 const adminNavSections = [
@@ -43,13 +45,30 @@ const adminNavSections = [
     ],
   },
   {
-    label: 'Kelola',
+    label: 'Produk',
+    items: [
+      { to: '/admin/produk', label: 'Produk', icon: Shirt },
+      { to: '/admin/kategori', label: 'Kategori', icon: Tags },
+    ],
+  },
+  {
+    label: 'Sablon',
     items: [
       { to: '/admin/layanan', label: 'Layanan', icon: Package },
-      { to: '/admin/portfolio', label: 'Portfolio', icon: Image },
       { to: '/admin/warna', label: 'Warna Sablon', icon: Palette },
       { to: '/admin/ukuran', label: 'Ukuran', icon: Ruler },
+    ],
+  },
+  {
+    label: 'Konten',
+    items: [
+      { to: '/admin/portfolio', label: 'Portfolio', icon: Image },
       { to: '/admin/testimoni', label: 'Testimoni', icon: MessageSquare },
+    ],
+  },
+  {
+    label: 'Sistem',
+    items: [
       { to: '/admin/pengaturan', label: 'Pengaturan', icon: Settings },
     ],
   },
@@ -61,6 +80,8 @@ const pageTitles = {
   '/admin/pembayaran': 'Kelola Pembayaran',
   '/admin/layanan': 'Kelola Layanan',
   '/admin/portfolio': 'Kelola Portfolio',
+  '/admin/produk': 'Kelola Produk',
+  '/admin/kategori': 'Kelola Kategori',
   '/admin/warna': 'Kelola Warna Sablon',
   '/admin/ukuran': 'Kelola Ukuran',
   '/admin/testimoni': 'Kelola Testimoni',

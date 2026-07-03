@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useOrderStore } from '../../store/orderStore';
 import Icon from '../../components/ui/Icon';
 import { useToast } from '../../components/ui/Toast';
+import { formatRupiah, getMinPrice } from '../../utils/formatRupiah';
 
 export default function Step1ServiceSelect() {
   const { services, selectedService, selectService, fetchServices, nextStep } = useOrderStore();
@@ -46,7 +47,9 @@ export default function Step1ServiceSelect() {
               <p className="text-gray text-[13px] mb-3 line-clamp-2">{service.description}</p>
               <div className="flex items-center justify-between">
                 <p className="text-primary font-bold text-lg">
-                  Rp {Number(service.base_price).toLocaleString('id-ID')}
+                  {service.pricing_type === 'tiered'
+                    ? 'Mulai ' + formatRupiah(getMinPrice(service))
+                    : formatRupiah(service.base_price)}
                   {service.pricing_type === 'flat' && <span className="text-gray text-xs font-normal">/pcs</span>}
                 </p>
                 <p className="text-gray text-[11px]">Min. {service.minimum_order} pcs</p>

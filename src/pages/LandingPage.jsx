@@ -11,7 +11,7 @@ import ScrollReveal from '../components/ui/ScrollReveal';
 import PortfolioCarousel from '../components/common/PortfolioCarousel';
 import TestimonialCarousel from '../components/common/TestimonialCarousel';
 import api from '../services/api';
-import { formatRupiah } from '../utils/formatRupiah';
+import { formatRupiah, getMinPrice } from '../utils/formatRupiah';
 
 const features = [
   { icon: 'zap', title: 'AI Design Generator', desc: 'Generate desain custom dengan teknologi AI' },
@@ -56,18 +56,28 @@ export default function LandingPage() {
   const [services, setServices] = useState([]);
   const [portfolios, setPortfolios] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       api.get('/services').catch(() => ({ data: { services: [] } })),
       api.get('/portfolios/featured').catch(() => ({ data: { portfolios: [] } })),
       api.get('/testimonials').catch(() => ({ data: { testimonials: [] } })),
-    ]).then(([servicesRes, portfoliosRes, testimonialsRes]) => {
-      setServices(servicesRes.data?.services || []);
-      setPortfolios(portfoliosRes.data?.portfolios || []);
-      setTestimonials(testimonialsRes.data?.testimonials || []);
-    }).finally(() => setLoading(false));
+    ])
+      .then(([svcRes, portRes, testimonialRes]) => {
+        setServices(svcRes.data.services || []);
+        setPortfolios(portRes.data.portfolios || []);
+        setTestimonials(testimonialRes.data.testimonials || []);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+
+    api.get('/products', { params: { per_page: 4 } })
+      .then((res) => setProducts(res.data.products?.data || []))
+      .catch(() => {})
+      .finally(() => setProductsLoading(false));
   }, []);
 
   return (
@@ -188,7 +198,9 @@ export default function LandingPage() {
                     <p className="text-[#777] text-[13px] leading-[1.7]">{service.description}</p>
                     <div className="mt-4 flex items-baseline gap-1">
                       <span className="text-primary font-bold text-lg">
-                        {formatRupiah(service.price_per_unit || service.base_price)}
+                        {service.pricing_type === 'tiered'
+                          ? 'Mulai ' + formatRupiah(getMinPrice(service))
+                          : formatRupiah(service.price_per_unit || service.base_price)}
                       </span>
                       <span className="text-gray-dark text-[11px]">/pcs</span>
                     </div>
@@ -254,6 +266,48 @@ export default function LandingPage() {
               <ScrollReveal direction="blur" delay={200}>
                 <PortfolioCarousel portfolios={portfolios} />
               </ScrollReveal>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ==================== PRODUCTS ==================== */}
+      <section className="bg-cream px-[5%] py-20">
+        <div className="max-w-7xl mx-auto">
+          <ScrollReveal>
+            <div className="section-tag">&mdash; produk eksklusif</div>
+            <h2 className="section-title">PRODUK</h2>
+            <div className="divider"></div>
+            <p className="section-sub">Produk original Dreamcatcher — kaos, merch, dan aksesoris eksklusif.</p>
+          </ScrollReveal>
+
+          {productsLoading ? (
+            <div className="py-12"><Spinner size="lg" /></div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
+              {products.slice(0, 4).map((product) => (
+                <ScrollReveal key={product.id} direction="up" delay={100}>
+                  <Link to={`/produk/${product.id}`} className="block bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all group no-underline">
+                    <div className="aspect-square bg-ink overflow-hidden">
+                      <img
+                        src={product.images?.[0]?.image_url || 'https://placehold.co/400x400/333/888?text=No+Image'}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <p className="text-gray text-[9px] uppercase tracking-[1px] mb-1">{product.category?.name || 'Produk'}</p>
+                      <h3 className="font-heading text-[18px] text-white tracking-[0.5px] truncate">{product.name}</h3>
+                      <p className="text-primary font-bold text-[16px] mt-1">{formatRupiah(product.base_price)}</p>
+                    </div>
+                  </Link>
+                </ScrollReveal>
+              ))}
+              {products.length > 4 && (
+                <div className="col-span-full text-center mt-6">
+                  <Link to="/produk" className="btn-acid px-6 py-3 text-[13px]">Lihat Semua Produk</Link>
+                </div>
+              )}
             </div>
           )}
         </div>

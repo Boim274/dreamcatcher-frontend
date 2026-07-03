@@ -15,7 +15,7 @@ import {
   CheckCircle, Clock, Package, CreditCard, Search, Filter, ShoppingBag,
   ClipboardList, Loader, PartyPopper, XCircle, Phone, Hash, Lock,
   Truck, MapPin, MessageCircle, AlertTriangle, SearchX, Loader2,
-  ChevronDown, ChevronUp, Image as ImageIcon, Ban, Star, Upload, X
+  ChevronDown, ChevronUp, Image as ImageIcon, Ban, Star, Upload, X, Copy, Check
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -141,8 +141,31 @@ function ProgressBar({ status }) {
   );
 }
 
+function CopyId({ id }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(String(id)); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+      className="text-gray hover:text-primary transition-colors inline-flex items-center gap-1"
+      title="Salin ID Produk"
+    >
+      {copied ? <Check size={10} className="text-success" /> : <Copy size={10} />}
+      <span className="text-[10px]">{copied ? 'Tersalin' : 'Salin'}</span>
+    </button>
+  );
+}
+
 function OrderDetailSection({ order }) {
   const items = order.items || [];
+
+  const renderItemDetails = (item) => [
+    item.size && `Ukuran ${item.size}`,
+    item.selected_color && `Warna ${item.selected_color}`,
+    item.sablon_type && `Sablon ${item.sablon_type}`,
+    item.print_area && `Posisi ${item.print_area.replace(/_/g, ' ')}`,
+    item.print_size && item.print_size,
+    item.quantity && `${item.quantity} pcs`,
+  ].filter(Boolean).join(' · ');
 
   return (
     <div className="mt-4 space-y-4">
@@ -187,27 +210,40 @@ function OrderDetailSection({ order }) {
           {items.map((item, idx) => (
             <div key={idx} className="bg-ink rounded-lg p-3">
               <div className="flex items-start gap-3">
-                {item.design?.image_url && (
-                  <img
-                    src={getImageUrl(item.design.image_url)}
-                    alt="Desain"
-                    className="w-14 h-14 object-contain bg-ink rounded-lg border border-border flex-shrink-0"
-                  />
+                {item.product ? (
+                  <>
+                    {item.product.images?.[0]?.image_url && (
+                      <img
+                        src={item.product.images[0].image_url}
+                        alt={item.product.name}
+                        className="w-14 h-14 object-contain bg-ink rounded-lg border border-border flex-shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-[13px] font-medium leading-snug mb-1">{item.product.description || item.product_name}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-gray text-[10px] font-mono">ID Produk: #{item.product.id}</span>
+                        <CopyId id={item.product.id} />
+                      </div>
+                      <p className="text-gray-light text-[11px] leading-relaxed">{renderItemDetails(item)}</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {item.design?.image_url && (
+                      <img
+                        src={getImageUrl(item.design.image_url)}
+                        alt="Desain"
+                        className="w-14 h-14 object-contain bg-ink rounded-lg border border-border flex-shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-[13px] font-medium mb-1">{item.product_name || item.service?.name || '-'}</p>
+                      <p className="text-gray-light text-[11px] leading-relaxed">{renderItemDetails(item)}</p>
+                    </div>
+                  </>
                 )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-[13px] font-medium mb-1">{item.product_name || item.service?.name || '-'}</p>
-                  <p className="text-gray-light text-[11px] leading-relaxed">
-                    {[
-                      item.size && `Ukuran ${item.size}`,
-                      item.selected_color && `Warna ${item.selected_color}`,
-                      item.sablon_type && `Sablon ${item.sablon_type}`,
-                      item.print_area && `Posisi ${item.print_area.replace(/_/g, ' ')}`,
-                      item.print_size && item.print_size,
-                      item.quantity && `${item.quantity} pcs`,
-                    ].filter(Boolean).join(' · ')}
-                  </p>
-                </div>
-                <p className="text-primary font-semibold text-[13px] whitespace-nowrap">{formatRupiah(item.subtotal)}</p>
+                <p className="text-primary font-semibold text-[13px] whitespace-nowrap flex-shrink-0">{formatRupiah(item.subtotal)}</p>
               </div>
             </div>
           ))}
@@ -221,30 +257,38 @@ function OrderDetailSection({ order }) {
   );
 }
 
-function TestimonialForm({ order, onClose, onSuccess }) {
-  const [rating, setRating] = useState(5);
-  const [review, setReview] = useState('');
+function TestimonialForm({ order, existingTestimonial, onClose, onSuccess }) {
+  const [rating, setRating] = useState(existingTestimonial?.rating || 5);
+  const [review, setReview] = useState(existingTestimonial?.review || '');
   const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState('');
+  const [imagePreview, setImagePreview] = useState(existingTestimonial ? getImageUrl(existingTestimonial.image_url) : '');
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef(null);
+  const isEdit = !!existingTestimonial;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
       const data = new FormData();
-      data.append('order_id', order.id);
       data.append('rating', rating);
       data.append('review', review);
       if (imageFile) data.append('image', imageFile);
 
-      await api.post('/testimonials', data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      if (isEdit) {
+        data.append('_method', 'PUT');
+        await api.post(`/testimonials/${existingTestimonial.id}`, data, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      } else {
+        data.append('order_id', order.id);
+        await api.post('/testimonials', data, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
       onSuccess();
     } catch (error) {
-      alert(error.response?.data?.message || 'Gagal mengirim testimoni');
+      alert(error.response?.data?.message || 'Gagal menyimpan testimoni');
     } finally {
       setSaving(false);
     }
@@ -254,7 +298,7 @@ function TestimonialForm({ order, onClose, onSuccess }) {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-card border border-border w-full max-w-md rounded-2xl">
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <h3 className="font-heading text-xl font-bold text-white">Beri Testimoni</h3>
+          <h3 className="font-heading text-xl font-bold text-white">{isEdit ? 'Edit Testimoni' : 'Beri Testimoni'}</h3>
           <button onClick={onClose} className="p-2 hover:bg-border rounded-xl">
             <X className="w-5 h-5 text-gray-light" />
           </button>
@@ -296,9 +340,13 @@ function TestimonialForm({ order, onClose, onSuccess }) {
             }} className="hidden" />
             <div className="flex gap-3 items-center">
               <button type="button" onClick={() => fileInputRef.current?.click()} className="px-4 py-2 rounded-xl bg-dark border border-border text-gray-light hover:text-white text-sm font-medium flex items-center gap-2">
-                <Upload className="w-4 h-4" /> Pilih Foto
+                <Upload className="w-4 h-4" /> {imagePreview ? 'Ganti Foto' : 'Pilih Foto'}
               </button>
-              {imagePreview && <img src={imagePreview} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-border" />}
+              {imagePreview && (
+                <div className="relative">
+                  <img src={imagePreview} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-border" />
+                </div>
+              )}
             </div>
           </div>
 
@@ -307,7 +355,7 @@ function TestimonialForm({ order, onClose, onSuccess }) {
           <div className="flex gap-4 pt-2">
             <button type="button" onClick={onClose} className="btn-secondary flex-1">Batal</button>
             <button type="submit" disabled={saving} className="btn-primary flex-1">
-              {saving ? <LoadingSpinner size="sm" /> : 'Kirim'}
+              {saving ? <LoadingSpinner size="sm" /> : (isEdit ? 'Simpan Perubahan' : 'Kirim')}
             </button>
           </div>
         </form>
@@ -321,6 +369,7 @@ function ActionButtons({ order, onCancelSuccess, onTestimonialSuccess }) {
   const [showTestimonial, setShowTestimonial] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const canCancel = ['pending', 'waiting_payment'].includes(order.status);
+  const testimonial = order.testimonial;
 
   const totalPaid = order.payments
     ?.filter(p => p.payment_status === 'verified')
@@ -372,9 +421,10 @@ function ActionButtons({ order, onCancelSuccess, onTestimonialSuccess }) {
         {order.status === 'completed' && (
           <button
             onClick={() => setShowTestimonial(true)}
-            className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-amber-400/50 text-amber-400 font-semibold rounded-xl hover:bg-amber-400/10 transition-colors text-[13px] uppercase tracking-[1px]"
+            className={`flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl transition-colors text-[13px] uppercase tracking-[1px] ${testimonial ? 'border-2 border-success/50 text-success hover:bg-success/10' : 'border-2 border-amber-400/50 text-amber-400 hover:bg-amber-400/10'}`}
           >
-            <Star className="w-4 h-4" /> Beri Testimoni
+            {testimonial ? <CheckCircle className="w-4 h-4" /> : <Star className="w-4 h-4" />}
+            {testimonial ? 'Testimoni' : 'Beri Testimoni'}
           </button>
         )}
       </div>
@@ -413,6 +463,7 @@ function ActionButtons({ order, onCancelSuccess, onTestimonialSuccess }) {
       {showTestimonial && (
         <TestimonialForm
           order={order}
+          existingTestimonial={testimonial}
           onClose={() => setShowTestimonial(false)}
           onSuccess={() => {
             setShowTestimonial(false);
@@ -477,10 +528,14 @@ function GuestTrackForm() {
             <div className="w-20 h-20 rounded-[14px] bg-ink border border-border flex items-center justify-center flex-shrink-0 overflow-hidden">
               {(() => {
                 const items = order.items || [];
-                const firstDesign = items.find(i => i.design?.image_url)?.design?.image_url;
-                if (firstDesign) {
-                  return <img src={getImageUrl(firstDesign)} alt="Desain" className="w-full h-full object-contain" />;
-                }
+                const imgSrc = (() => {
+                  const d = items.find(i => i.design?.image_url);
+                  if (d) return getImageUrl(d.design.image_url);
+                  const p = items.find(i => i.product?.images?.length > 0);
+                  if (p) return p.product.images[0].image_url;
+                  return null;
+                })();
+                if (imgSrc) return <img src={imgSrc} alt="Item" className="w-full h-full object-contain" />;
                 return <ImageIcon className="w-8 h-8 text-gray/40" />;
               })()}
             </div>
@@ -607,40 +662,55 @@ function OrderCard({ order, onRefresh }) {
   const isFullyPaid = remaining === 0;
   const isCompleted = order.status === 'completed';
 
+  const heroText = (() => {
+    const prod = items.find(i => i.product?.description);
+    if (prod) return prod.product.description;
+    const svc = items.find(i => i.service?.name);
+    if (svc) return svc.service.name;
+    if (order.description) return order.description;
+    const name = items.find(i => i.product_name);
+    if (name) return name.product_name;
+    return null;
+  })();
+
+  const thumbUrl = (() => {
+    const d = items.find(i => i.design?.image_url);
+    if (d) return getImageUrl(d.design.image_url);
+    const p = items.find(i => i.product?.images?.length > 0);
+    if (p) return p.product.images[0].image_url;
+    return null;
+  })();
+
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden transition-all duration-300 hover:border-primary/30">
       <div className="p-5 cursor-pointer select-none" onClick={() => setShowDetail(!showDetail)}>
         <div className="flex items-start gap-3">
-          {(() => {
-            const firstDesign = items.find(i => i.design?.image_url)?.design?.image_url;
-            if (!firstDesign) return null;
-            return (
-              <img
-                src={getImageUrl(firstDesign)}
-                alt="Desain"
-                className="w-12 h-12 object-contain bg-ink rounded-lg border border-border flex-shrink-0 mt-0.5"
-              />
-            );
-          })()}
+          {thumbUrl && (
+            <img
+              src={thumbUrl}
+              alt="Item"
+              className="w-12 h-12 object-contain bg-ink rounded-lg border border-border flex-shrink-0 mt-0.5"
+            />
+          )}
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-4 mb-3">
+            {heroText && (
+              <p className="text-white text-[14px] font-medium leading-snug mb-2 line-clamp-2">{heroText}</p>
+            )}
+            <div className="flex items-start justify-between gap-4 mb-1.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-[15px] text-primary font-bold tracking-wider">#{order.order_code}</span>
+                <span className="font-mono text-[11px] text-gray tracking-wider">#{order.order_code}</span>
                 <StatusBadge status={order.status} />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <p className="font-bold text-primary text-lg whitespace-nowrap">{formatRupiah(order.total_price)}</p>
                 {showDetail ? <ChevronUp className="w-5 h-5 text-gray" /> : <ChevronDown className="w-5 h-5 text-gray" />}
               </div>
             </div>
-            {order.description && (
-              <p className="text-[12px] text-gray-light leading-relaxed mb-2 line-clamp-2">{order.description}</p>
-            )}
-            <div className="flex items-center gap-3 text-[12px] text-gray-light mb-3 flex-wrap">
-              <span className="flex items-center gap-1"><Icon name="calendar" size={12} />{new Date(order.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-              <span className="flex items-center gap-1"><ShoppingBag size={12} />{itemCount} item · {totalQty} pcs</span>
-              {sizes.length > 0 && <span className="flex items-center gap-1"><Icon name="tag" size={12} />{sizes.join(', ')}</span>}
-              {colors.length > 0 && <span className="flex items-center gap-1"><Icon name="palette" size={12} />{colors.join(', ')}</span>}
+            <div className="flex items-center gap-3 text-[11px] text-gray mb-2 flex-wrap">
+              <span className="flex items-center gap-1"><Icon name="calendar" size={11} />{new Date(order.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              <span className="flex items-center gap-1"><ShoppingBag size={11} />{itemCount} item · {totalQty} pcs</span>
+              {sizes.length > 0 && <span className="flex items-center gap-1"><Icon name="tag" size={11} />{sizes.join(', ')}</span>}
+              {colors.length > 0 && <span className="flex items-center gap-1"><Icon name="palette" size={11} />{colors.join(', ')}</span>}
             </div>
             <div className="flex items-center gap-1">
               {order.status === 'cancel_requested' ? (

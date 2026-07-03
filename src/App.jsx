@@ -7,6 +7,9 @@ import feather from 'feather-icons';
 
 import LandingPage from './pages/LandingPage';
 import CatalogPage from './pages/CatalogPage';
+import ProductListPage from './pages/ProductListPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import CartPage from './pages/CartPage';
 import OrderPage from './pages/OrderPage';
 import PaymentPage from './pages/PaymentPage';
 import MyOrdersPage from './pages/MyOrdersPage';
@@ -22,6 +25,8 @@ import OrderDetailPage from './pages/admin/OrderDetailPage';
 import PaymentsPage from './pages/admin/PaymentsPage';
 import ServicesPage from './pages/admin/ServicesPage';
 import PortfoliosPage from './pages/admin/PortfoliosPage';
+import ProductsPage from './pages/admin/ProductsPage';
+import CategoriesPage from './pages/admin/CategoriesPage';
 import ColorsPage from './pages/admin/ColorsPage';
 import SizesPage from './pages/admin/SizesPage';
 import TestimonialsPage from './pages/admin/TestimonialsPage';
@@ -93,6 +98,13 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/layanan" element={<CatalogPage />} />
+        <Route path="/produk" element={<ProductListPage />} />
+        <Route path="/produk/:id" element={<ProductDetailPage />} />
+        <Route path="/keranjang" element={
+          <CustomerProtectedRoute>
+            <CartPage />
+          </CustomerProtectedRoute>
+        } />
         <Route path="/pesan" element={
           <CustomerProtectedRoute>
             <OrderPage />
@@ -129,6 +141,8 @@ function AppContent() {
           <Route path="pembayaran" element={<PaymentsPage />} />
           <Route path="layanan" element={<ServicesPage />} />
           <Route path="portfolio" element={<PortfoliosPage />} />
+          <Route path="produk" element={<ProductsPage />} />
+          <Route path="kategori" element={<CategoriesPage />} />
           <Route path="warna" element={<ColorsPage />} />
           <Route path="ukuran" element={<SizesPage />} />
           <Route path="testimoni" element={<TestimonialsPage />} />

@@ -8,7 +8,7 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import Icon from '../components/ui/Icon';
 import ServiceIcon from '../components/ui/ServiceIcons';
 import ScrollReveal from '../components/ui/ScrollReveal';
-import { formatRupiah } from '../utils/formatRupiah';
+import { formatRupiah, getMinPrice } from '../utils/formatRupiah';
 
 export default function CatalogPage() {
   const [services, setServices] = useState([]);
@@ -68,7 +68,9 @@ export default function CatalogPage() {
                           <div>
                             <p className="text-gray text-[11px] tracking-[1px] uppercase">Harga per pcs</p>
                             <p className="font-bold text-xl text-primary">
-                              {formatRupiah(service.price_per_unit || service.base_price)}
+                              {service.pricing_type === 'tiered'
+                                ? 'Mulai ' + formatRupiah(getMinPrice(service))
+                                : formatRupiah(service.price_per_unit || service.base_price)}
                             </p>
                           </div>
                           <div>
