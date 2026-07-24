@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import { useToast } from '../../components/ui/Toast';
 import api from '../../services/api';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -27,6 +28,8 @@ import {
   Settings,
   Shirt,
   Tags,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 const adminNavSections = [
@@ -95,6 +98,7 @@ export default function AdminLayout() {
   const { isAuthenticated, logout, user } = useAuthStore();
   const toast = useToast();
 
+  const { theme, toggleTheme } = useThemeStore();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileModalTab, setProfileModalTab] = useState('profile');
@@ -118,10 +122,10 @@ export default function AdminLayout() {
   const paymentNotifRef = useRef(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || user?.role !== 'admin') {
       navigate('/admin/login');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
     localStorage.setItem('admin_sidebar_collapsed', sidebarCollapsed);
@@ -208,10 +212,10 @@ export default function AdminLayout() {
   const sidebarWidth = sidebarCollapsed ? 'w-[72px]' : 'w-64';
   const mainMargin = sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-64';
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated || user?.role !== 'admin') return null;
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-cream" data-theme={theme}>
       {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
@@ -297,10 +301,17 @@ export default function AdminLayout() {
 
         {/* User + Logout */}
         <div className={`border-t border-white/10 p-3 ${sidebarCollapsed ? 'hidden' : ''}`}>
-          <div className="px-3 mb-3">
+          <div className="px-3 mb-2">
             <p className="font-medium text-white text-[13px] truncate">{user?.name || 'Admin'}</p>
             <p className="text-[11px] text-gray truncate">{user?.email}</p>
           </div>
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-2 px-3 py-2 w-full rounded-lg hover:bg-white/5 transition-colors text-gray-light text-[13px] mb-1"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {theme === 'dark' ? 'Tema Terang' : 'Tema Gelap'}
+          </button>
           <button
             onClick={() => setShowLogoutConfirm(true)}
             className="flex items-center gap-2 px-3 py-2 w-full rounded-lg hover:bg-white/5 transition-colors text-gray-light text-[13px]"

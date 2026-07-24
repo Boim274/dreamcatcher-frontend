@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useToast } from '../../components/ui/Toast';
-import { Settings, Save } from 'lucide-react';
+import { Store, MapPin, Phone, Mail, MessageCircle, Truck, DollarSign, Save } from 'lucide-react';
 
 const groups = {
-  general: { label: 'Umum', icon: Settings },
-  contact: { label: 'Kontak & Alamat', icon: Settings },
-  shipping: { label: 'Pengiriman', icon: Settings },
+  general: { label: 'Umum', icon: Store },
+  contact: { label: 'Kontak & Alamat', icon: MapPin },
+  shipping: { label: 'Pengiriman', icon: Truck },
 };
 
 export default function SettingsPage() {
@@ -81,14 +81,15 @@ export default function SettingsPage() {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Tab Navigation */}
         <div className="lg:w-56 flex lg:flex-col gap-2 overflow-x-auto">
-          {Object.entries(groups).map(([key, { label }]) => (
+          {Object.entries(groups).map(([key, { label, icon: Icon }]) => (
             <button
               key={key}
               onClick={() => setActiveGroup(key)}
-              className={`px-4 py-3 rounded-xl text-sm font-medium text-left whitespace-nowrap transition-colors ${
-                activeGroup === key ? 'bg-primary text-white' : 'bg-card border border-border text-gray-light hover:text-white hover:bg-ink/50'
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-left whitespace-nowrap transition-colors ${
+                activeGroup === key ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-card border border-border text-gray-light hover:text-white hover:bg-ink/50'
               }`}
             >
+              <Icon size={18} />
               {label}
             </button>
           ))}
@@ -103,28 +104,62 @@ export default function SettingsPage() {
               <>
                 <div>
                   <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Nama Toko</label>
-                  <input type="text" value={getSettingValue('store_name')} onChange={(e) => updateLocal('store_name', e.target.value)} className="input-dark" />
+                  <div className="input-icon-wrapper">
+                    <Store className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+                    <input type="text" value={getSettingValue('store_name')} onChange={(e) => updateLocal('store_name', e.target.value)} className="input-dark" placeholder="Nama toko Anda" />
+                  </div>
+                  <p className="text-gray-dark text-xs mt-1">Nama yang akan ditampilkan di website dan invoice</p>
                 </div>
               </>
             )}
 
             {activeGroup === 'contact' && (
               <>
-                <div>
-                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Alamat Toko</label>
-                  <textarea value={getSettingValue('store_address')} onChange={(e) => updateLocal('store_address', e.target.value)} className="input-dark min-h-[80px] resize-none" />
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-1">
+                    <MapPin size={16} className="text-primary" />
+                    <h4 className="text-white text-sm font-semibold">Alamat</h4>
+                  </div>
+                  <p className="text-gray-dark text-xs mb-4">Informasi lokasi toko fisik</p>
+                  <div>
+                    <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Alamat Toko</label>
+                    <div className="input-icon-wrapper">
+                      <MapPin className="absolute left-3.5 top-3 w-5 h-5 text-gray" />
+                      <textarea value={getSettingValue('store_address')} onChange={(e) => updateLocal('store_address', e.target.value)} className="input-dark min-h-[80px] resize-none" placeholder="Alamat lengkap toko" />
+                    </div>
+                  </div>
                 </div>
+
                 <div>
-                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Telepon</label>
-                  <input type="text" value={getSettingValue('store_phone')} onChange={(e) => updateLocal('store_phone', e.target.value)} className="input-dark" placeholder="08xxxxxxxxxx" />
-                </div>
-                <div>
-                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">WhatsApp</label>
-                  <input type="text" value={getSettingValue('store_whatsapp')} onChange={(e) => updateLocal('store_whatsapp', e.target.value)} className="input-dark" placeholder="628xxxxxxxxxx" />
-                </div>
-                <div>
-                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Email</label>
-                  <input type="email" value={getSettingValue('store_email')} onChange={(e) => updateLocal('store_email', e.target.value)} className="input-dark" placeholder="email@domain.com" />
+                  <div className="flex items-center gap-2 mb-1">
+                    <Phone size={16} className="text-primary" />
+                    <h4 className="text-white text-sm font-semibold">Kontak</h4>
+                  </div>
+                  <p className="text-gray-dark text-xs mb-4">Informasi kontak yang bisa dihubungi pelanggan</p>
+                  <div className="space-y-5">
+                    <div>
+                      <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Telepon</label>
+                      <div className="input-icon-wrapper">
+                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+                        <input type="text" value={getSettingValue('store_phone')} onChange={(e) => updateLocal('store_phone', e.target.value)} className="input-dark" placeholder="08xxxxxxxxxx" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">WhatsApp</label>
+                      <div className="input-icon-wrapper">
+                        <MessageCircle className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+                        <input type="text" value={getSettingValue('store_whatsapp')} onChange={(e) => updateLocal('store_whatsapp', e.target.value)} className="input-dark" placeholder="628xxxxxxxxxx" />
+                      </div>
+                      <p className="text-gray-dark text-xs mt-1">Format dengan kode negara, tanpa + (contoh: 62812xxx)</p>
+                    </div>
+                    <div>
+                      <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Email</label>
+                      <div className="input-icon-wrapper">
+                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+                        <input type="email" value={getSettingValue('store_email')} onChange={(e) => updateLocal('store_email', e.target.value)} className="input-dark" placeholder="email@domain.com" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </>
             )}
@@ -133,15 +168,22 @@ export default function SettingsPage() {
               <>
                 <div>
                   <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Biaya Pengiriman (Rp)</label>
-                  <input type="number" value={getSettingValue('shipping_cost')} onChange={(e) => updateLocal('shipping_cost', e.target.value)} className="input-dark" min="0" />
-                  <p className="text-gray-dark text-xs mt-1">Flat rate untuk semua pengiriman</p>
+                  <div className="input-icon-wrapper">
+                    <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+                    <input type="number" value={getSettingValue('shipping_cost')} onChange={(e) => updateLocal('shipping_cost', e.target.value)} className="input-dark" min="0" placeholder="15000" />
+                  </div>
+                  <p className="text-gray-dark text-xs mt-1">Biaya pengiriman flat untuk semua order</p>
                 </div>
                 <div>
                   <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Metode Pengiriman</label>
-                  <select value={getSettingValue('shipping_method')} onChange={(e) => updateLocal('shipping_method', e.target.value)} className="input-dark">
-                    <option value="flat">Flat Rate</option>
-                    <option value="free">Gratis Ongkir</option>
-                  </select>
+                  <div className="input-icon-wrapper">
+                    <Truck className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+                    <select value={getSettingValue('shipping_method')} onChange={(e) => updateLocal('shipping_method', e.target.value)} className="input-dark">
+                      <option value="flat">Flat Rate (Biaya tetap)</option>
+                      <option value="free">Gratis Ongkir</option>
+                    </select>
+                  </div>
+                  <p className="text-gray-dark text-xs mt-1">Pilih metode pengiriman yang akan ditawarkan ke customer</p>
                 </div>
               </>
             )}

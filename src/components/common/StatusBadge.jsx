@@ -1,14 +1,19 @@
 const statusConfig = {
   pending: { label: 'Pending', className: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' },
   waiting_payment: { label: 'Menunggu Pembayaran', className: 'bg-orange-500/20 text-orange-400 border border-orange-500/30' },
+  waiting_verification: { label: 'Menunggu Verifikasi', className: 'bg-orange-500/20 text-orange-400 border border-orange-500/30' },
+  ready_to_process: { label: 'Siap Diproses', className: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
+  ready_for_pickup: { label: 'Siap Diambil / Dikirim', className: 'bg-purple-500/20 text-purple-400 border border-purple-500/30' },
   paid: { label: 'Lunas', className: 'bg-[#c8f000]/20 text-[#c8f000] border border-[#c8f000]/30' },
+  dp: { label: 'DP', className: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
+  rejected: { label: 'Ditolak', className: 'bg-red-500/20 text-red-400 border border-red-500/30' },
   processed: { label: 'Diproses', className: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
   delivered: { label: 'Dikirim / Siap Diambil', className: 'bg-purple-500/20 text-purple-400 border border-purple-500/30' },
+  processing: { label: 'Diproses', className: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
   completed: { label: 'Selesai', className: 'bg-[#c8f000]/20 text-[#c8f000] border border-[#c8f000]/30' },
   cancelled: { label: 'Batal', className: 'bg-red-500/20 text-red-400 border border-red-500/30' },
   cancel_requested: { label: 'Menunggu Pembatalan', className: 'bg-orange-500/20 text-orange-400 border border-orange-500/30' },
   confirmed: { label: 'Dikonfirmasi', className: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
-  processing: { label: 'Diproses', className: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
   ready: { label: 'Siap Diambil', className: 'bg-[#c8f000]/20 text-[#c8f000] border border-[#c8f000]/30' },
 };
 

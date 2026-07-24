@@ -4,7 +4,7 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { useToast } from '../../components/ui/Toast';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { CheckCircle, XCircle, AlertCircle, CreditCard, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, CreditCard, ChevronLeft, ChevronRight, Search, Percent } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
@@ -15,6 +15,12 @@ const getImageUrl = (url) => {
   return `${API_BASE}/${url}`;
 };
 
+const paymentTypeLabel = {
+  full: 'Lunas',
+  dp: 'DP',
+  pelunasan: 'Pelunasan',
+};
+
 export default function PaymentsPage() {
   const toast = useToast();
   const [payments, setPayments] = useState([]);
@@ -22,7 +28,7 @@ export default function PaymentsPage() {
   const [actionLoading, setActionLoading] = useState(null);
   const [rejectNotes, setRejectNotes] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(null);
-  const [confirmVerify, setConfirmVerify] = useState({ show: false, id: null });
+  const [confirmAction, setConfirmAction] = useState({ show: false, id: null, type: '', label: '' });
   const [pagination, setPagination] = useState(null);
   const [filters, setFilters] = useState({ search: '', status: '', date_from: '', date_to: '' });
 
@@ -63,20 +69,21 @@ export default function PaymentsPage() {
     }
   };
 
-  const verifyPayment = async (id) => {
-    setConfirmVerify({ show: true, id });
+  const handleVerify = (id, type, label) => {
+    setConfirmAction({ show: true, id, type, label });
   };
 
-  const handleConfirmVerify = async () => {
-    const id = confirmVerify.id;
-    setConfirmVerify({ show: false, id: null });
+  const handleConfirmAction = async () => {
+    const { id, type } = confirmAction;
+    setConfirmAction({ show: false, id: null, type: '', label: '' });
     setActionLoading(id);
     try {
-      await api.patch(`/admin/payments/${id}/verify`);
+      const endpoint = type === 'full' ? 'verify' : type === 'dp' ? 'verify-dp' : 'verify-pelunasan';
+      await api.patch(`/admin/payments/${id}/${endpoint}`);
       toast.success('Pembayaran berhasil diverifikasi');
       fetchPayments(pagination?.current_page || 1);
     } catch (error) {
-      toast.error('Gagal memverifikasi pembayaran');
+      toast.error(error.response?.data?.message || 'Gagal memverifikasi pembayaran');
     } finally {
       setActionLoading(null);
     }
@@ -110,6 +117,18 @@ export default function PaymentsPage() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const paymentStatusColor = (status) => {
+    switch (status) {
+      case 'paid': return { badge: 'completed', label: 'Lunas' };
+      case 'dp': return { badge: 'paid', label: 'DP' };
+      case 'waiting_verification': return { badge: 'waiting_payment', label: 'Menunggu Verifikasi' };
+      case 'verified': return { badge: 'completed', label: 'Terverifikasi' };
+      case 'pending': return { badge: 'waiting_payment', label: 'Menunggu' };
+      case 'rejected': return { badge: 'cancelled', label: 'Ditolak' };
+      default: return { badge: 'pending', label: status };
+    }
   };
 
   if (loading) {
@@ -149,6 +168,9 @@ export default function PaymentsPage() {
           >
             <option value="">Semua Status</option>
             <option value="pending">Menunggu</option>
+            <option value="waiting_verification">Menunggu Verifikasi</option>
+            <option value="dp">DP</option>
+            <option value="paid">Lunas</option>
             <option value="verified">Terverifikasi</option>
             <option value="rejected">Ditolak</option>
           </select>
@@ -210,50 +232,65 @@ export default function PaymentsPage() {
                       {formatRupiah(payment.amount)}
                     </p>
                     <p className="text-gray text-sm">
-                      {payment.payment_method.replace('_', ' ').toUpperCase()} - 
-                      {payment.payment_type === 'dp' ? ' DP' : payment.payment_type === 'full' ? ' Lunas' : ' Pelunasan'}
+                      {payment.payment_method.replace('_', ' ').toUpperCase()} — {paymentTypeLabel[payment.payment_type] || payment.payment_type}
                     </p>
                     <p className="text-gray text-sm mt-1">
                       {formatDate(payment.created_at)}
                     </p>
+                    {payment.order?.remaining_amount > 0 && (
+                      <p className="text-warning text-sm mt-1">
+                        Sisa tagihan: {formatRupiah(payment.order.remaining_amount)}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:items-end gap-2">
-                  <StatusBadge
-                    status={payment.payment_status === 'verified' ? 'completed' : payment.payment_status === 'pending' ? 'waiting_payment' : 'cancelled'}
-                  />
+                  <StatusBadge status={paymentStatusColor(payment.payment_status).badge} />
+                  <span className="text-[11px] text-gray-medium -mt-1">{paymentStatusColor(payment.payment_status).label}</span>
 
                   {payment.payment_status === 'pending' && (
                     <div className="flex flex-col sm:flex-row gap-2 mt-4">
-                      <button
-                        onClick={() => verifyPayment(payment.id)}
-                        disabled={actionLoading === payment.id}
-                        className="btn-primary flex items-center gap-2"
-                      >
-                        {actionLoading === payment.id ? (
-                          <LoadingSpinner size="sm" />
-                        ) : (
-                          <>
-                            <CheckCircle className="w-4 h-4" />
-                            Verifikasi
-                          </>
-                        )}
-                      </button>
+                      {payment.payment_type === 'pelunasan' ? (
+                        <button
+                          onClick={() => handleVerify(payment.id, 'pelunasan', 'Verifikasi Pelunasan')}
+                          disabled={actionLoading === payment.id}
+                          className="btn-primary flex items-center gap-2"
+                        >
+                          {actionLoading === payment.id ? <LoadingSpinner size="sm" /> : <><CheckCircle className="w-4 h-4" /> Verifikasi Pelunasan</>}
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleVerify(payment.id, 'full', 'Verifikasi (Lunas)')}
+                            disabled={actionLoading === payment.id}
+                            className="btn-primary flex items-center gap-2"
+                          >
+                            {actionLoading === payment.id ? <LoadingSpinner size="sm" /> : <><CheckCircle className="w-4 h-4" /> Verifikasi (Lunas)</>}
+                          </button>
+                          <button
+                            onClick={() => handleVerify(payment.id, 'dp', 'Verifikasi DP')}
+                            disabled={actionLoading === payment.id}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/20 text-primary hover:bg-primary/30 transition-colors text-sm font-semibold"
+                          >
+                            <Percent className="w-4 h-4" /> Verifikasi DP
+                          </button>
+                        </>
+                      )}
                       <button
                         onClick={() => setShowRejectModal(payment.id)}
                         className="btn-secondary flex items-center gap-2 text-danger border-danger hover:bg-danger hover:text-white"
                       >
-                        <XCircle className="w-4 h-4" />
-                        Tolak
+                        <XCircle className="w-4 h-4" /> Tolak
                       </button>
                     </div>
                   )}
 
-                  {payment.payment_status === 'verified' && payment.verifier && (
-                    <p className="text-gray text-sm mt-2">
-                      Verifikasi oleh: {payment.verifier.name}
-                    </p>
+                  {payment.payment_status === 'paid' && payment.verifier && (
+                    <p className="text-gray text-sm mt-2">Verifikasi oleh: {payment.verifier.name}</p>
+                  )}
+                  {payment.payment_status === 'dp' && payment.verifier && (
+                    <p className="text-gray text-sm mt-2">Verifikasi DP oleh: {payment.verifier.name}</p>
                   )}
                 </div>
               </div>
@@ -303,12 +340,12 @@ export default function PaymentsPage() {
             <p className="text-gray mb-4">
               Berikan alasan penolakan yang jelas agar customer dapat memperbaiki pembayarannya.
             </p>
-              <textarea
-                value={rejectNotes}
-                onChange={(e) => setRejectNotes(e.target.value)}
-                placeholder="Contoh: Nomor rekening salah, nominal tidak sesuai"
-                className="input-dark min-h-[100px] resize-none mb-4"
-              />
+            <textarea
+              value={rejectNotes}
+              onChange={(e) => setRejectNotes(e.target.value)}
+              placeholder="Contoh: Nomor rekening salah, nominal tidak sesuai"
+              className="input-dark min-h-[100px] resize-none mb-4"
+            />
             <div className="flex gap-4">
               <button
                 onClick={() => { setShowRejectModal(null); setRejectNotes(''); }}
@@ -321,11 +358,7 @@ export default function PaymentsPage() {
                 disabled={actionLoading === showRejectModal}
                 className="btn-primary flex-1 flex items-center justify-center gap-2"
               >
-                {actionLoading === showRejectModal ? (
-                  <LoadingSpinner size="sm" />
-                ) : (
-                  'Tolak Pembayaran'
-                )}
+                {actionLoading === showRejectModal ? <LoadingSpinner size="sm" /> : 'Tolak Pembayaran'}
               </button>
             </div>
           </div>
@@ -333,11 +366,11 @@ export default function PaymentsPage() {
       )}
 
       <ConfirmDialog
-        isOpen={confirmVerify.show}
-        onClose={() => setConfirmVerify({ show: false, id: null })}
-        onConfirm={handleConfirmVerify}
-        title="Verifikasi Pembayaran"
-        message="Apakah Anda yakin ingin memverifikasi pembayaran ini? Status pembayaran akan diubah menjadi terverifikasi."
+        isOpen={confirmAction.show}
+        onClose={() => setConfirmAction({ show: false, id: null, type: '', label: '' })}
+        onConfirm={handleConfirmAction}
+        title={confirmAction.label || 'Verifikasi Pembayaran'}
+        message={`Apakah Anda yakin ingin ${confirmAction.label?.toLowerCase() || 'memverifikasi'} pembayaran ini?`}
         confirmLabel="Ya, Verifikasi"
       />
     </div>

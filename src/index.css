@@ -650,3 +650,46 @@
 /* Scrollbar hide utility */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ===================== LIGHT THEME (Admin) ===================== */
+[data-theme="light"] {
+  --color-ink: #ffffff;
+  --color-card: #f8fafc;
+  --color-border: #e2e8f0;
+  --color-gray: #64748b;
+  --color-gray-light: #475569;
+  --color-gray-medium: #94a3b8;
+  --color-gray-dark: #cbd5e1;
+  --color-chrome: #1e293b;
+  --color-cream: #f8fafc;
+  --color-dark: #f1f5f9;
+  --color-white: #1e293b;
+}
+
+[data-theme="light"] .input-dark { color: #1e293b; }
+
+[data-theme="light"] .text-white\/60 { color: rgba(30, 41, 59, 0.6); }
+[data-theme="light"] .text-white\/80 { color: rgba(30, 41, 59, 0.8); }
+[data-theme="light"] .text-white\/\[0\.03\] { color: rgba(30, 41, 59, 0.03); }
+[data-theme="light"] .text-white\/\[0\.04\] { color: rgba(30, 41, 59, 0.04); }
+[data-theme="light"] .group-hover\:text-white:is(:where(.group):hover *) { color: #1e293b; }
+
+[data-theme="light"] .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .hover\:bg-white\/5:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.15);
+}

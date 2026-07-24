@@ -5,7 +5,7 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { useToast } from '../../components/ui/Toast';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { ArrowLeft, CheckCircle, XCircle, Clock, Package, Truck, Ban } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Ban, CreditCard, Wallet } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
@@ -16,16 +16,41 @@ const getImageUrl = (url) => {
   return `${API_BASE}/${url}`;
 };
 
-const statusOptions = [
-  { value: 'pending', label: 'Pending', icon: Clock, color: 'gray' },
-  { value: 'waiting_payment', label: 'Menunggu Pembayaran', icon: Clock, color: 'yellow' },
-  { value: 'paid', label: 'Lunas', icon: CheckCircle, color: 'blue' },
-  { value: 'processed', label: 'Diproses', icon: Package, color: 'purple' },
-  { value: 'delivered', label: 'Dikirim / Siap Diambil', icon: Truck, color: 'purple' },
-  { value: 'completed', label: 'Selesai', icon: CheckCircle, color: 'green' },
-  { value: 'cancelled', label: 'Batal', icon: XCircle, color: 'red' },
-  { value: 'cancel_requested', label: 'Menunggu Pembatalan', icon: Ban, color: 'orange' },
-];
+const statusConfig = {
+  pending: { label: 'Pending', color: 'gray' },
+  waiting_payment: { label: 'Menunggu Pembayaran', color: 'yellow' },
+  waiting_verification: { label: 'Menunggu Verifikasi', color: 'yellow' },
+  ready_to_process: { label: 'Siap Diproses', color: 'blue' },
+  processing: { label: 'Diproses', color: 'purple' },
+  ready_for_pickup: { label: 'Siap Diambil / Dikirim', color: 'purple' },
+  completed: { label: 'Selesai', color: 'green' },
+  cancelled: { label: 'Batal', color: 'red' },
+  cancel_requested: { label: 'Menunggu Pembatalan', color: 'orange' },
+};
+
+const validTransitions = {
+  pending: ['waiting_payment'],
+  waiting_payment: ['waiting_verification'],
+  waiting_verification: ['processing', 'ready_for_pickup'],
+  processing: ['ready_for_pickup'],
+  ready_for_pickup: ['completed'],
+  cancel_requested: ['cancelled', 'waiting_payment'],
+};
+
+const transitionLabels = {
+  'waiting_verification->processing': 'Verifikasi & Proses',
+  'waiting_verification->ready_for_pickup': 'Verifikasi & Langsung Siap',
+  'processing->ready_for_pickup': 'Selesai Produksi',
+  'ready_for_pickup->completed': 'Konfirmasi Selesai',
+};
+
+const paymentStatusLabel = {
+  pending: 'Belum Dibayar',
+  waiting_verification: 'Menunggu Verifikasi',
+  dp: 'DP',
+  paid: 'Lunas',
+  rejected: 'Ditolak',
+};
 
 export default function OrderDetailPage() {
   const { id } = useParams();
@@ -52,7 +77,7 @@ export default function OrderDetailPage() {
   };
 
   const updateStatus = async (newStatus) => {
-    const label = statusOptions.find((o) => o.value === newStatus)?.label || newStatus;
+    const label = statusConfig[newStatus]?.label || newStatus;
     setConfirmStatus({ show: true, status: newStatus, label });
   };
 
@@ -65,7 +90,7 @@ export default function OrderDetailPage() {
       toast.success(`Status pesanan diubah menjadi "${confirmStatus.label}"`);
       await fetchOrder();
     } catch (error) {
-      toast.error('Gagal update status');
+      toast.error(error.response?.data?.message || 'Gagal update status');
     } finally {
       setUpdating(false);
     }
@@ -116,6 +141,8 @@ export default function OrderDetailPage() {
     );
   }
 
+  const availableTransitions = validTransitions[order.status] || [];
+
   return (
     <div>
       <Link to="/admin/pesanan" className="inline-flex items-center gap-2 text-gray-light hover:text-primary mb-6">
@@ -158,11 +185,11 @@ export default function OrderDetailPage() {
             {order.notes && (
               <div>
                 <p className="text-gray text-sm">Catatan</p>
-                <p className="font-medium text-white">{order.notes}</p>
+                <p className="font-medium text-white whitespace-pre-wrap">{order.notes}</p>
               </div>
             )}
             {order.description && (
-              <div className="col-span-2">
+              <div>
                 <p className="text-gray text-sm">Deskripsi Pesanan</p>
                 <p className="font-medium text-white whitespace-pre-wrap">{order.description}</p>
               </div>
@@ -171,59 +198,96 @@ export default function OrderDetailPage() {
         </div>
 
         <div className="bg-card border border-border p-6">
-          <h2 className="font-semibold mb-4 text-white">Update Status</h2>
-
-          {/* Cancel Request Alert */}
-          {order.status === 'cancel_requested' && (
-            <div className="mb-4 p-4 bg-warning/10 border border-warning/30 rounded-lg">
-              <div className="flex items-center gap-2 mb-3">
-                <Ban className="w-5 h-5 text-warning" />
-                <p className="text-warning font-semibold text-sm">Permintaan Pembatalan</p>
+          <h2 className="font-semibold mb-4 text-white">Informasi Pembayaran</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 bg-ink border border-border rounded-lg">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-primary" />
+                <span className="text-gray text-sm">Status Pembayaran</span>
               </div>
-              <p className="text-warning/70 text-xs mb-4">
-                Customer meminta pembatalan pesanan ini. Pilih tindakan:
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setConfirmCancelAction({ show: true, action: 'approve' })}
-                  disabled={updating}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-danger hover:bg-danger/80 text-white font-semibold rounded-lg transition-colors text-[13px] disabled:opacity-50"
-                >
-                  <XCircle className="w-4 h-4" /> Setujui Pembatalan
-                </button>
-                <button
-                  onClick={() => setConfirmCancelAction({ show: true, action: 'reject' })}
-                  disabled={updating}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors text-[13px] disabled:opacity-50"
-                >
-                  <CheckCircle className="w-4 h-4" /> Tolak Pembatalan
-                </button>
-              </div>
+              <span className="font-semibold text-white">{paymentStatusLabel[order.payment_status] || order.payment_status}</span>
             </div>
-          )}
-
-          <div className="space-y-2">
-            {statusOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => updateStatus(option.value)}
-                disabled={updating || order.status === option.value}
-                className={`w-full p-3 rounded-lg border-2 flex items-center gap-3 transition-all ${
-                  order.status === option.value
-                    ? 'border-primary bg-primary/10'
-                    : 'border-border hover:border-gray-dark disabled:opacity-50'
-                }`}
-              >
-                <option.icon className={`w-5 h-5 ${
-                  order.status === option.value ? 'text-primary' : 'text-gray'
-                }`} />
-                <span className="font-medium text-white">{option.label}</span>
-                {order.status === option.value && (
-                  <CheckCircle className="w-5 h-5 text-primary ml-auto" />
-                )}
-              </button>
-            ))}
+            <div className="flex items-center justify-between p-3 bg-ink border border-border rounded-lg">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-primary" />
+                <span className="text-gray text-sm">Total Tagihan</span>
+              </div>
+              <span className="font-bold text-lg text-white">{formatRupiah(order.total_price)}</span>
+            </div>
+            {order.paid_amount > 0 && (
+              <div className="flex items-center justify-between p-3 bg-success/5 border border-success/20 rounded-lg">
+                <span className="text-gray text-sm">Sudah Dibayar</span>
+                <span className="font-bold text-lg text-success">{formatRupiah(order.paid_amount)}</span>
+              </div>
+            )}
+            {order.remaining_amount > 0 && (
+              <div className="flex items-center justify-between p-3 bg-warning/5 border border-warning/20 rounded-lg">
+                <span className="text-gray text-sm">Sisa Tagihan</span>
+                <span className="font-bold text-lg text-warning">{formatRupiah(order.remaining_amount)}</span>
+              </div>
+            )}
           </div>
+        </div>
+      </div>
+
+      <div className="bg-card border border-border p-6 mt-6">
+        <h2 className="font-semibold mb-4 text-white">Update Status</h2>
+
+        {order.status === 'cancel_requested' && (
+          <div className="mb-4 p-4 bg-warning/10 border border-warning/30 rounded-lg">
+            <div className="flex items-center gap-2 mb-3">
+              <Ban className="w-5 h-5 text-warning" />
+              <p className="text-warning font-semibold text-sm">Permintaan Pembatalan</p>
+            </div>
+            <p className="text-warning/70 text-xs mb-4">
+              Customer meminta pembatalan pesanan ini. Pilih tindakan:
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmCancelAction({ show: true, action: 'approve' })}
+                disabled={updating}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-danger hover:bg-danger/80 text-white font-semibold rounded-lg transition-colors text-[13px] disabled:opacity-50"
+              >
+                <XCircle className="w-4 h-4" /> Setujui Pembatalan
+              </button>
+              <button
+                onClick={() => setConfirmCancelAction({ show: true, action: 'reject' })}
+                disabled={updating}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors text-[13px] disabled:opacity-50"
+              >
+                <CheckCircle className="w-4 h-4" /> Tolak Pembatalan
+              </button>
+            </div>
+          </div>
+        )}
+
+        {availableTransitions.length === 0 ? (
+          <p className="text-gray text-center py-8">
+            Tidak ada perubahan status yang tersedia untuk status ini.
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-3">
+            {availableTransitions.map((status) => {
+              const labelKey = `${order.status}->${status}`;
+              const label = transitionLabels[labelKey] || statusConfig[status]?.label || status;
+              return (
+                <button
+                  key={status}
+                  onClick={() => updateStatus(status)}
+                  disabled={updating}
+                  className="btn-primary"
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 mt-4 p-3 bg-ink border border-border rounded-lg">
+          <p className="text-gray text-sm">
+            Status saat ini: <span className="font-semibold text-white">{statusConfig[order.status]?.label || order.status}</span>
+          </p>
         </div>
       </div>
 
@@ -288,7 +352,7 @@ export default function OrderDetailPage() {
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-lg text-white">{formatRupiah(payment.amount)}</p>
-                    <StatusBadge status={payment.payment_status === 'verified' ? 'completed' : payment.payment_status === 'pending' ? 'waiting_payment' : 'cancelled'} />
+                    <StatusBadge status={payment.payment_status === 'verified' ? 'completed' : payment.payment_status === 'pending' ? 'waiting_payment' : payment.payment_status === 'paid' ? 'completed' : payment.payment_status === 'dp' ? 'paid' : 'cancelled'} />
                   </div>
                 </div>
                 {payment.payment_proof && (

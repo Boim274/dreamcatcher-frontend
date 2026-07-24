@@ -146,93 +146,125 @@ export default function ProductsPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <h1 className="text-[22px] font-heading text-white tracking-[1px]">Produk</h1>
-        <button onClick={() => openModal(null)} className="flex items-center gap-2 bg-primary text-ink font-semibold py-2 px-4 rounded-xl hover:bg-primary-dark transition-colors text-[12px] uppercase tracking-[1px]">
-          <Plus size={16} /> Tambah Produk
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        <h1 className="font-heading text-[28px] text-white tracking-[1px]">Kelola Produk</h1>
+        <button onClick={() => openModal(null)} className="btn-primary flex items-center gap-2">
+          <Plus className="w-5 h-5" /> Tambah Produk
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-        <div className="input-icon-wrapper">
-          <Search size={14} className="input-icon" />
-          <input type="text" placeholder="Cari produk..." value={filters.search} onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value }))} onKeyDown={handleSearchKeyDown} className="input-dark" />
+      <div className="bg-card border border-border p-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="sm:col-span-2 lg:col-span-1">
+            <div className="input-icon-wrapper">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+              <input type="text" placeholder="Cari produk..." value={filters.search} onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value }))} onKeyDown={handleSearchKeyDown} className="input-dark" />
+            </div>
+          </div>
+          <select value={filters.category_id} onChange={(e) => handleFilter('category_id', e.target.value)} className="input-dark">
+            <option value="">Semua Kategori</option>
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <select value={filters.is_active} onChange={(e) => handleFilter('is_active', e.target.value)} className="input-dark">
+            <option value="">Semua Status</option>
+            <option value="1">Aktif</option>
+            <option value="0">Nonaktif</option>
+          </select>
         </div>
-        <select value={filters.category_id} onChange={(e) => handleFilter('category_id', e.target.value)} className="input-dark">
-          <option value="">Semua Kategori</option>
-          {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        <select value={filters.is_active} onChange={(e) => handleFilter('is_active', e.target.value)} className="input-dark">
-          <option value="">Semua Status</option>
-          <option value="1">Aktif</option>
-          <option value="0">Nonaktif</option>
-        </select>
       </div>
 
       {loading ? (
-        <div className="py-20"><LoadingSpinner size="lg" /></div>
+        <div className="flex items-center justify-center h-64"><LoadingSpinner size="lg" /></div>
       ) : (
         <>
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-[13px]">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left p-3 text-fire font-medium text-[11px] tracking-[1px] uppercase">Produk</th>
-                    <th className="text-left p-3 text-fire font-medium text-[11px] tracking-[1px] uppercase">Kategori</th>
-                    <th className="text-right p-3 text-fire font-medium text-[11px] tracking-[1px] uppercase">Harga</th>
-                    <th className="text-center p-3 text-fire font-medium text-[11px] tracking-[1px] uppercase">Stok</th>
-                    <th className="text-center p-3 text-fire font-medium text-[11px] tracking-[1px] uppercase">Status</th>
-                    <th className="text-center p-3 text-fire font-medium text-[11px] tracking-[1px] uppercase">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.map((p) => (
-                    <tr key={p.id} className="border-b border-border last:border-0 hover:bg-ink/50 transition-colors">
-                      <td className="p-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-ink rounded-lg overflow-hidden flex-shrink-0">
-                            <img src={p.images?.[0]?.image_url || 'https://placehold.co/100x100/333/666?text=No'} alt="" className="w-full h-full object-cover" />
-                          </div>
-                          <span className="text-white font-medium truncate max-w-[200px]">{p.name}</span>
-                        </div>
-                      </td>
-                      <td className="p-3 text-gray">{p.category?.name || '-'}</td>
-                      <td className="p-3 text-primary font-semibold text-right">{formatRupiah(p.base_price)}</td>
-                      <td className="p-3 text-center">
-                        <span className={`text-[12px] font-medium ${p.stock > 0 ? 'text-green-400' : 'text-fire'}`}>{p.stock}</span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${p.is_active ? 'bg-primary/20 text-primary' : 'bg-gray/20 text-gray'}`}>
-                          {p.is_active ? 'Aktif' : 'Nonaktif'}
-                        </span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button onClick={() => openModal(p)} className="text-info hover:text-white transition-colors"><Edit2 size={14} /></button>
-                          <button onClick={() => setConfirmDelete({ show: true, id: p.id })} className="text-fire hover:text-white transition-colors"><Trash2 size={14} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {products.length === 0 && (
-                    <tr><td colSpan={6} className="p-6 text-center text-gray">Belum ada produk</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+          {/* Mobile: Cards */}
+          <div className="sm:hidden space-y-3">
+            {products.map((p) => (
+              <div key={p.id} className="bg-card border border-border rounded-xl p-4 flex items-start gap-3">
+                <div className="w-12 h-12 bg-ink rounded-lg overflow-hidden flex-shrink-0">
+                  <img src={p.images?.[0]?.image_url || 'https://placehold.co/100x100/333/666?text=No'} alt="" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-white text-sm">{p.name}</p>
+                  <p className="text-gray-light text-xs mt-0.5">{p.category?.name || '-'}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-primary font-semibold text-xs">{formatRupiah(p.base_price)}</span>
+                    <span className={`text-[10px] font-medium ${p.stock > 0 ? 'text-green-400' : 'text-fire'}`}>Stok: {p.stock}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button onClick={() => openModal(p)} className="p-1.5 hover:bg-border rounded-lg"><Edit2 className="w-4 h-4 text-gray-light" /></button>
+                  <button onClick={() => setConfirmDelete({ show: true, id: p.id })} className="p-1.5 hover:bg-danger/10 rounded-lg"><Trash2 className="w-4 h-4 text-danger" /></button>
+                </div>
+              </div>
+            ))}
+            {products.length === 0 && <div className="bg-card border border-border rounded-xl p-12 text-center text-gray-light">Belum ada produk</div>}
           </div>
 
+          {/* Desktop: Table */}
+          <div className="hidden sm:block bg-card border border-border overflow-hidden rounded-xl">
+            <table className="w-full">
+              <thead className="bg-ink">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Produk</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Kategori</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray">Harga</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray">Stok</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray">Status</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {products.map((p) => (
+                  <tr key={p.id} className="hover:bg-ink/50 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-ink rounded-lg overflow-hidden flex-shrink-0">
+                          <img src={p.images?.[0]?.image_url || 'https://placehold.co/100x100/333/666?text=No'} alt="" className="w-full h-full object-cover" />
+                        </div>
+                        <span className="font-semibold text-white truncate max-w-[200px]">{p.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-gray-light text-sm">{p.category?.name || '-'}</td>
+                    <td className="px-4 py-3 text-primary font-semibold text-right">{formatRupiah(p.base_price)}</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`text-sm font-medium ${p.stock > 0 ? 'text-green-400' : 'text-fire'}`}>{p.stock}</span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${p.is_active ? 'bg-primary/20 text-primary' : 'bg-gray-dark/20 text-gray-dark'}`}>
+                        {p.is_active ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end gap-1">
+                        <button onClick={() => openModal(p)} className="p-2 hover:bg-border rounded-lg transition-colors"><Edit2 className="w-4 h-4 text-gray-light" /></button>
+                        <button onClick={() => setConfirmDelete({ show: true, id: p.id })} className="p-2 hover:bg-danger/10 rounded-lg transition-colors"><Trash2 className="w-4 h-4 text-danger" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {products.length === 0 && (
+                  <tr><td colSpan={6} className="px-4 py-12 text-center text-gray-light">Belum ada produk</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
           {pagination.last_page > 1 && (
-            <div className="flex items-center justify-center gap-4 mt-6">
-              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="flex items-center gap-1 px-3 py-1.5 border border-border rounded-lg text-gray hover:text-white disabled:opacity-30 transition-colors text-[12px]">
-                <ChevronLeft size={14} /> Prev
-              </button>
-              <span className="text-gray text-[13px]">{pagination.current_page} / {pagination.last_page}</span>
-              <button onClick={() => setPage((p) => p + 1)} disabled={page >= pagination.last_page} className="flex items-center gap-1 px-3 py-1.5 border border-border rounded-lg text-gray hover:text-white disabled:opacity-30 transition-colors text-[12px]">
-                Next <ChevronRight size={14} />
-              </button>
+            <div className="flex items-center justify-between mt-6">
+              <p className="text-gray-light text-sm">
+                Menampilkan {(pagination.current_page - 1) * pagination.per_page + 1}–{Math.min(pagination.current_page * pagination.per_page, pagination.total)} dari {pagination.total} produk
+              </p>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={pagination.current_page === 1} className="p-2 rounded-lg bg-card border border-border text-gray-light hover:text-white hover:bg-border disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-gray-light text-sm px-2">{pagination.current_page} / {pagination.last_page}</span>
+                <button onClick={() => setPage((p) => Math.min(pagination.last_page, p + 1))} disabled={pagination.current_page === pagination.last_page} className="p-2 rounded-lg bg-card border border-border text-gray-light hover:text-white hover:bg-border disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
         </>
@@ -240,29 +272,28 @@ export default function ProductsPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-start justify-center z-[100] p-4 overflow-y-auto">
-          <div className="bg-card border border-border rounded-xl p-6 max-w-2xl w-full my-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-[20px] font-heading text-white tracking-[1px]">{editingId ? 'Edit Produk' : 'Tambah Produk'}</h2>
-              <button onClick={() => setShowModal(false)} className="text-gray hover:text-white transition-colors"><X size={20} /></button>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-2xl my-8">
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h3 className="font-heading text-xl font-bold text-white">{editingId ? 'Edit Produk' : 'Tambah Produk'}</h3>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-border rounded-xl"><X className="w-5 h-5 text-gray-light" /></button>
             </div>
-
-            <div className="space-y-4">
+            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
-                  <label className="text-gray text-[11px] tracking-[1px] uppercase mb-1 block">Nama Produk</label>
+                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Nama Produk</label>
                   <input type="text" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} className="input-dark w-full" placeholder="Nama produk" />
                 </div>
                 <div>
-                  <label className="text-gray text-[11px] tracking-[1px] uppercase mb-1 block">Harga</label>
+                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Harga</label>
                   <input type="number" value={form.base_price} onChange={(e) => setForm((p) => ({ ...p, base_price: e.target.value }))} className="input-dark w-full" />
                 </div>
                 <div>
-                  <label className="text-gray text-[11px] tracking-[1px] uppercase mb-1 block">Stok</label>
+                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Stok</label>
                   <input type="number" value={form.stock} onChange={(e) => setForm((p) => ({ ...p, stock: parseInt(e.target.value) || 0 }))} className="input-dark w-full" />
                 </div>
                 <div>
-                  <label className="text-gray text-[11px] tracking-[1px] uppercase mb-1 block">Kategori</label>
+                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Kategori</label>
                   <select value={form.category_id} onChange={(e) => setForm((p) => ({ ...p, category_id: e.target.value }))} className="input-dark w-full">
                     <option value="">Pilih kategori</option>
                     {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -270,23 +301,22 @@ export default function ProductsPage() {
                 </div>
                 <div className="flex items-end gap-4">
                   <div>
-                    <label className="text-gray text-[11px] tracking-[1px] uppercase mb-1 block">Urutan</label>
+                    <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Urutan</label>
                     <input type="number" value={form.sort_order} onChange={(e) => setForm((p) => ({ ...p, sort_order: parseInt(e.target.value) || 0 }))} className="input-dark w-20" />
                   </div>
                   <label className="flex items-center gap-2 pb-2 cursor-pointer">
-                    <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} className="w-4 h-4" />
-                    <span className="text-white text-[13px]">Aktif</span>
+                    <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} className="w-5 h-5" />
+                    <span className="font-medium text-white">Aktif</span>
                   </label>
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-gray text-[11px] tracking-[1px] uppercase mb-1 block">Deskripsi</label>
+                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Deskripsi</label>
                   <textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className="input-dark w-full resize-none" rows={3} />
                 </div>
               </div>
 
-              {/* Images */}
               <div>
-                <label className="text-gray text-[11px] tracking-[1px] uppercase mb-2 block">Gambar Produk</label>
+                <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Gambar Produk</label>
                 <div className="flex flex-wrap gap-3 mb-3">
                   {existingImages.map((img) => (
                     <div key={img.id} className="relative w-24 h-24 bg-ink rounded-lg overflow-hidden group">
@@ -308,47 +338,43 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              {/* Sizes */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-gray text-[11px] tracking-[1px] uppercase">Ukuran</label>
-                  <button onClick={addSize} className="text-primary text-[11px] hover:underline">+ Tambah Ukuran</button>
+                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase">Ukuran</label>
+                  <button onClick={addSize} className="text-primary text-sm hover:underline">+ Tambah Ukuran</button>
                 </div>
                 <div className="space-y-2">
                   {sizes.map((size, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <input type="text" value={size.name} onChange={(e) => updateSize(i, 'name', e.target.value)} className="input-dark flex-1" placeholder="Nama ukuran (S, M, L, XL...)" />
                       <input type="number" value={size.stock} onChange={(e) => updateSize(i, 'stock', parseInt(e.target.value) || 0)} className="input-dark w-20" placeholder="Stok" />
-                      <button onClick={() => removeSize(i)} className="text-fire hover:text-white transition-colors"><X size={16} /></button>
+                      <button onClick={() => removeSize(i)} className="p-1.5 hover:bg-danger/10 rounded-lg transition-colors"><X size={16} className="text-danger" /></button>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Colors */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-gray text-[11px] tracking-[1px] uppercase">Warna</label>
-                  <button onClick={addColor} className="text-primary text-[11px] hover:underline">+ Tambah Warna</button>
+                  <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase">Warna</label>
+                  <button onClick={addColor} className="text-primary text-sm hover:underline">+ Tambah Warna</button>
                 </div>
                 <div className="space-y-2">
                   {colors.map((color, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <input type="color" value={color.hex_code || '#000000'} onChange={(e) => updateColor(i, 'hex_code', e.target.value)} className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-transparent" />
                       <input type="text" value={color.name} onChange={(e) => updateColor(i, 'name', e.target.value)} className="input-dark flex-1" placeholder="Nama warna" />
-                      <button onClick={() => removeColor(i)} className="text-fire hover:text-white transition-colors"><X size={16} /></button>
+                      <button onClick={() => removeColor(i)} className="p-1.5 hover:bg-danger/10 rounded-lg transition-colors"><X size={16} className="text-danger" /></button>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
 
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowModal(false)} className="flex-1 border-2 border-border text-gray py-2.5 rounded-xl hover:text-white transition-colors text-[12px] uppercase tracking-[1px]">Batal</button>
-              <button onClick={handleSubmit} disabled={saving} className="flex-1 bg-primary text-ink font-bold py-2.5 rounded-xl hover:bg-primary-dark transition-colors text-[12px] uppercase tracking-[1px] disabled:opacity-50">
-                {saving ? 'Menyimpan...' : 'Simpan'}
-              </button>
-            </div>
+              <div className="flex gap-4 pt-4">
+                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary flex-1">Batal</button>
+                <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? <LoadingSpinner size="sm" /> : 'Simpan'}</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

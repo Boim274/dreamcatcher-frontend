@@ -6,12 +6,29 @@ import { StatusBadge } from '../../components/common/StatusBadge';
 import { Search, Eye, ChevronLeft, ChevronRight, ShoppingBag } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 
+const paymentStatusLabel = {
+  pending: 'Belum Dibayar',
+  waiting_verification: 'Menunggu Verifikasi',
+  dp: 'DP',
+  paid: 'Lunas',
+  rejected: 'Ditolak',
+};
+
+const paymentStatusBadge = {
+  pending: 'waiting_payment',
+  waiting_verification: 'waiting_payment',
+  dp: 'paid',
+  paid: 'completed',
+  rejected: 'cancelled',
+};
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState(null);
   const [filters, setFilters] = useState({
     status: '',
+    payment_status: '',
     search: '',
     date_from: '',
     date_to: '',
@@ -19,13 +36,14 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-  }, [filters]);
+  }, [filters.status, filters.payment_status]);
 
   const fetchOrders = async (page = 1) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (filters.status) params.append('status', filters.status);
+      if (filters.payment_status) params.append('payment_status', filters.payment_status);
       if (filters.search) params.append('search', filters.search);
       if (filters.date_from) params.append('date_from', filters.date_from);
       if (filters.date_to) params.append('date_to', filters.date_to);
@@ -45,23 +63,20 @@ export default function OrdersPage() {
     }
   };
 
-  const handleFilter = (key, value) => {
-    setFilters({ ...filters, [key]: value });
-  };
-
   return (
     <div>
       <h1 className="font-heading text-[28px] text-white tracking-[1px] mb-8">Kelola Pesanan</h1>
 
       <div className="bg-card border border-border p-6 mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="input-icon-wrapper">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
               <input
                 type="text"
                 value={filters.search}
-                onChange={(e) => handleFilter('search', e.target.value)}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                onKeyDown={(e) => { if (e.key === 'Enter') fetchOrders(); }}
                 placeholder="Cari kode/nama/HP..."
                 className="input-dark"
               />
@@ -70,29 +85,45 @@ export default function OrdersPage() {
 
           <select
             value={filters.status}
-            onChange={(e) => handleFilter('status', e.target.value)}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
             className="input-dark"
           >
             <option value="">Semua Status</option>
             <option value="pending">Pending</option>
             <option value="waiting_payment">Menunggu Pembayaran</option>
-            <option value="paid">Lunas</option>
-            <option value="processed">Diproses</option>
+            <option value="waiting_verification">Menunggu Verifikasi</option>
+            <option value="ready_to_process">Siap Diproses</option>
+            <option value="processing">Diproses</option>
+            <option value="ready_for_pickup">Siap Diambil / Dikirim</option>
             <option value="completed">Selesai</option>
             <option value="cancelled">Batal</option>
+            <option value="cancel_requested">Menunggu Pembatalan</option>
+          </select>
+
+          <select
+            value={filters.payment_status}
+            onChange={(e) => setFilters({ ...filters, payment_status: e.target.value })}
+            className="input-dark"
+          >
+            <option value="">Semua Pembayaran</option>
+            <option value="pending">Belum Dibayar</option>
+            <option value="waiting_verification">Menunggu Verifikasi</option>
+            <option value="dp">DP</option>
+            <option value="paid">Lunas</option>
+            <option value="rejected">Ditolak</option>
           </select>
 
           <input
             type="date"
             value={filters.date_from}
-            onChange={(e) => handleFilter('date_from', e.target.value)}
+            onChange={(e) => setFilters({ ...filters, date_from: e.target.value })}
             className="input-dark"
           />
 
           <input
             type="date"
             value={filters.date_to}
-            onChange={(e) => handleFilter('date_to', e.target.value)}
+            onChange={(e) => setFilters({ ...filters, date_to: e.target.value })}
             className="input-dark"
           />
         </div>
@@ -119,6 +150,7 @@ export default function OrdersPage() {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Layanan</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Total</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Status</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Pembayaran</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Tanggal</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Aksi</th>
                 </tr>
@@ -141,6 +173,11 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={order.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      {order.payment_status ? (
+                        <StatusBadge status={paymentStatusBadge[order.payment_status] || 'pending'} />
+                      ) : '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray">
                       {new Date(order.created_at).toLocaleDateString('id-ID')}

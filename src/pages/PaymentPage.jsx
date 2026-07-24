@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import { orderService } from '../services/orderService';
 import {
@@ -23,7 +23,7 @@ const getImageUrl = (url) => {
 
 const PAYMENT_TYPES = [
   { id: 'dp', label: 'Bayar DP (50%)', desc: 'Bayar uang muka, pelunasan setelah produksi', icon: Wallet },
-  { id: 'pelunasan', label: 'Bayar Cicilan', desc: 'Bayar sebagian, sisa dibayar nanti', icon: CircleDollarSign },
+  { id: 'pelunasan', label: 'Bayar Pelunasan', desc: 'Lunasi sisa pembayaran setelah DP', icon: CircleDollarSign },
   { id: 'full', label: 'Bayar Full / Lunas', desc: 'Bayar penuh sekarang, langsung diproses', icon: Banknote },
 ];
 
@@ -35,11 +35,14 @@ const BANK_ACCOUNTS = [
 const PAYMENT_STATUS_MAP = {
   pending: { label: 'Menunggu Verifikasi', color: 'text-amber-600', bg: 'bg-amber-50 border border-amber-200', icon: Clock },
   verified: { label: 'Terverifikasi', color: 'text-emerald-600', bg: 'bg-emerald-50 border border-emerald-200', icon: BadgeCheck },
+  paid: { label: 'Lunas', color: 'text-emerald-600', bg: 'bg-emerald-50 border border-emerald-200', icon: BadgeCheck },
+  dp: { label: 'DP', color: 'text-blue-600', bg: 'bg-blue-50 border border-blue-200', icon: BadgeCheck },
   rejected: { label: 'Ditolak', color: 'text-red-500', bg: 'bg-red-50 border border-red-200', icon: XCircle },
 };
 
 export default function PaymentPage() {
   const { orderCode } = useParams();
+  const [searchParams] = useSearchParams();
   const [order, setOrder] = useState(null);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -79,9 +82,20 @@ export default function PaymentPage() {
     }
   };
 
+  const typeParam = searchParams.get('type');
+  const isPelunasanMode = typeParam === 'pelunasan' || order?.payment_status === 'dp';
+  const availableTypes = isPelunasanMode ? PAYMENT_TYPES.filter(t => t.id === 'pelunasan') : PAYMENT_TYPES;
+
+  useEffect(() => {
+    if (order && isPelunasanMode) {
+      setSelectedType('pelunasan');
+    }
+  }, [order, isPelunasanMode]);
+
   const getPayAmount = () => {
     if (!order) return 0;
     const total = order.total_price;
+    if (isPelunasanMode) return remaining;
     if (selectedType === 'dp') return Math.round(total * 0.5);
     if (selectedType === 'full') return total;
     const custom = parseInt(customAmount, 10);
@@ -182,10 +196,14 @@ export default function PaymentPage() {
     );
   }
 
-  const totalPaid = payments
-    .filter(p => p.payment_status === 'verified')
-    .reduce((sum, p) => sum + parseFloat(p.amount), 0);
-  const remaining = Math.max(order.total_price - totalPaid, 0);
+  const totalPaid = order.paid_amount
+    ? parseFloat(order.paid_amount)
+    : payments
+        .filter(p => p.payment_status === 'verified' || p.payment_status === 'paid' || p.payment_status === 'dp')
+        .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+  const remaining = order.remaining_amount !== undefined
+    ? parseFloat(order.remaining_amount)
+    : Math.max(order.total_price - totalPaid, 0);
   const payAmount = getPayAmount();
 
   return (
@@ -263,52 +281,78 @@ export default function PaymentPage() {
             </div>
           </div>
 
+          {/* Rejected payment alert */}
+          {payments.some(p => p.payment_status === 'rejected') && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-red-700 text-sm">Pembayaran Ditolak</p>
+                  <p className="text-red-600 text-xs mt-1">
+                    {payments.filter(p => p.payment_status === 'rejected').slice(-1)[0]?.notes || 'Bukti pembayaran tidak valid. Silakan upload ulang.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Payment Type Selection */}
           {remaining > 0 && (
             <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-xl mb-6">
               <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-4 flex items-center gap-2">
-                <CircleDollarSign size={18} className="text-primary" /> PILIH TIPE PEMBAYARAN
+                <CircleDollarSign size={18} className="text-primary" /> {isPelunasanMode ? 'PELUNASAN DP' : 'PILIH TIPE PEMBAYARAN'}
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {PAYMENT_TYPES.map((type) => {
-                  const Icon = type.icon;
-                  const isActive = selectedType === type.id;
-                  return (
-                    <button
-                      key={type.id}
-                      onClick={() => setSelectedType(type.id)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all ${
-                        isActive
-                          ? 'border-primary bg-primary/5 shadow-sm'
-                          : 'border-gray-200 bg-white hover:border-gray-300'
-                      }`}
-                    >
-                      <Icon size={24} className={isActive ? 'text-primary' : 'text-gray-400'} />
-                      <p className={`mt-2 font-semibold text-sm ${isActive ? 'text-primary' : 'text-ink'}`}>
-                        {type.label}
-                      </p>
-                      <p className="text-gray-500 text-xs mt-1">{type.desc}</p>
-                    </button>
-                  );
-                })}
-              </div>
 
-              {selectedType === 'pelunasan' && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <label className="text-gray-500 text-xs uppercase tracking-wider block mb-2 font-medium">Jumlah Cicilan (Rp)</label>
-                  <input
-                    type="number"
-                    value={customAmount}
-                    onChange={(e) => setCustomAmount(e.target.value)}
-                    placeholder="Masukkan jumlah..."
-                    min="1000"
-                    max={remaining}
-                    className="w-full bg-white border border-gray-300 text-ink rounded-lg px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-gray-400"
-                  />
-                  <p className="text-gray-500 text-xs mt-2">
-                    Maksimal: {formatRupiah(remaining)}
-                  </p>
+              {isPelunasanMode ? (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 text-center">
+                  <p className="text-gray-500 text-sm mb-2">Anda akan melunasi sisa pembayaran DP sebesar:</p>
+                  <p className="text-primary font-bold text-3xl">{formatRupiah(remaining)}</p>
+                  <p className="text-gray-400 text-xs mt-2">Jumlah sudah ditentukan sesuai sisa tagihan</p>
                 </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {availableTypes.map((type) => {
+                      const Icon = type.icon;
+                      const isActive = selectedType === type.id;
+                      return (
+                        <button
+                          key={type.id}
+                          onClick={() => setSelectedType(type.id)}
+                          className={`p-4 rounded-xl border-2 text-left transition-all ${
+                            isActive
+                              ? 'border-primary bg-primary/5 shadow-sm'
+                              : 'border-gray-200 bg-white hover:border-gray-300'
+                          }`}
+                        >
+                          <Icon size={24} className={isActive ? 'text-primary' : 'text-gray-400'} />
+                          <p className={`mt-2 font-semibold text-sm ${isActive ? 'text-primary' : 'text-ink'}`}>
+                            {type.label}
+                          </p>
+                          <p className="text-gray-500 text-xs mt-1">{type.desc}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {selectedType === 'pelunasan' && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                      <label className="text-gray-500 text-xs uppercase tracking-wider block mb-2 font-medium">Jumlah Pelunasan (Rp)</label>
+                      <input
+                        type="number"
+                        value={customAmount}
+                        onChange={(e) => setCustomAmount(e.target.value)}
+                        placeholder="Masukkan jumlah..."
+                        min="1000"
+                        max={remaining}
+                        className="w-full bg-white border border-gray-300 text-ink rounded-lg px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-gray-400"
+                      />
+                      <p className="text-gray-500 text-xs mt-2">
+                        Maksimal: {formatRupiah(remaining)}
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-xl">
@@ -316,7 +360,7 @@ export default function PaymentPage() {
                   <span className="text-ink font-semibold">Jumlah Dibayar:</span>
                   <span className="text-primary font-bold text-xl">{formatRupiah(payAmount)}</span>
                 </div>
-                {selectedType !== 'full' && remaining > payAmount && (
+                {!isPelunasanMode && selectedType !== 'full' && remaining > payAmount && (
                   <p className="text-gray-500 text-xs mt-1">
                     Sisa setelah pembayaran ini: {formatRupiah(remaining - payAmount)}
                   </p>
@@ -373,7 +417,7 @@ export default function PaymentPage() {
                 <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
                   <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
                   <p className="font-semibold text-emerald-700">Bukti Pembayaran Terkirim!</p>
-                  <p className="text-gray-600 text-sm mt-1">Mohon tunggu verifikasi dari admin dalam 1x24 jam.</p>
+                  <p className="text-gray-600 text-sm mt-1">Status pesanan Anda kini <strong>Menunggu Verifikasi</strong>. Admin akan memverifikasi dalam 1x24 jam.</p>
                   <button
                     onClick={() => { setUploadSuccess(false); setSelectedFile(null); setPreviewUrl(null); }}
                     className="mt-4 px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm font-semibold hover:bg-primary/20 transition-colors"
@@ -436,7 +480,7 @@ export default function PaymentPage() {
                   {payments.some(p => p.payment_status === 'pending') && !uploadSuccess && (
                     <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2 text-sm">
                       <Clock className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                      <span className="text-amber-700">Bukti pembayaran sudah dikirim. Menunggu verifikasi admin.</span>
+                      <span className="text-amber-700">Bukti pembayaran sudah dikirim. Status pesanan: Menunggu Verifikasi.</span>
                     </div>
                   )}
                 </>

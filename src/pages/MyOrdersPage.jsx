@@ -29,13 +29,14 @@ const getImageUrl = (path) => {
 const statusSteps = [
   { key: 'pending', label: 'Pesanan Diterima', description: 'Pesanan Anda sudah diterima dan menunggu konfirmasi dari admin.', icon: ClipboardList },
   { key: 'waiting_payment', label: 'Menunggu Pembayaran', description: 'Silakan lakukan pembayaran dalam 24 jam.', icon: CreditCard },
-  { key: 'paid', label: 'Pembayaran Terverifikasi', description: 'Pembayaran telah dikonfirmasi. Pesanan segera diproses.', icon: CheckCircle },
-  { key: 'processed', label: 'Sedang Diproses', description: 'Tim sedang mengerjakan pesanan Anda. Estimasi 3-5 hari kerja.', icon: Loader },
-  { key: 'delivered', label: 'Dikirim / Siap Diambil', description: 'Pesanan sedang dikirim atau siap diambil di toko.', icon: Truck },
+  { key: 'waiting_verification', label: 'Menunggu Verifikasi', description: 'Bukti pembayaran telah diterima. Menunggu verifikasi admin.', icon: Clock },
+  { key: 'ready_to_process', label: 'Siap Diproses', description: 'Pembayaran telah dikonfirmasi. Pesanan akan segera dikerjakan.', icon: CheckCircle },
+  { key: 'processing', label: 'Sedang Diproses', description: 'Tim sedang mengerjakan pesanan Anda. Estimasi 3-5 hari kerja.', icon: Loader },
+  { key: 'ready_for_pickup', label: 'Dikirim / Siap Diambil', description: 'Pesanan sedang dikirim atau siap diambil di toko.', icon: Truck },
   { key: 'completed', label: 'Selesai', description: 'Pesanan telah selesai dan diterima dengan baik.', icon: PartyPopper },
 ];
 
-const statusOrder = ['pending', 'waiting_payment', 'paid', 'processed', 'delivered', 'completed'];
+const statusOrder = ['pending', 'waiting_payment', 'waiting_verification', 'ready_to_process', 'processing', 'ready_for_pickup', 'completed'];
 
 function getProgressPercent(status) {
   const idx = statusOrder.indexOf(status);
@@ -104,8 +105,8 @@ function VerticalTimeline({ status, deliveryMethod }) {
               <p className={`text-[15px] font-semibold ${isCurrent ? 'text-primary' : isCompleted ? 'text-white' : 'text-gray'}`}>
                 {step.label}
               </p>
-              <p className={`text-[12px] mt-1 leading-relaxed ${isCurrent ? 'text-gray-light' : isFuture ? 'text-gray-medium/80' : 'text-gray-light'}`}>
-                {step.key === 'delivered' && deliveryMethod
+                <p className={`text-[12px] mt-1 leading-relaxed ${isCurrent ? 'text-gray-light' : isFuture ? 'text-gray-medium/80' : 'text-gray-light'}`}>
+                {step.key === 'ready_for_pickup' && deliveryMethod
                   ? deliveryMethod === 'pickup'
                     ? 'Pesanan siap diambil di toko. Silakan datang ke toko kami.'
                     : 'Pesanan sedang dikirim ke alamat Anda. Silakan pantau ekspedisi.'
@@ -368,15 +369,16 @@ function ActionButtons({ order, onCancelSuccess, onTestimonialSuccess }) {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showTestimonial, setShowTestimonial] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const canCancel = ['pending', 'waiting_payment'].includes(order.status);
+  const canCancel = ['pending', 'waiting_payment', 'waiting_verification', 'ready_to_process'].includes(order.status);
   const testimonial = order.testimonial;
 
   const totalPaid = order.payments
-    ?.filter(p => p.payment_status === 'verified')
+    ?.filter(p => p.payment_status === 'verified' || p.payment_status === 'paid' || p.payment_status === 'dp')
     .reduce((sum, p) => sum + parseFloat(p.amount), 0) || 0;
   const remaining = Math.max(order.total_price - totalPaid, 0);
-  const hasDP = order.payments?.some(p => p.payment_type === 'dp' && p.payment_status === 'verified');
-  const needsPelunasan = order.status === 'completed' && hasDP && remaining > 0;
+  const hasDP = order.payments?.some(p => p.payment_type === 'dp' && (p.payment_status === 'verified' || p.payment_status === 'dp'));
+  const needsPelunasan = remaining > 0 && hasDP && ['ready_for_pickup', 'completed'].includes(order.status);
+  const paymentRejected = order.payment_status === 'rejected';
 
   const handleCancel = async () => {
     setCancelling(true);
@@ -394,13 +396,19 @@ function ActionButtons({ order, onCancelSuccess, onTestimonialSuccess }) {
   return (
     <>
       <div className="flex gap-3 mt-4">
-        {order.status === 'waiting_payment' && (
+        {(order.status === 'waiting_payment' || paymentRejected) && (
           <Link
             to={`/pesan/pembayaran/${order.order_code}`}
             className="flex-1 flex items-center justify-center gap-2 bg-primary text-white font-semibold py-3 rounded-xl hover:bg-primary-dark transition-colors text-[13px] uppercase tracking-[1px]"
           >
-            <CreditCard className="w-4 h-4" /> Bayar Sekarang
+            <CreditCard className="w-4 h-4" /> {paymentRejected ? 'Upload Ulang' : 'Bayar Sekarang'}
           </Link>
+        )}
+        {paymentRejected && (
+          <div className="w-full p-3 bg-danger/10 border border-danger/30 rounded-lg flex items-center gap-2 text-danger text-xs">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            Pembayaran ditolak. Silakan upload ulang bukti pembayaran.
+          </div>
         )}
         {canCancel && (
           <button
@@ -437,9 +445,9 @@ function ActionButtons({ order, onCancelSuccess, onTestimonialSuccess }) {
             </div>
             <div className="flex-1">
               <p className="text-amber-400 font-semibold text-sm">Sisa Pembayaran: {formatRupiah(remaining)}</p>
-              <p className="text-gray-light text-xs mt-1">Pesanan sudah selesai. Silakan lunasi sisa pembayaran DP Anda.</p>
+              <p className="text-gray-light text-xs mt-1">Silakan lunasi sisa pembayaran DP Anda.</p>
               <Link
-                to={`/pesan/pembayaran/${order.order_code}`}
+                to={`/pesan/pembayaran/${order.order_code}?type=pelunasan`}
                 className="inline-flex items-center gap-2 mt-3 bg-amber-400 text-ink font-semibold py-2 px-4 rounded-lg hover:bg-amber-300 transition-colors text-[12px] uppercase tracking-[1px]"
               >
                 <CreditCard className="w-3.5 h-3.5" /> Lunasi Sekarang
@@ -639,9 +647,10 @@ const filterTabs = [
   { key: 'all', label: 'Semua' },
   { key: 'waiting_payment', label: 'Menunggu Bayar' },
   { key: 'pending', label: 'Pending' },
-  { key: 'paid', label: 'Lunas' },
-  { key: 'processed', label: 'Diproses' },
-  { key: 'delivered', label: 'Dikirim' },
+  { key: 'waiting_verification', label: 'Verifikasi' },
+  { key: 'ready_to_process', label: 'Siap Proses' },
+  { key: 'processing', label: 'Diproses' },
+  { key: 'ready_for_pickup', label: 'Siap Ambil' },
   { key: 'completed', label: 'Selesai' },
   { key: 'cancel_requested', label: 'Pembatalan' },
   { key: 'cancelled', label: 'Dibatalkan' },
@@ -748,7 +757,7 @@ function OrderCard({ order, onRefresh }) {
               <p className="text-success/80 text-[12px]">Pembayaran telah lunas. Terima kasih!</p>
             </div>
           )}
-          {order.status === 'delivered' && (
+          {order.status === 'ready_for_pickup' && (
             <div className="bg-info/10 border border-info/30 rounded-xl p-5 mb-4">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-lg bg-info/20 flex items-center justify-center flex-shrink-0">

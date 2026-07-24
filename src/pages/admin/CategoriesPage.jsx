@@ -67,76 +67,97 @@ export default function CategoriesPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <h1 className="text-[22px] font-heading text-white tracking-[1px]">Kategori</h1>
-        <button onClick={() => openModal(null)} className="flex items-center gap-2 bg-primary text-ink font-semibold py-2 px-4 rounded-xl hover:bg-primary-dark transition-colors text-[12px] uppercase tracking-[1px]">
-          <Plus size={16} /> Tambah Kategori
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        <h1 className="font-heading text-[28px] text-white tracking-[1px]">Kelola Kategori</h1>
+        <button onClick={() => openModal(null)} className="btn-primary flex items-center gap-2">
+          <Plus className="w-5 h-5" /> Tambah Kategori
         </button>
       </div>
 
       {loading ? (
-        <div className="py-20"><LoadingSpinner size="lg" /></div>
+        <div className="flex items-center justify-center h-64"><LoadingSpinner size="lg" /></div>
       ) : (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left p-3 text-fire font-medium text-[11px] tracking-[1px] uppercase">Urutan</th>
-                <th className="text-left p-3 text-fire font-medium text-[11px] tracking-[1px] uppercase">Nama</th>
-                <th className="text-center p-3 text-fire font-medium text-[11px] tracking-[1px] uppercase">Jumlah Produk</th>
-                <th className="text-center p-3 text-fire font-medium text-[11px] tracking-[1px] uppercase">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {categories.map((cat) => (
-                <tr key={cat.id} className="border-b border-border last:border-0 hover:bg-ink/50 transition-colors">
-                  <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <GripVertical size={14} className="text-gray" />
-                      <span className="text-gray">{cat.sort_order}</span>
-                    </div>
-                  </td>
-                  <td className="p-3 text-white font-medium">{cat.name}</td>
-                  <td className="p-3 text-center text-gray">{cat.products_count || 0}</td>
-                  <td className="p-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <button onClick={() => openModal(cat)} className="text-info hover:text-white transition-colors"><Edit2 size={14} /></button>
-                      <button onClick={() => setConfirmDelete({ show: true, id: cat.id })} className="text-fire hover:text-white transition-colors"><Trash2 size={14} /></button>
-                    </div>
-                  </td>
+        <>
+          {/* Mobile: Cards */}
+          <div className="sm:hidden space-y-3">
+            {categories.map((cat) => (
+              <div key={cat.id} className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <GripVertical size={14} className="text-gray flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-white text-sm">{cat.name}</p>
+                    <p className="text-gray-light text-xs">{cat.products_count || 0} produk</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button onClick={() => openModal(cat)} className="p-1.5 hover:bg-border rounded-lg"><Edit2 className="w-4 h-4 text-gray-light" /></button>
+                  <button onClick={() => setConfirmDelete({ show: true, id: cat.id })} className="p-1.5 hover:bg-danger/10 rounded-lg"><Trash2 className="w-4 h-4 text-danger" /></button>
+                </div>
+              </div>
+            ))}
+            {categories.length === 0 && <div className="bg-card border border-border rounded-xl p-12 text-center text-gray-light">Belum ada kategori</div>}
+          </div>
+
+          {/* Desktop: Table */}
+          <div className="hidden sm:block bg-card border border-border overflow-hidden rounded-xl">
+            <table className="w-full">
+              <thead className="bg-ink">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Urutan</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Nama</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray">Jumlah Produk</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray">Aksi</th>
                 </tr>
-              ))}
-              {categories.length === 0 && (
-                <tr><td colSpan={4} className="p-6 text-center text-gray">Belum ada kategori</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {categories.map((cat) => (
+                  <tr key={cat.id} className="hover:bg-ink/50 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <GripVertical size={14} className="text-gray" />
+                        <span className="text-gray-light text-sm">{cat.sort_order}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-white">{cat.name}</td>
+                    <td className="px-4 py-3 text-center text-gray-light text-sm">{cat.products_count || 0}</td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end gap-1">
+                        <button onClick={() => openModal(cat)} className="p-2 hover:bg-border rounded-lg transition-colors"><Edit2 className="w-4 h-4 text-gray-light" /></button>
+                        <button onClick={() => setConfirmDelete({ show: true, id: cat.id })} className="p-2 hover:bg-danger/10 rounded-lg transition-colors"><Trash2 className="w-4 h-4 text-danger" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {categories.length === 0 && (
+                  <tr><td colSpan={4} className="px-4 py-12 text-center text-gray-light">Belum ada kategori</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4">
-          <div className="bg-card border border-border rounded-xl p-6 max-w-md w-full">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-[20px] font-heading text-white tracking-[1px]">{editingId ? 'Edit Kategori' : 'Tambah Kategori'}</h2>
-              <button onClick={() => setShowModal(false)} className="text-gray hover:text-white transition-colors"><X size={20} /></button>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border w-full max-w-md rounded-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h3 className="font-heading text-xl font-bold text-white">{editingId ? 'Edit Kategori' : 'Tambah Kategori'}</h3>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-border rounded-xl"><X className="w-5 h-5 text-gray-light" /></button>
             </div>
-            <div className="space-y-4">
+            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="p-6 space-y-4">
               <div>
-                <label className="text-gray text-[11px] tracking-[1px] uppercase mb-1 block">Nama Kategori</label>
+                <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Nama Kategori</label>
                 <input type="text" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} className="input-dark w-full" placeholder="Nama kategori" />
               </div>
               <div>
-                <label className="text-gray text-[11px] tracking-[1px] uppercase mb-1 block">Urutan</label>
+                <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Urutan</label>
                 <input type="number" value={form.sort_order} onChange={(e) => setForm((p) => ({ ...p, sort_order: parseInt(e.target.value) || 0 }))} className="input-dark w-20" />
               </div>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowModal(false)} className="flex-1 border-2 border-border text-gray py-2.5 rounded-xl hover:text-white transition-colors text-[12px] uppercase tracking-[1px]">Batal</button>
-              <button onClick={handleSubmit} disabled={saving} className="flex-1 bg-primary text-ink font-bold py-2.5 rounded-xl hover:bg-primary-dark transition-colors text-[12px] uppercase tracking-[1px] disabled:opacity-50">
-                {saving ? 'Menyimpan...' : 'Simpan'}
-              </button>
-            </div>
+              <div className="flex gap-4 pt-4">
+                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary flex-1">Batal</button>
+                <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? <LoadingSpinner size="sm" /> : 'Simpan'}</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

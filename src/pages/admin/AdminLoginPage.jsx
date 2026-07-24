@@ -6,7 +6,7 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuthStore();
+  const { login, logout } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -37,6 +37,12 @@ export default function AdminLoginPage() {
       }
 
       await login(email, password);
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser?.role !== 'admin') {
+        logout();
+        setError('Hanya akun admin yang dapat mengakses halaman ini');
+        return;
+      }
       navigate('/admin');
     } catch (err) {
       const msg = err.response?.data?.message || '';
