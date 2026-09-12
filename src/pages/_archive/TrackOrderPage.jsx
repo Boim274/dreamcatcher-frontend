@@ -17,6 +17,7 @@ import Footer from '../components/common/Footer';
 import ScrollToTop from '../components/common/ScrollToTop';
 import ScrollReveal from '../components/ui/ScrollReveal';
 import { formatRupiah } from '../utils/formatRupiah';
+import { waLink, WA_URL } from '../constants/whatsapp';
 
 const statusSteps = [
   { key: 'pending', label: 'Pesanan Diterima', description: 'Pesanan Anda sudah diterima dan menunggu konfirmasi dari admin.', icon: ClipboardList },
@@ -344,7 +345,7 @@ function ActionButtons({ order, onCancelSuccess }) {
           </button>
         )}
         <a
-          href={`https://wa.me/6281234567890?text=Halo%20Dreamcatcher%2C%20saya%20ingin%20menanyakan%20pesanan%20%23${order.order_code}`}
+          href={waLink(`Halo Dreamcatcher, saya ingin menanyakan pesanan #${order.order_code}`)}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 px-5 py-3.5 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-primary hover:text-white transition-colors text-[13px] uppercase tracking-[1px]"
@@ -481,7 +482,7 @@ function EmptyState({ onReset }) {
             Coba Lagi
           </button>
           <a
-            href="https://wa.me/6281234567890?text=Halo%20Dreamcatcher%2C%20saya%20butuh%20bantuan%20melacak%20pesanan"
+            href={waLink('Halo Dreamcatcher, saya butuh bantuan melacak pesanan')}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-primary hover:text-white transition-colors text-[13px] uppercase tracking-[1px]"

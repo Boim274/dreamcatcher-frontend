@@ -180,23 +180,82 @@ export default function Step3Quantity() {
         )}
       </div>
 
-      {/* Pricing Info */}
+      {/* Pricing Information */}
       {selectedService.pricing_type === 'tiered' && selectedService.pricing_config && (
-        <div className="bg-ink border border-border rounded-xl p-4 mb-6">
-          <p className="text-fire text-[11px] tracking-[1px] uppercase mb-3 font-medium">Info Harga per Tier</p>
-          <div className="space-y-2 text-sm">
+        <div className="bg-ink border border-border rounded-xl p-5 mb-6">
+          <div className="mb-4">
+            <h3 className="text-fire text-xs font-semibold uppercase tracking-[1.5px]">
+              Informasi Harga
+            </h3>
+            <p className="text-gray text-sm mt-1">
+              Harga dihitung <span className="text-white font-medium">per pcs</span>.
+              Semakin banyak jumlah pesanan, semakin murah harga yang didapat.
+            </p>
+          </div>
+
+          <div className="space-y-5">
             {Object.entries(selectedService.pricing_config).map(([type, prices]) => (
-              <div key={type}>
-                <p className="text-white font-semibold capitalize mb-1">{type}</p>
-                {prices.satuan && <p className="text-gray">Satuan (&lt;12 pcs): <span className="text-primary">{formatRupiah(prices.satuan)}</span></p>}
-                {prices.lusin_1 && <p className="text-gray">1 lusin (12 pcs): <span className="text-primary">{formatRupiah(prices.lusin_1)}</span></p>}
-                {prices.lusin_2_6 && <p className="text-gray">2-6 lusin (24-72 pcs): <span className="text-primary">{formatRupiah(prices.lusin_2_6)}</span></p>}
+              <div
+                key={type}
+                className="border border-border rounded-lg p-4 bg-black/20"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-white font-semibold capitalize">
+                    {type}
+                  </h4>
+                  <span className="text-xs text-gray uppercase">
+                    Harga / Pcs
+                  </span>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  {prices.satuan && (
+                    <div className="flex justify-between">
+                      <span className="text-gray">
+                        Satuan (1–11 pcs)
+                      </span>
+                      <span className="text-primary font-medium">
+                        {formatRupiah(prices.satuan)}
+                      </span>
+                    </div>
+                  )}
+
+                  {prices.lusin_1 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray">
+                        1 Lusin (12–23 pcs)
+                      </span>
+                      <span className="text-primary font-medium">
+                        {formatRupiah(prices.lusin_1)}
+                      </span>
+                    </div>
+                  )}
+
+                  {prices.lusin_2_6 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray">
+                        2–6 Lusin (24–72 pcs)
+                      </span>
+                      <span className="text-primary font-medium">
+                        {formatRupiah(prices.lusin_2_6)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
+
+          <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/20">
+            <p className="text-xs text-gray leading-relaxed">
+              💡 <span className="text-white font-medium">Catatan:</span> Harga akan
+              dihitung otomatis berdasarkan total jumlah pesanan. Jika jumlah pesanan
+              mencapai tier berikutnya, sistem akan menggunakan harga yang sesuai
+              dengan tier tersebut.
+            </p>
+          </div>
         </div>
       )}
-
       <div className="flex gap-4">
         <button onClick={prevStep}
           className="flex items-center gap-2 border-2 border-primary text-primary font-semibold py-3 px-6 rounded-xl hover:bg-primary hover:text-white transition-colors text-[13px] uppercase tracking-[1px]">

@@ -1,5 +1,13 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { authService } from '../services/authService';
+
+// Per-user storage key so each logged-in account keeps its own cart instead of
+// a single shared (global) cart in localStorage.
+const cartStorageKey = () => {
+  const user = authService.getUser();
+  return user?.id != null ? `cart-u${user.id}` : null;
+};
 
 export const useCartStore = create(
   persist(
@@ -54,6 +62,19 @@ export const useCartStore = create(
         return get().getSubtotal();
       },
     }),
-    { name: 'cart-storage' }
+    {
+      name: 'cart-storage',
+      storage: createJSONStorage(() => ({
+        getItem: () => (cartStorageKey() ? localStorage.getItem(cartStorageKey()) : null),
+        setItem: (_name, value) => {
+          const key = cartStorageKey();
+          if (key) localStorage.setItem(key, value);
+        },
+        removeItem: () => {
+          const key = cartStorageKey();
+          if (key) localStorage.removeItem(key);
+        },
+      })),
+    }
   )
 );

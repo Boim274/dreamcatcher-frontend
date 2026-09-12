@@ -92,6 +92,12 @@
 }
 .animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
 
+@keyframes blink-border {
+  0%, 100% { border-color: var(--color-primary); opacity: 1; }
+  50% { border-color: #ef69a9; opacity: 0.7; }
+}
+.animate-blink-border { animation: blink-border 1.5s ease-in-out infinite; }
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -651,45 +657,104 @@
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* ===================== LIGHT THEME (Admin) ===================== */
-[data-theme="light"] {
+/* ===================== ADMIN MODERN DESIGN SYSTEM ===================== */
+.admin-theme {
+  --color-ink: #0b0f19;
+  --color-card: #111827;
+  --color-dark: #070a10;
+  --color-border: #1e293b;
+  --color-primary: #f43f5e;
+  --color-primary-dark: #e11d48;
+  --color-primary-light: #fb7185;
+  --color-cream: #090d16;
+  --color-gray: #94a3b8;
+  --color-gray-light: #cbd5e1;
+  --color-gray-dark: #64748b;
+  --color-gray-medium: #64748b;
+  color: #f8fafc;
+}
+
+.admin-theme[data-theme="light"] {
   --color-ink: #ffffff;
-  --color-card: #f8fafc;
+  --color-card: #ffffff;
+  --color-dark: #f8fafc;
   --color-border: #e2e8f0;
-  --color-gray: #64748b;
-  --color-gray-light: #475569;
-  --color-gray-medium: #94a3b8;
-  --color-gray-dark: #cbd5e1;
-  --color-chrome: #1e293b;
+  --color-primary: #f43f5e;
+  --color-primary-dark: #e11d48;
+  --color-primary-light: #fb7185;
   --color-cream: #f8fafc;
-  --color-dark: #f1f5f9;
-  --color-white: #1e293b;
+  --color-gray: #64748b;
+  --color-gray-light: #334155;
+  --color-gray-dark: #94a3b8;
+  --color-gray-medium: #94a3b8;
+  --color-chrome: #0f172a;
+  color: #0f172a;
 }
 
-[data-theme="light"] .input-dark { color: #1e293b; }
-
-[data-theme="light"] .text-white\/60 { color: rgba(30, 41, 59, 0.6); }
-[data-theme="light"] .text-white\/80 { color: rgba(30, 41, 59, 0.8); }
-[data-theme="light"] .text-white\/\[0\.03\] { color: rgba(30, 41, 59, 0.03); }
-[data-theme="light"] .text-white\/\[0\.04\] { color: rgba(30, 41, 59, 0.04); }
-[data-theme="light"] .group-hover\:text-white:is(:where(.group):hover *) { color: #1e293b; }
-
-[data-theme="light"] .bg-white\/5 {
-  background-color: rgba(0, 0, 0, 0.05);
+.admin-theme[data-theme="light"] .input-dark {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+  color: #0f172a;
 }
 
-[data-theme="light"] .bg-white\/10 {
+.admin-theme[data-theme="light"] .input-dark::placeholder {
+  color: #94a3b8;
+}
+
+.admin-theme[data-theme="light"] .text-white {
+  color: #0f172a;
+}
+
+.admin-theme[data-theme="light"] .bg-ink {
+  background-color: #f8fafc;
+}
+
+.admin-theme[data-theme="light"] .bg-card {
+  background-color: #ffffff;
+}
+
+.admin-theme[data-theme="light"] .border-border {
+  border-color: #e2e8f0;
+}
+
+.admin-theme[data-theme="light"] .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.admin-theme[data-theme="light"] .bg-white\/10 {
   background-color: rgba(0, 0, 0, 0.08);
 }
 
-[data-theme="light"] .hover\:bg-white\/5:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+.admin-theme[data-theme="light"] .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
-[data-theme="light"] .border-white\/10 {
-  border-color: rgba(0, 0, 0, 0.1);
+.admin-theme[data-theme="light"] .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.12);
 }
 
-[data-theme="light"] .border-white\/20 {
-  border-color: rgba(0, 0, 0, 0.15);
+.admin-theme[data-theme="light"] .text-gray-light {
+  color: #475569;
+}
+
+.admin-theme .admin-card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 0.875rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.admin-theme .admin-card:hover {
+  border-color: rgba(244, 63, 94, 0.35);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+}
+
+.admin-theme .glass-header {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background-color: rgba(11, 15, 25, 0.9);
+}
+
+.admin-theme[data-theme="light"] .glass-header {
+  background-color: rgba(255, 255, 255, 0.9);
 }

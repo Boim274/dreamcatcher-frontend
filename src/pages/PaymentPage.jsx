@@ -13,17 +13,10 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { formatRupiah } from '../utils/formatRupiah';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
-
-const getImageUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  return `${API_BASE}/${url}`;
-};
+import { getImageUrl } from '../utils/getImageUrl';
 
 const PAYMENT_TYPES = [
-  { id: 'dp', label: 'Bayar DP (50%)', desc: 'Bayar uang muka, pelunasan setelah produksi', icon: Wallet },
-  { id: 'pelunasan', label: 'Bayar Pelunasan', desc: 'Lunasi sisa pembayaran setelah DP', icon: CircleDollarSign },
+  { id: 'dp', label: 'Bayar DP (50%)', desc: 'Bayar uang muka 50%, sisa dibayar setelah produksi selesai', icon: Wallet },
   { id: 'full', label: 'Bayar Full / Lunas', desc: 'Bayar penuh sekarang, langsung diproses', icon: Banknote },
 ];
 
@@ -47,7 +40,6 @@ export default function PaymentPage() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState('dp');
-  const [customAmount, setCustomAmount] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadError, setUploadError] = useState(null);
@@ -84,7 +76,7 @@ export default function PaymentPage() {
 
   const typeParam = searchParams.get('type');
   const isPelunasanMode = typeParam === 'pelunasan' || order?.payment_status === 'dp';
-  const availableTypes = isPelunasanMode ? PAYMENT_TYPES.filter(t => t.id === 'pelunasan') : PAYMENT_TYPES;
+  const availableTypes = PAYMENT_TYPES;
 
   useEffect(() => {
     if (order && isPelunasanMode) {
@@ -97,10 +89,7 @@ export default function PaymentPage() {
     const total = order.total_price;
     if (isPelunasanMode) return remaining;
     if (selectedType === 'dp') return Math.round(total * 0.5);
-    if (selectedType === 'full') return total;
-    const custom = parseInt(customAmount, 10);
-    if (isNaN(custom) || custom <= 0) return 0;
-    return Math.min(custom, total);
+    return total;
   };
 
   const getRemainingAmount = () => {
@@ -219,15 +208,46 @@ export default function PaymentPage() {
               <CreditCard className="w-8 h-8 text-primary" />
             </div>
             <h1 className="font-heading text-[28px] text-ink tracking-[1px] mb-2">PEMBAYARAN</h1>
-            <p className="text-gray-600 text-sm">Kode Pesanan: <span className="font-bold text-fire">{order.order_code}</span></p>
+            <p className="text-gray-600 text-sm mb-1">Kode Pesanan: <span className="font-bold text-fire">{order.order_code}</span></p>
+            <p className="text-gray-500 text-xs">Selesaikan pembayaran pesanan Anda dengan mengikuti 4 langkah mudah di bawah ini.</p>
             <div className="mt-2">
               <StatusBadge status={order.status} />
             </div>
           </div>
 
+          {/* Payment Flow Steps */}
+          <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-xl mb-6">
+            <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-5 flex items-center gap-2 border-b border-gray-100 pb-4">
+              <ArrowRight size={18} className="text-primary" /> ALUR PEMBAYARAN
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { icon: Wallet, title: 'Pilih Tipe Pembayaran', desc: 'DP 50% atau Bayar Lunas' },
+                { icon: Building2, title: 'Transfer ke Rekening', desc: 'Sesuai nominal yang tampil' },
+                { icon: Upload, title: 'Upload Bukti Bayar', desc: 'Foto bukti transfer' },
+                { icon: BadgeCheck, title: 'Verifikasi Admin', desc: 'Maks. 1x24 jam' },
+              ].map((step, i) => {
+                const StepIcon = step.icon;
+                return (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center">
+                      <span className="font-heading text-sm text-primary">{i + 1}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="flex items-center gap-1.5 text-ink font-semibold text-xs">
+                        <StepIcon size={14} className="text-primary" /> {step.title}
+                      </p>
+                      <p className="text-gray-500 text-[11px] mt-0.5">{step.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Order Summary */}
           <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-xl mb-6">
-            <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-4 flex items-center gap-2">
+            <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-4 flex items-center gap-2 border-b border-gray-100 pb-4">
               <FileText size={18} className="text-primary" /> DETAIL PESANAN
             </h3>
             <div className="space-y-3 text-sm">
@@ -252,7 +272,7 @@ export default function PaymentPage() {
 
           {/* Payment Progress */}
           <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-xl mb-6">
-            <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-4 flex items-center gap-2">
+            <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-4 flex items-center gap-2 border-b border-gray-100 pb-4">
               <Wallet size={18} className="text-primary" /> PROGRES PEMBAYARAN
             </h3>
             <div className="space-y-3">
@@ -269,9 +289,9 @@ export default function PaymentPage() {
                 <span className="text-fire font-bold text-lg">{formatRupiah(remaining)}</span>
               </div>
               {/* Progress bar */}
-              <div className="w-full bg-gray-200 rounded-full h-3 mt-2">
+              <div className="w-full bg-gray-100 border border-gray-200 rounded-full h-3 mt-2 overflow-hidden">
                 <div
-                  className="bg-primary h-3 rounded-full transition-all duration-500"
+                  className="bg-gradient-to-r from-primary to-primary-dark h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min((totalPaid / order.total_price) * 100, 100)}%` }}
                 />
               </div>
@@ -299,9 +319,14 @@ export default function PaymentPage() {
           {/* Payment Type Selection */}
           {remaining > 0 && (
             <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-xl mb-6">
-              <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-4 flex items-center gap-2">
+              <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-4 flex items-center gap-2 border-b border-gray-100 pb-4">
                 <CircleDollarSign size={18} className="text-primary" /> {isPelunasanMode ? 'PELUNASAN DP' : 'PILIH TIPE PEMBAYARAN'}
               </h3>
+              {!isPelunasanMode && (
+                <p className="text-gray-500 text-xs mb-4 -mt-2">
+                  Pilih cara bayar. Nominal transfer otomatis menyesuaikan.
+                </p>
+              )}
 
               {isPelunasanMode ? (
                 <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 text-center">
@@ -311,7 +336,7 @@ export default function PaymentPage() {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {availableTypes.map((type) => {
                       const Icon = type.icon;
                       const isActive = selectedType === type.id;
@@ -322,7 +347,7 @@ export default function PaymentPage() {
                           className={`p-4 rounded-xl border-2 text-left transition-all ${
                             isActive
                               ? 'border-primary bg-primary/5 shadow-sm'
-                              : 'border-gray-200 bg-white hover:border-gray-300'
+                              : 'border-gray-200 bg-white hover:border-primary/40 hover:bg-gray-50'
                           }`}
                         >
                           <Icon size={24} className={isActive ? 'text-primary' : 'text-gray-400'} />
@@ -334,35 +359,17 @@ export default function PaymentPage() {
                       );
                     })}
                   </div>
-
-                  {selectedType === 'pelunasan' && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                      <label className="text-gray-500 text-xs uppercase tracking-wider block mb-2 font-medium">Jumlah Pelunasan (Rp)</label>
-                      <input
-                        type="number"
-                        value={customAmount}
-                        onChange={(e) => setCustomAmount(e.target.value)}
-                        placeholder="Masukkan jumlah..."
-                        min="1000"
-                        max={remaining}
-                        className="w-full bg-white border border-gray-300 text-ink rounded-lg px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-gray-400"
-                      />
-                      <p className="text-gray-500 text-xs mt-2">
-                        Maksimal: {formatRupiah(remaining)}
-                      </p>
-                    </div>
-                  )}
                 </>
               )}
 
-              <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-xl">
+              <div className="mt-4 p-5 bg-primary/10 border-2 border-primary/30 rounded-xl">
                 <div className="flex justify-between items-center">
                   <span className="text-ink font-semibold">Jumlah Dibayar:</span>
-                  <span className="text-primary font-bold text-xl">{formatRupiah(payAmount)}</span>
+                  <span className="text-primary font-bold text-[28px] leading-none">{formatRupiah(payAmount)}</span>
                 </div>
                 {!isPelunasanMode && selectedType !== 'full' && remaining > payAmount && (
-                  <p className="text-gray-500 text-xs mt-1">
-                    Sisa setelah pembayaran ini: {formatRupiah(remaining - payAmount)}
+                  <p className="text-gray-500 text-xs mt-2">
+                    Sisa setelah pembayaran ini: <span className="font-semibold text-ink">{formatRupiah(remaining - payAmount)}</span>
                   </p>
                 )}
               </div>
@@ -372,7 +379,7 @@ export default function PaymentPage() {
           {/* Bank Transfer Info */}
           {remaining > 0 && (
             <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-xl mb-6">
-              <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-4 flex items-center gap-2">
+              <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-4 flex items-center gap-2 border-b border-gray-100 pb-4">
                 <Building2 size={18} className="text-primary" /> TRANSFER BANK
               </h3>
               <div className="space-y-3">
@@ -380,7 +387,7 @@ export default function PaymentPage() {
                   <div key={acc.number} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
                     <div>
                       <p className="text-ink font-semibold text-sm">Bank {acc.bank}</p>
-                      <p className="text-primary font-bold text-lg font-mono">{acc.number}</p>
+                      <p className="text-primary font-bold text-[20px] font-mono tracking-wider">{acc.number}</p>
                       <p className="text-gray-500 text-xs">a.n. {acc.name}</p>
                     </div>
                     <button
@@ -400,16 +407,19 @@ export default function PaymentPage() {
                   </div>
                 ))}
               </div>
-              <p className="text-gray-500 text-xs mt-3 text-center">
-                Transfer sebesar <strong className="text-primary">{formatRupiah(payAmount)}</strong> ke salah satu rekening di atas
-              </p>
+              <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <p className="text-amber-800 text-xs flex items-center gap-2">
+                  <AlertCircle size={14} className="flex-shrink-0" />
+                  Transfer sebesar <strong className="text-amber-900">{formatRupiah(payAmount)}</strong> ke salah satu rekening di atas, lalu upload bukti bayar di langkah berikutnya.
+                </p>
+              </div>
             </div>
           )}
 
           {/* Upload Proof */}
           {remaining > 0 && (
             <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-xl mb-6">
-              <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-4 flex items-center gap-2">
+              <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-4 flex items-center gap-2 border-b border-gray-100 pb-4">
                 <Upload size={18} className="text-primary" /> UPLOAD BUKTI BAYAR
               </h3>
 
@@ -491,7 +501,7 @@ export default function PaymentPage() {
           {/* Payment History */}
           {payments.length > 0 && (
             <div className="bg-white border border-gray-200 shadow-sm p-6 rounded-xl mb-6">
-              <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-4 flex items-center gap-2">
+              <h3 className="font-heading text-[20px] text-ink tracking-[1px] mb-4 flex items-center gap-2 border-b border-gray-100 pb-4">
                 <Clock size={18} className="text-primary" /> RIWAYAT PEMBAYARAN
               </h3>
               <div className="space-y-3">

@@ -9,6 +9,7 @@ import Icon from '../components/ui/Icon';
 import ServiceIcon from '../components/ui/ServiceIcons';
 import ScrollReveal from '../components/ui/ScrollReveal';
 import { formatRupiah, getMinPrice } from '../utils/formatRupiah';
+import { WA_URL } from '../constants/whatsapp';
 
 export default function CatalogPage() {
   const [services, setServices] = useState([]);
@@ -98,7 +99,7 @@ export default function CatalogPage() {
             <div className="mt-16 bg-ink p-8 text-center">
               <h3 className="font-heading text-[28px] text-white tracking-[1px] mb-4">BUTUH BANTUAN MEMILIH LAYANAN?</h3>
               <p className="text-gray text-[14px] mb-6">Tim kami siap membantu Anda menemukan solusi terbaik</p>
-              <a target='_blank' href="https://wa.me/6287877294587" className="btn-acid">
+              <a target='_blank' href={WA_URL} className="btn-acid">
                 Konsultasi via WhatsApp
               </a>
             </div>

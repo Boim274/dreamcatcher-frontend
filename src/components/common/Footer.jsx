@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import Icon from '../ui/Icon';
+import { NAV_LINKS } from '../../constants/nav';
+import { scrollToTop } from '../../utils/scrollToTop';
 
 export default function Footer() {
   return (
@@ -7,7 +9,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-[5%] py-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <Link to="/" className="flex items-center gap-2 no-underline">
+            <Link to="/" onClick={scrollToTop} className="flex items-center gap-2 no-underline">
               <img src="/logo.png" alt="Dreamcatcher" className="h-10" />
               <span className="font-heading text-[22px] text-primary tracking-[2px]">
                 Dream<span className="text-[#ef69a9]">catcher</span>
@@ -21,11 +23,17 @@ export default function Footer() {
           <div>
             <h3 className="font-heading text-[18px] text-chrome tracking-[1px] mb-4">NAVIGASI</h3>
             <ul className="space-y-2 list-none">
-              <li><Link to="/layanan" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Layanan</Link></li>
-              <li><Link to="/design-studio" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Design Studio</Link></li>
-              <li><Link to="/pricelist" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Daftar Harga</Link></li>
-              <li><Link to="/size-chart" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Size Chart</Link></li>
-              <li><Link to="/about" className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]">Tentang Kami</Link></li>
+              {NAV_LINKS.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    onClick={scrollToTop}
+                    className="text-gray hover:text-primary transition-colors text-[13px] no-underline tracking-[1px]"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

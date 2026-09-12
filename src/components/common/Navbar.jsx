@@ -7,16 +7,12 @@ import Icon from '../ui/Icon';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import { useToast } from '../ui/Toast';
 import CustomerProfileModal from './CustomerProfileModal';
+import DpPaymentAlert from './DpPaymentAlert';
+import { WA_URL } from '../../constants/whatsapp';
+import { NAV_LINKS } from '../../constants/nav';
+import { scrollToTop } from '../../utils/scrollToTop';
 
-const navLinks = [
-  { to: '/', label: 'Beranda' },
-  { to: '/layanan', label: 'Layanan' },
-  { to: '/produk', label: 'Produk' },
-  { to: '/design-studio', label: 'Design Studio' },
-  { to: '/pricelist', label: 'Harga' },
-  { to: '/size-chart', label: 'Size Chart' },
-  { to: '/about', label: 'Tentang' },
-];
+const navLinks = NAV_LINKS;
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,15 +52,15 @@ export default function Navbar() {
     toast.success('Berhasil logout. Sampai jumpa!');
   };
 
-  const handleNavClick = (e) => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleNavClick = () => {
+    scrollToTop();
   };
 
   return (
     <>
     <nav className="bg-ink border-b-[3px] border-primary px-[5%] sticky top-0 z-50">
       <div className="flex items-center justify-between h-16">
-        <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2 no-underline">
+        <Link to="/" onClick={scrollToTop} className="flex items-center gap-2 no-underline">
           <img src="/logo.png" alt="Dreamcatcher" className="h-10" />
           <span className="font-heading text-[24px] text-primary tracking-[2px]">
             Dream<span className="text-[#ef69a9]">catcher</span>
@@ -91,7 +87,7 @@ export default function Navbar() {
           </ul>
 
           <a
-            href="https://wa.me/6287877294587"
+            href={WA_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-[#c8f000] hover:bg-[#4bc278] text-white font-semibold py-2 px-4 text-[13px] tracking-[1px] uppercase no-underline transition-colors"
@@ -134,6 +130,12 @@ export default function Navbar() {
                     className="flex items-center gap-2 px-4 py-2 text-chrome hover:bg-card hover:text-primary transition-colors text-[13px]"
                   >
                     <Icon name="package" size={16} /> Pesanan Saya
+                  </Link>
+                  <Link
+                    to="/histori-pesanan"
+                    className="flex items-center gap-2 px-4 py-2 text-chrome hover:bg-card hover:text-primary transition-colors text-[13px]"
+                  >
+                    <Icon name="clock" size={16} /> Histori Pesanan
                   </Link>
                   <Link
                     to="/pesan"
@@ -208,6 +210,13 @@ export default function Navbar() {
                   Pesanan Saya
                 </Link>
                 <Link
+                  to="/histori-pesanan"
+                  onClick={() => setIsOpen(false)}
+                  className="font-medium py-2 text-chrome text-[14px] tracking-[1px] uppercase no-underline"
+                >
+                  Histori Pesanan
+                </Link>
+                <Link
                   to="/pesan"
                   onClick={() => setIsOpen(false)}
                   className="font-medium py-2 text-chrome text-[14px] tracking-[1px] uppercase no-underline"
@@ -244,13 +253,14 @@ export default function Navbar() {
               </div>
             )}
 
-            <a href="https://wa.me/6281234567890" className="bg-[#c8f000] text-white font-semibold py-3 text-center mt-2 no-underline uppercase tracking-[1px] text-[14px]">
+            <a href={WA_URL} className="bg-[#c8f000] text-white font-semibold py-3 text-center mt-2 no-underline uppercase tracking-[1px] text-[14px]">
               WhatsApp
             </a>
           </div>
         </div>
       )}
     </nav>
+    <DpPaymentAlert />
     <CustomerProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
     <ConfirmDialog
       isOpen={showLogoutConfirm}

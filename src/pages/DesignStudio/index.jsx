@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense, useEffect } from 'react';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import ScrollToTop from '../../components/common/ScrollToTop';
+import ScrollReveal from '../../components/ui/ScrollReveal';
 import Icon from '../../components/ui/Icon';
 import AIGenerateTab from './AIGenerateTab';
 import MockupEditorTab from './MockupEditorTab';
-import ARTryOnTab from './ARTryOnTab';
+
+const ARTryOnTab = lazy(() => import('./ARTryOnTab'));
 
 const tabs = [
   { id: 'ai', label: 'AI Generate', icon: 'zap', desc: 'Buat desain dengan AI' },
@@ -13,14 +15,34 @@ const tabs = [
   { id: 'ar', label: 'AR Try-On', icon: 'camera', desc: 'Coba pakai AR' },
 ];
 
+const STORAGE_KEY = 'design-studio-state';
+
+function readPersistedState() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
 export default function DesignStudioPage() {
-  const [activeTab, setActiveTab] = useState('ai');
-  const [generatedDesign, setGeneratedDesign] = useState(null);
+  const [persisted] = useState(readPersistedState);
+  const [activeTab, setActiveTab] = useState(() => persisted.activeTab || 'ai');
+  const [generatedDesign, setGeneratedDesign] = useState(() => persisted.generatedDesign || null);
+  const [activeConversationId, setActiveConversationId] = useState(() => persisted.activeConversationId || null);
   const [selectedColor, setSelectedColor] = useState('#ffffff');
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ activeTab, generatedDesign, activeConversationId }));
+  }, [activeTab, generatedDesign, activeConversationId]);
 
   const handleDesignReady = (design) => {
     setGeneratedDesign(design);
     setActiveTab('mockup');
+  };
+
+  const handleDesignChange = (design) => {
+    setGeneratedDesign(design);
   };
 
   return (
@@ -28,11 +50,14 @@ export default function DesignStudioPage() {
       <Navbar />
       <main className="flex-1 py-8 sm:py-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <div className="section-tag">&mdash; design studio</div>
-            <h1 className="section-title">DESIGN<br/>STUDIO</h1>
-            <div className="divider mx-auto"></div>
-            <p className="section-sub mx-auto">Buat desain, lihat preview di kaos, atau coba pakai langsung dengan AR</p>
+          <div className="text-center mb-12 relative">
+            <div className="graffiti-deco">DESIGN<br/>STUDIO</div>
+            <ScrollReveal>
+              <div className="section-tag">&mdash; design studio</div>
+              <h1 className="section-title">DESIGN<br/>STUDIO</h1>
+              <div className="divider mx-auto"></div>
+              <p className="section-sub mx-auto">Buat desain, lihat preview di kaos, atau coba pakai langsung dengan AR</p>
+            </ScrollReveal>
           </div>
 
           {/* Tab Navigation */}
@@ -55,9 +80,13 @@ export default function DesignStudioPage() {
 
           {/* Tab Content */}
           <div className="animate-fade-in">
-            {activeTab === 'ai' && <AIGenerateTab onDesignReady={handleDesignReady} />}
-            {activeTab === 'mockup' && <MockupEditorTab design={generatedDesign} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
-            {activeTab === 'ar' && <ARTryOnTab design={generatedDesign} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
+            {activeTab === 'ai' && <AIGenerateTab onDesignReady={handleDesignReady} initialConversationId={activeConversationId} onActiveConversationChange={setActiveConversationId} />}
+            {activeTab === 'mockup' && <MockupEditorTab design={generatedDesign} selectedColor={selectedColor} setSelectedColor={setSelectedColor} onDesignChange={handleDesignChange} />}
+            {activeTab === 'ar' && (
+              <Suspense fallback={<div className="text-center text-gray py-16">Memuat AR Try-On...</div>}>
+                <ARTryOnTab design={generatedDesign} selectedColor={selectedColor} setSelectedColor={setSelectedColor} onDesignChange={handleDesignChange} onExit={() => setActiveTab('mockup')} />
+              </Suspense>
+            )}
           </div>
         </div>
       </main>

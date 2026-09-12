@@ -12,7 +12,7 @@ const initialDesign = {
   type: null,
   prompt: null,
 };
-const initialPrintArea = { position: null, printSize: null, design: { ...initialDesign } };
+const initialPrintArea = { position: null, printSize: null, customWidth: '', customHeight: '', design: { ...initialDesign } };
 const initialCustomer = {
   name: '',
   email: '',
@@ -79,7 +79,19 @@ export const useOrderStore = create(
 
       setPrintAreaSize: (index, printSize) => set((state) => {
         const newAreas = [...state.printAreas];
-        newAreas[index] = { ...newAreas[index], printSize };
+        newAreas[index] = { ...newAreas[index], printSize, customWidth: '', customHeight: '' };
+        return { printAreas: newAreas };
+      }),
+
+      setPrintAreaCustomSize: (index, customWidth, customHeight) => set((state) => {
+        const newAreas = [...state.printAreas];
+        const hasValues = customWidth && customHeight;
+        newAreas[index] = {
+          ...newAreas[index],
+          printSize: hasValues ? `custom_${customWidth}x${customHeight}` : '_custom',
+          customWidth,
+          customHeight,
+        };
         return { printAreas: newAreas };
       }),
 
@@ -209,7 +221,9 @@ export const useOrderStore = create(
       },
 
       getTotalPrice: () => {
-        return get().getSubtotal() + get().getShippingCost();
+        const subtotal = get().getSubtotal();
+        const surcharge = get().getAreaSurcharge() * get().getTotalQuantity();
+        return subtotal + surcharge + get().getShippingCost();
       },
 
       getDpAmount: () => {

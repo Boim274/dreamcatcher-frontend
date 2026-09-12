@@ -20,7 +20,7 @@ export default function ProductDetailPage() {
   const toast = useToast();
   const { addItem } = useCartStore();
   const { isAuthenticated } = useAuthStore();
-  const { openModal } = useAuthModalStore();
+  const { openLogin } = useAuthModalStore();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,13 +46,13 @@ export default function ProductDetailPage() {
   }, [id]);
 
   const handleAddToCart = () => {
-    if (!isAuthenticated) { openModal(); return; }
+    if (!isAuthenticated) { openLogin(); return; }
     addItem(product, selectedSize, selectedColor, quantity);
     toast.success('Ditambahkan ke keranjang!');
   };
 
   const handleBuyNow = () => {
-    if (!isAuthenticated) { openModal(); return; }
+    if (!isAuthenticated) { openLogin(); return; }
     addItem(product, selectedSize, selectedColor, quantity);
     navigate('/keranjang');
   };

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import ScrollReveal from '../ui/ScrollReveal';
+import { getImageUrl } from '../../utils/getImageUrl';
 
 const GAP_PX = 16;
 
@@ -41,7 +42,7 @@ function TestimonialCard({ item }) {
       <div className="flex items-center gap-3 pt-4 border-t border-[#e0d8cc]">
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
           {item.image_url ? (
-            <img src={item.image_url} alt="" className="w-full h-full rounded-full object-cover" />
+            <img src={getImageUrl(item.image_url)} alt="" className="w-full h-full rounded-full object-cover" />
           ) : (
             <span className="text-primary font-bold text-sm">{item.customer_name?.[0] ?? '?'}</span>
           )}
@@ -69,11 +70,24 @@ function StaticGrid({ testimonials }) {
 function CarouselView({ testimonials }) {
   const itemsPerView = useItemsPerView();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const intervalRef = useRef(null);
 
   const maxIndex = Math.max(0, testimonials.length - itemsPerView);
   const effectiveIndex = Math.min(currentIndex, maxIndex);
   const canPrev = effectiveIndex > 0;
   const canNext = effectiveIndex < maxIndex;
+
+  useEffect(() => {
+    if (testimonials.length <= itemsPerView || isPaused) return;
+    intervalRef.current = setInterval(() => {
+      setCurrentIndex((prev) => {
+        const idx = Math.min(prev, maxIndex);
+        return idx >= maxIndex ? 0 : idx + 1;
+      });
+    }, 4000);
+    return () => clearInterval(intervalRef.current);
+  }, [testimonials.length, itemsPerView, maxIndex, isPaused]);
 
   const cardWidth = `calc((100% - ${(itemsPerView - 1) * GAP_PX}px) / ${itemsPerView})`;
   const translateX = `calc(-${effectiveIndex} * (${cardWidth} + ${GAP_PX}px))`;
@@ -83,7 +97,7 @@ function CarouselView({ testimonials }) {
 
   return (
     <ScrollReveal direction="up">
-      <div className="relative px-12">
+      <div className="relative px-12" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
         <button
           type="button"
           onClick={() => setCurrentIndex((prev) => Math.max(0, Math.min(prev, maxIndex) - 1))}

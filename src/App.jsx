@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './store/authStore';
 import { useAuthModalStore } from './store/authModalStore';
+import { useCartStore } from './store/cartStore';
+import { authService } from './services/authService';
 import feather from 'feather-icons';
 
 import LandingPage from './pages/LandingPage';
@@ -13,6 +14,7 @@ import CartPage from './pages/CartPage';
 import OrderPage from './pages/OrderPage';
 import PaymentPage from './pages/PaymentPage';
 import MyOrdersPage from './pages/MyOrdersPage';
+import CustomerOrderHistoryPage from './pages/CustomerOrderHistoryPage';
 import PricelistPage from './pages/PricelistPage';
 import DesignStudioPage from './pages/DesignStudio';
 import SizeChartPage from './pages/SizeChartPage';
@@ -21,8 +23,10 @@ import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import DashboardPage from './pages/admin/DashboardPage';
 import OrdersPage from './pages/admin/OrdersPage';
+import OrderHistoryPage from './pages/admin/OrderHistoryPage';
 import OrderDetailPage from './pages/admin/OrderDetailPage';
 import PaymentsPage from './pages/admin/PaymentsPage';
+import PaymentHistoryPage from './pages/admin/PaymentHistoryPage';
 import ServicesPage from './pages/admin/ServicesPage';
 import PortfoliosPage from './pages/admin/PortfoliosPage';
 import ProductsPage from './pages/admin/ProductsPage';
@@ -32,20 +36,14 @@ import SizesPage from './pages/admin/SizesPage';
 import TestimonialsPage from './pages/admin/TestimonialsPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import ReportsPage from './pages/admin/ReportsPage';
+import UsersPage from './pages/admin/UsersPage';
 import AuthModal from './components/ui/AuthModal';
+import WhatsAppButton from './components/common/WhatsAppButton';
 import { ToastProvider } from './components/ui/Toast';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      retry: 1,
-    },
-  },
-});
-
 function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isInitialized } = useAuthStore();
+  if (!isInitialized) return null;
   return isAuthenticated ? children : <Navigate to="/admin/login" replace />;
 }
 
@@ -79,6 +77,30 @@ function AppContent() {
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  // Keep the cart scoped to the logged-in user: switching accounts (or logging
+  // out) loads that account's own cart instead of a shared global one.
+  useEffect(() => {
+    const syncCart = () => {
+      const id = authService.getUser()?.id;
+      if (id == null) {
+        useCartStore.setState({ items: [] });
+        return;
+      }
+      try {
+        const raw = localStorage.getItem(`cart-u${id}`);
+        const stored = raw ? JSON.parse(raw) : null;
+        useCartStore.setState({ items: stored?.state?.items || stored?.items || [] });
+      } catch {
+        useCartStore.setState({ items: [] });
+      }
+    };
+
+    const unsubscribe = useAuthStore.subscribe((state, prev) => {
+      if (state.user?.id !== prev.user?.id) syncCart();
+    });
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     feather.replace();
@@ -128,6 +150,11 @@ function AppContent() {
             <MyOrdersPage />
           </CustomerProtectedRoute>
         } />
+        <Route path="/histori-pesanan" element={
+          <CustomerProtectedRoute>
+            <CustomerOrderHistoryPage />
+          </CustomerProtectedRoute>
+        } />
 
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={
@@ -137,8 +164,10 @@ function AppContent() {
         }>
           <Route index element={<DashboardPage />} />
           <Route path="pesanan" element={<OrdersPage />} />
+          <Route path="histori-pesanan" element={<OrderHistoryPage />} />
           <Route path="pesanan/:id" element={<OrderDetailPage />} />
           <Route path="pembayaran" element={<PaymentsPage />} />
+          <Route path="histori-pembayaran" element={<PaymentHistoryPage />} />
           <Route path="layanan" element={<ServicesPage />} />
           <Route path="portfolio" element={<PortfoliosPage />} />
           <Route path="produk" element={<ProductsPage />} />
@@ -148,21 +177,21 @@ function AppContent() {
           <Route path="testimoni" element={<TestimonialsPage />} />
           <Route path="pengaturan" element={<SettingsPage />} />
           <Route path="laporan" element={<ReportsPage />} />
+          <Route path="pengguna" element={<UsersPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <AuthModal />
+      <WhatsAppButton />
     </BrowserRouter>
   );
 }
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <AppContent />
-      </ToastProvider>
-    </QueryClientProvider>
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
   );
 }

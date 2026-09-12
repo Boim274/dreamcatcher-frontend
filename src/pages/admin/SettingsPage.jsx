@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import api from '../../services/api';
+import { adminService } from '../../services/adminService';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useToast } from '../../components/ui/Toast';
 import { Store, MapPin, Phone, Mail, MessageCircle, Truck, DollarSign, Save } from 'lucide-react';
+import ErrorBoundary from '../../components/ui/ErrorBoundary';
 
 const groups = {
   general: { label: 'Umum', icon: Store },
@@ -18,15 +19,17 @@ export default function SettingsPage() {
   const [activeGroup, setActiveGroup] = useState('general');
 
   useEffect(() => {
-    fetchSettings();
+    const controller = new AbortController();
+    fetchSettings(controller.signal);
+    return () => controller.abort();
   }, []);
 
-  const fetchSettings = async () => {
+  const fetchSettings = async (signal) => {
     try {
-      const res = await api.get('/admin/settings');
-      setSettings(res.data.settings);
+      const res = await adminService.getSettings(signal);
+      setSettings(res);
     } catch (error) {
-      console.error('Failed to fetch settings:', error);
+      if (error?.name !== 'CanceledError') console.error('Failed to fetch settings:', error);
     } finally {
       setLoading(false);
     }
@@ -54,9 +57,7 @@ export default function SettingsPage() {
         grouped[s.group].push({ key: s.key, value: s.value, group: s.group });
       });
 
-      for (const [group, items] of Object.entries(grouped)) {
-        await api.put('/admin/settings', { settings: items });
-      }
+      await adminService.saveSettings(grouped);
       toast.success('Pengaturan berhasil disimpan');
     } catch (error) {
       toast.error('Gagal menyimpan pengaturan');
@@ -70,7 +71,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div>
+    <ErrorBoundary>
+      <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <h1 className="font-heading text-[28px] text-white tracking-[1px]">Pengaturan</h1>
         <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2">
@@ -191,5 +193,6 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

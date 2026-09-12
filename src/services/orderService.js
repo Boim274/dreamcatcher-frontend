@@ -18,8 +18,8 @@ export const orderService = {
     return response.data;
   },
 
-  getAll: async () => {
-    const response = await api.get('/orders');
+  getAll: async (params = {}) => {
+    const response = await api.get('/orders', { params });
     return response.data;
   },
 

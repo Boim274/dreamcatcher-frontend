@@ -11,6 +11,7 @@ import ScrollReveal from '../components/ui/ScrollReveal';
 import Icon from '../components/ui/Icon';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { formatRupiah } from '../utils/formatRupiah';
+import { waLink } from '../constants/whatsapp';
 import {
   CheckCircle, Clock, Package, CreditCard, Search, Filter, ShoppingBag,
   ClipboardList, Loader, PartyPopper, XCircle, Phone, Hash, Lock,
@@ -19,12 +20,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 
-const getImageUrl = (path) => {
-  if (!path) return '';
-  if (path.startsWith('data:') || path.startsWith('http')) return path;
-  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
-  return `${baseUrl}/${path}`;
-};
+import { getImageUrl } from '../utils/getImageUrl';
 
 const statusSteps = [
   { key: 'pending', label: 'Pesanan Diterima', description: 'Pesanan Anda sudah diterima dan menunggu konfirmasi dari admin.', icon: ClipboardList },
@@ -221,7 +217,7 @@ function OrderDetailSection({ order }) {
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-[13px] font-medium leading-snug mb-1">{item.product.description || item.product_name}</p>
+                      <p className="text-white text-[13px] font-medium leading-snug mb-1">{item.product.name || item.product_name}</p>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-gray text-[10px] font-mono">ID Produk: #{item.product.id}</span>
                         <CopyId id={item.product.id} />
@@ -239,7 +235,7 @@ function OrderDetailSection({ order }) {
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-[13px] font-medium mb-1">{item.product_name || item.service?.name || '-'}</p>
+                      <p className="text-white text-[13px] font-medium mb-1">{item.service?.name || item.product_name || '-'}</p>
                       <p className="text-gray-light text-[11px] leading-relaxed">{renderItemDetails(item)}</p>
                     </div>
                   </>
@@ -419,7 +415,7 @@ function ActionButtons({ order, onCancelSuccess, onTestimonialSuccess }) {
           </button>
         )}
         <a
-          href={`https://wa.me/6281234567890?text=Halo%20Dreamcatcher%2C%20saya%20ingin%20menanyakan%20pesanan%20%23${order.order_code}`}
+          href={waLink(`Halo Dreamcatcher, saya ingin menanyakan pesanan #${order.order_code}`)}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-primary hover:text-white transition-colors text-[13px] uppercase tracking-[1px]"
@@ -552,6 +548,12 @@ function GuestTrackForm() {
                 <span className="font-mono text-[16px] text-primary font-bold tracking-wider">#{order.order_code}</span>
                 <StatusBadge status={order.status} />
               </div>
+              {(() => {
+                const itemNames = (order.items || []).map(i => i.product?.name || i.service?.name || i.product_name).filter(Boolean);
+                if (itemNames.length === 0) return null;
+                const title = itemNames.length === 1 ? itemNames[0] : `${itemNames[0]} (+${itemNames.length - 1} item lainnya)`;
+                return <p className="text-white text-[14px] font-medium leading-snug mb-1">{title}</p>;
+              })()}
               <p className="text-[12px] text-gray-light mb-2">
                 {new Date(order.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </p>
@@ -643,6 +645,8 @@ function GuestTrackForm() {
   );
 }
 
+const ACTIVE_STATUSES = ['pending', 'waiting_payment', 'waiting_verification', 'ready_to_process', 'processing', 'ready_for_pickup', 'cancel_requested'];
+
 const filterTabs = [
   { key: 'all', label: 'Semua' },
   { key: 'waiting_payment', label: 'Menunggu Bayar' },
@@ -651,9 +655,7 @@ const filterTabs = [
   { key: 'ready_to_process', label: 'Siap Proses' },
   { key: 'processing', label: 'Diproses' },
   { key: 'ready_for_pickup', label: 'Siap Ambil' },
-  { key: 'completed', label: 'Selesai' },
   { key: 'cancel_requested', label: 'Pembatalan' },
-  { key: 'cancelled', label: 'Dibatalkan' },
 ];
 
 function OrderCard({ order, onRefresh }) {
@@ -672,21 +674,22 @@ function OrderCard({ order, onRefresh }) {
   const isCompleted = order.status === 'completed';
 
   const heroText = (() => {
-    const prod = items.find(i => i.product?.description);
-    if (prod) return prod.product.description;
-    const svc = items.find(i => i.service?.name);
-    if (svc) return svc.service.name;
+    const itemNames = items
+      .map(i => i.product?.name || i.service?.name || i.product_name)
+      .filter(Boolean);
+    if (itemNames.length > 0) {
+      if (itemNames.length === 1) return itemNames[0];
+      return `${itemNames[0]} (+${itemNames.length - 1} item lainnya)`;
+    }
     if (order.description) return order.description;
-    const name = items.find(i => i.product_name);
-    if (name) return name.product_name;
-    return null;
+    return `Pesanan #${order.order_code}`;
   })();
 
   const thumbUrl = (() => {
     const d = items.find(i => i.design?.image_url);
     if (d) return getImageUrl(d.design.image_url);
     const p = items.find(i => i.product?.images?.length > 0);
-    if (p) return p.product.images[0].image_url;
+    if (p) return getImageUrl(p.product.images[0].image_url);
     return null;
   })();
 
@@ -806,7 +809,7 @@ export default function MyOrdersPage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await orderService.getAll();
+      const data = await orderService.getAll({ status: ACTIVE_STATUSES });
       setOrders(data.orders?.data || data.orders || []);
     } catch {
       setError('Gagal memuat pesanan');
@@ -821,8 +824,30 @@ export default function MyOrdersPage() {
     let result = orders;
     if (activeFilter !== 'all') result = result.filter(o => o.status === activeFilter);
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(o => o.order_code?.toLowerCase().includes(q) || o.customer_name?.toLowerCase().includes(q));
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(o => {
+        if (o.order_code?.toLowerCase().includes(q)) return true;
+        if (o.customer_name?.toLowerCase().includes(q)) return true;
+        const orderItems = o.items || [];
+        return orderItems.some(item => {
+          const prodName = (item.product?.name || '').toLowerCase();
+          const svcName = (item.service?.name || '').toLowerCase();
+          const pName = (item.product_name || '').toLowerCase();
+          const variant = (item.variant_label || '').toLowerCase();
+          const size = (item.size || '').toLowerCase();
+          const color = (item.selected_color || '').toLowerCase();
+          const sablon = (item.sablon_type || '').toLowerCase();
+          return (
+            prodName.includes(q) ||
+            svcName.includes(q) ||
+            pName.includes(q) ||
+            variant.includes(q) ||
+            size.includes(q) ||
+            color.includes(q) ||
+            sablon.includes(q)
+          );
+        });
+      });
     }
     return result;
   }, [orders, activeFilter, searchQuery]);
@@ -917,7 +942,7 @@ export default function MyOrdersPage() {
             <ScrollReveal>
               <div className="relative mb-4">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray" />
-                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Cari kode pesanan atau nama..."
+                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Cari produk, layanan, kode pesanan..."
                   className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-xl text-[13px] text-white placeholder-gray focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors" />
               </div>
             </ScrollReveal>

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import ScrollToTop from '../components/common/ScrollToTop';
@@ -12,6 +12,7 @@ import PortfolioCarousel from '../components/common/PortfolioCarousel';
 import TestimonialCarousel from '../components/common/TestimonialCarousel';
 import api from '../services/api';
 import { formatRupiah, getMinPrice } from '../utils/formatRupiah';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const features = [
   { icon: 'zap', title: 'AI Design Generator', desc: 'Generate desain custom dengan teknologi AI' },
@@ -59,6 +60,8 @@ export default function LandingPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     Promise.all([
@@ -79,6 +82,21 @@ export default function LandingPage() {
       .catch(() => {})
       .finally(() => setProductsLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (products.length === 0 || isPaused) return;
+    const id = setInterval(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if (el.scrollLeft >= maxScroll - 10) {
+        el.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        el.scrollBy({ left: 300, behavior: 'smooth' });
+      }
+    }, 4000);
+    return () => clearInterval(id);
+  }, [products.length, isPaused]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -283,32 +301,63 @@ export default function LandingPage() {
 
           {productsLoading ? (
             <div className="py-12"><Spinner size="lg" /></div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
-              {products.slice(0, 4).map((product) => (
-                <ScrollReveal key={product.id} direction="up" delay={100}>
-                  <Link to={`/produk/${product.id}`} className="block bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all group no-underline">
-                    <div className="aspect-square bg-ink overflow-hidden">
-                      <img
-                        src={product.images?.[0]?.image_url || 'https://placehold.co/400x400/333/888?text=No+Image'}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <p className="text-gray text-[9px] uppercase tracking-[1px] mb-1">{product.category?.name || 'Produk'}</p>
-                      <h3 className="font-heading text-[18px] text-white tracking-[0.5px] truncate">{product.name}</h3>
-                      <p className="text-primary font-bold text-[16px] mt-1">{formatRupiah(product.base_price)}</p>
-                    </div>
-                  </Link>
-                </ScrollReveal>
-              ))}
-              {products.length > 4 && (
-                <div className="col-span-full text-center mt-6">
-                  <Link to="/produk" className="btn-acid px-6 py-3 text-[13px]">Lihat Semua Produk</Link>
+          ) : products.length === 0 ? null : (
+            <>
+              <div className="relative mt-12">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = scrollRef.current;
+                    if (el) el.scrollBy({ left: -320, behavior: 'smooth' });
+                  }}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-card border border-border text-gray-light hover:text-white hover:bg-border transition-colors -ml-5"
+                  aria-label="Geser ke kiri"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div
+                  ref={scrollRef}
+                  onMouseEnter={() => setIsPaused(true)}
+                  onMouseLeave={() => setIsPaused(false)}
+                  className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2"
+                >
+                  {products.map((product) => (
+                    <Link
+                      key={product.id}
+                      to={`/produk/${product.id}`}
+                      className="flex-shrink-0 w-[260px] sm:w-[280px] snap-start bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all group no-underline"
+                    >
+                      <div className="aspect-square bg-ink overflow-hidden">
+                        <img
+                          src={getImageUrl(product.images?.[0]?.image_url || '')}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <p className="text-gray text-[9px] uppercase tracking-[1px] mb-1">{product.category?.name || 'Produk'}</p>
+                        <h3 className="font-heading text-[18px] text-white tracking-[0.5px] truncate">{product.name}</h3>
+                        <p className="text-primary font-bold text-[16px] mt-1">{formatRupiah(product.base_price)}</p>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
-              )}
-            </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = scrollRef.current;
+                    if (el) el.scrollBy({ left: 320, behavior: 'smooth' });
+                  }}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-card border border-border text-gray-light hover:text-white hover:bg-border transition-colors -mr-5"
+                  aria-label="Geser ke kanan"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="text-center mt-8">
+                <Link to="/produk" className="btn-acid px-6 py-3 text-[13px]">Lihat Produk Lengkap</Link>
+              </div>
+            </>
           )}
         </div>
       </section>

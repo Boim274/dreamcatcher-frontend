@@ -15,7 +15,7 @@ export default function ScrollToTop() {
   return (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      className="fixed bottom-6 right-6 z-40 w-12 h-12 bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:bg-primary-dark hover:scale-110 transition-all duration-200 cursor-pointer"
+      className="fixed bottom-6 left-6 z-40 w-12 h-12 bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:bg-primary-dark hover:scale-110 transition-all duration-200 cursor-pointer"
       style={{ clipPath: 'polygon(0 0, 100% 0, 90% 100%, 0 100%)' }}
       aria-label="Scroll to top"
     >

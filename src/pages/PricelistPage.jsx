@@ -9,6 +9,7 @@ import ScrollReveal from '../components/ui/ScrollReveal';
 import ServiceIcon from '../components/ui/ServiceIcons';
 import Icon from '../components/ui/Icon';
 import { formatRupiah, getMinPrice } from '../utils/formatRupiah';
+import { WA_URL } from '../constants/whatsapp';
 
 const colorMap = {
   Putih: '#FFFFFF', Hitam: '#000000', 'Abu Muda': '#D3D3D3', 'Abu Tua': '#555555',
@@ -290,7 +291,7 @@ export default function PricelistPage() {
               </div>
               <a
                 target="_blank"
-                href="https://wa.me/6287877294587"
+                href={WA_URL}
                 className="btn-acid px-6 py-3 text-[14px] sm:text-[16px]"
               >
                 Chat via WhatsApp

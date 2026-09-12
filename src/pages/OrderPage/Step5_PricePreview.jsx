@@ -2,12 +2,7 @@ import { useOrderStore } from '../../store/orderStore';
 import Icon from '../../components/ui/Icon';
 import { formatRupiah } from '../../utils/formatRupiah';
 
-const getImageUrl = (path) => {
-  if (!path) return '';
-  if (path.startsWith('data:') || path.startsWith('http')) return path;
-  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:8000';
-  return `${baseUrl}/${path}`;
-};
+import { getImageUrl } from '../../utils/getImageUrl';
 
 export default function Step5PricePreview() {
   const { selectedService, config, printAreas, getTotalQuantity, getPriceBreakdown, getSubtotal, getShippingCost, getTotalPrice, getDpAmount, getAreaSurcharge, nextStep, prevStep } = useOrderStore();

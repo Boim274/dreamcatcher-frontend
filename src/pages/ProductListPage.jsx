@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import api from '../services/api';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
@@ -7,6 +8,7 @@ import ScrollToTop from '../components/common/ScrollToTop';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import ScrollReveal from '../components/ui/ScrollReveal';
 import { formatRupiah } from '../utils/formatRupiah';
+import { getImageUrl } from '../utils/getImageUrl';
 
 export default function ProductListPage() {
   const [products, setProducts] = useState([]);
@@ -18,6 +20,16 @@ export default function ProductListPage() {
 
   const activeCategory = searchParams.get('category_id') || '';
   const search = searchParams.get('search') || '';
+  const [searchInput, setSearchInput] = useState(search);
+
+  useEffect(() => { setSearchInput(search); }, [search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== search) handleFilter('search', searchInput);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     api.get('/categories').then((res) => setCategories(res.data.categories || [])).catch(() => {});
@@ -65,27 +77,39 @@ export default function ProductListPage() {
             </ScrollReveal>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3 mb-8">
-            <button
-              onClick={() => handleFilter('category_id', '')}
-              className={`px-4 py-2 rounded-lg text-[12px] font-semibold uppercase tracking-[1px] transition-colors ${
-                !activeCategory ? 'bg-primary text-ink' : 'bg-card border border-border text-gray hover:text-white'
-              }`}
-            >
-              Semua
-            </button>
-            {categories.map((cat) => (
+          {/* Search & Filters */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-8">
+            <div className="input-icon-wrapper sm:max-w-xs">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Cari produk..."
+                className="input-dark"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                key={cat.id}
-                onClick={() => handleFilter('category_id', cat.id)}
+                onClick={() => handleFilter('category_id', '')}
                 className={`px-4 py-2 rounded-lg text-[12px] font-semibold uppercase tracking-[1px] transition-colors ${
-                  activeCategory === String(cat.id) ? 'bg-primary text-ink' : 'bg-card border border-border text-gray hover:text-white'
+                  !activeCategory ? 'bg-primary text-ink' : 'bg-card border border-border text-gray hover:text-white'
                 }`}
               >
-                {cat.name}
+                Semua
               </button>
-            ))}
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => handleFilter('category_id', cat.id)}
+                  className={`px-4 py-2 rounded-lg text-[12px] font-semibold uppercase tracking-[1px] transition-colors ${
+                    activeCategory === String(cat.id) ? 'bg-primary text-ink' : 'bg-card border border-border text-gray hover:text-white'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
           </div>
 
           {loading ? (
@@ -102,7 +126,7 @@ export default function ProductListPage() {
                     <Link to={`/produk/${product.id}`} className="block bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all group no-underline">
                       <div className="aspect-square bg-ink overflow-hidden">
                         <img
-                          src={product.images?.[0]?.image_url || 'https://placehold.co/400x400/333/888?text=No+Image'}
+                          src={getImageUrl(product.images?.[0]?.image_url || '')}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
