@@ -4,9 +4,23 @@ import { useToast } from '../../components/ui/Toast';
 import DesignUpload from '../../components/design-studio/DesignUpload';
 import ShirtRenderer from '../../components/design-studio/ShirtRenderer';
 import LayerHandles from '../../components/design-studio/LayerHandles';
-import AIGenerateTab from './AIGenerateTab';
 import { getImageUrl } from '../../utils/getImageUrl';
+import { designService } from '../../services/designService';
+import { getUserSession } from '../../utils/userSession';
+import { Loader2, Sparkles, FolderOpen, X, RefreshCw } from 'lucide-react';
 import { PRINT_SIZES, PRINT_POSITIONS, BODY_CM_W, BODY_CM_H } from '../../constants/printPlacements';
+
+const getMockupStorageKey = (uid) =>
+  uid != null ? `mockup-workspace-u${uid}` : 'mockup-workspace-guest';
+
+function readPersistedMockup(uid) {
+  try {
+    return JSON.parse(localStorage.getItem(getMockupStorageKey(uid))) || null;
+  } catch {
+    return null;
+  }
+}
+
 
 const TSHIRT_COLORS = [
   { id: 'white', label: 'Putih', hex: '#ffffff' },
@@ -84,10 +98,15 @@ function analyzeImageColors(imageUrl) {
   });
 }
 
-export default function MockupEditorTab({ design, selectedColor, setSelectedColor, onDesignChange }) {
+export default function MockupEditorTab({ userId, design, selectedColor, setSelectedColor, onDesignChange }) {
   const toast = useToast();
-  // Seed the editor with a design shared from the AI Generate tab (mount time).
+  const savedWorkspace = readPersistedMockup(userId);
+
+  // Seed the editor with per-user saved workspace or design shared from AI Generate
   const [layers, setLayers] = useState(() => {
+    if (savedWorkspace?.layers && Array.isArray(savedWorkspace.layers) && savedWorkspace.layers.length > 0) {
+      return savedWorkspace.layers;
+    }
     if (design?.imageUrl) {
       const image = resolveDesignUrl(design.imageUrl);
       if (image) {
@@ -104,10 +123,9 @@ export default function MockupEditorTab({ design, selectedColor, setSelectedColo
     return [];
   });
   const [selectedLayerId, setSelectedLayerId] = useState(null);
-  const [showAiPanel, setShowAiPanel] = useState(false);
   const [showTextPanel, setShowTextPanel] = useState(false);
-  const [textConfig, setTextConfig] = useState({ text: '', color: '#ffffff', size: 72 });
-  const [printType, setPrintType] = useState('dtf');
+  const [textConfig, setTextConfig] = useState(() => savedWorkspace?.textConfig || { text: '', color: '#ffffff', size: 72 });
+  const [printType, setPrintType] = useState(() => savedWorkspace?.printType || 'dtf');
   const [colorCount, setColorCount] = useState(0);
   const selectedModel = 'low_poly';
   const [autoRotate, setAutoRotate] = useState(false);
@@ -116,6 +134,40 @@ export default function MockupEditorTab({ design, selectedColor, setSelectedColo
   const [zoom, setZoom] = useState(1);
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
+  const [interactionMode, setInteractionMode] = useState('drag'); // 'drag' | 'orbit'
+
+  // Library modal state for picking from user's AI designs collection
+  const [showLibraryModal, setShowLibraryModal] = useState(false);
+  const [libraryDesigns, setLibraryDesigns] = useState([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
+
+  const lastAppliedDesignIdRef = useRef(design?.id || null);
+
+  // Sync selectedColor if savedWorkspace had one
+  useEffect(() => {
+    if (savedWorkspace?.selectedColor && savedWorkspace.selectedColor !== selectedColor) {
+      setSelectedColor?.(savedWorkspace.selectedColor);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Persist workspace per user
+  useEffect(() => {
+    const key = getMockupStorageKey(userId);
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          layers,
+          selectedColor,
+          printType,
+          textConfig,
+          updated_at: Date.now(),
+        })
+      );
+    } catch {
+      /* ignore storage quota */
+    }
+  }, [userId, layers, selectedColor, printType, textConfig]);
 
   const viewContainerRef = useRef(null);
   const spinYRef = useRef(0);
@@ -189,6 +241,50 @@ export default function MockupEditorTab({ design, selectedColor, setSelectedColo
     probe.onload = () => doAdd(probe.naturalWidth && probe.naturalHeight ? probe.naturalWidth / probe.naturalHeight : 1);
     probe.onerror = () => doAdd(1);
     probe.src = image;
+  };
+
+  // When a new design is passed from AI Generate tab via "Pakai Desain"
+  useEffect(() => {
+    if (!design?.imageUrl) return;
+    if (design.id && design.id === lastAppliedDesignIdRef.current) return;
+    lastAppliedDesignIdRef.current = design.id || Date.now();
+
+    const image = resolveDesignUrl(design.imageUrl);
+    if (!image) return;
+
+    // Avoid duplicate if exact image already in layers
+    const exists = layers.some((l) => l.image === image);
+    if (exists) return;
+
+    addLayer(image, {
+      name: design.prompt ? design.prompt.slice(0, 40) : 'Desain AI',
+      source: design.source || 'ai',
+    });
+  }, [design?.id, design?.imageUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const openLibraryModal = async () => {
+    setShowLibraryModal(true);
+    setLibraryLoading(true);
+    try {
+      const res = await designService.list(getUserSession(), null, { page: 1, per_page: 30 });
+      const paginator = res.designs;
+      const list = Array.isArray(paginator) ? paginator : paginator?.data || [];
+      setLibraryDesigns(list);
+    } catch {
+      toast.error('Gagal memuat koleksi desain.');
+    } finally {
+      setLibraryLoading(false);
+    }
+  };
+
+  const handleSelectLibraryDesign = (d) => {
+    const url = getImageUrl(d.image_url);
+    addLayer(url, {
+      name: d.prompt ? d.prompt.slice(0, 40) : 'Desain AI',
+      source: 'ai',
+    });
+    setShowLibraryModal(false);
+    toast.success('Desain dari koleksi berhasil ditambahkan ke kaos!');
   };
 
   const updateLayer = (id, patch) => {
@@ -287,15 +383,23 @@ export default function MockupEditorTab({ design, selectedColor, setSelectedColo
     toast.success('Desain disesuaikan otomatis ke dada kaos');
   };
 
-  // Apply a preset position. Sleeve presets use the calibrated print zone
-  // centroid so they land on the actual sleeve instead of the old UV guess.
+  // Apply a preset position (Dada, Punggung, Lengan) with auto-aligning camera angle.
   const applyPositionPreset = (pos) => {
-    if (!selectedLayer) return;
+    const targetLayer = selectedLayer || layers[0];
+    if (!targetLayer) {
+      toast.warning('Tambahkan atau pilih desain terlebih dahulu');
+      return;
+    }
+    if (selectedLayerId !== targetLayer.id) {
+      setSelectedLayerId(targetLayer.id);
+    }
+
     const api = rendererApiRef.current;
     const zones = api?.getZones?.();
     const ff = api?.getFrameFactors?.();
     let position_x = pos.uvX;
     let position_y = pos.uvY;
+
     if ((pos.id === 'lengan-kiri' || pos.id === 'lengan-kanan') && zones && ff) {
       const z = zones.front?.[pos.id === 'lengan-kiri' ? 'leftSleeve' : 'rightSleeve'];
       if (z) {
@@ -303,14 +407,27 @@ export default function MockupEditorTab({ design, selectedColor, setSelectedColo
         position_y = (((z.minY + z.maxY) / 2) - ff.minY) / ff.spanY;
       }
     }
+
     const isBack = pos.id === 'standar-belakang' || pos.id === 'punggung-atas';
-    updateLayer(selectedLayer.id, {
+
+    // Auto rotate 3D camera to face the selected position directly:
+    if (pos.id === 'lengan-kiri') {
+      spinYRef.current = 90;
+    } else if (pos.id === 'lengan-kanan') {
+      spinYRef.current = 270;
+    } else if (isBack) {
+      spinYRef.current = 180;
+    } else {
+      spinYRef.current = 0;
+    }
+
+    updateLayer(targetLayer.id, {
       side: isBack ? 'back' : 'front',
       position_x,
       position_y,
       positionId: pos.id,
     });
-    toast.success(`Posisi ${pos.label} diterapkan`);
+    toast.success(`Posisi ${pos.label} diterapkan!`);
   };
 
   // Center the design on the front body print zone.
@@ -391,14 +508,6 @@ export default function MockupEditorTab({ design, selectedColor, setSelectedColo
     addLayer(url, { name: file.name || 'Desain upload' });
   };
 
-  const handleGenerateDesign = (result) => {
-    if (!result) return;
-    addLayer(result.imageUrl, {
-      name: result.prompt ? result.prompt.slice(0, 40) : 'Desain AI',
-      source: 'ai',
-    });
-  };
-
   // Render the text config onto a transparent canvas and add it as a layer.
   const handleAddText = () => {
     const text = textConfig.text.trim();
@@ -466,19 +575,46 @@ export default function MockupEditorTab({ design, selectedColor, setSelectedColo
     return () => el.removeEventListener('wheel', onWheel);
   }, []);
 
-  // Pointer gestures: clicking a design selects+moves it, dragging empty space
-  // rotates the shirt.
+  // Pointer gestures: clicking a design selects+moves it, clicking shirt moves/spins,
+  // clicking outside the shirt deselects and switches to orbit mode (hiding the bounding box).
   const handlePointerDown = (e) => {
     const api = rendererApiRef.current;
+    
+    // 1. Direct hit on a design quad
     const pick = api?.pickLayer(e.clientX, e.clientY);
     if (pick) {
       setSelectedLayerId(pick.layerId);
-      dragRef.current = { mode: 'move', layerId: pick.layerId };
-    } else {
-      // Klik area kosong → batalkan seleksi (kotak handle hilang) & mulai putar.
-      setSelectedLayerId(null);
-      dragRef.current = { mode: 'spin', startX: e.clientX, baseAngle: spinYRef.current };
+      dragRef.current = { mode: 'move', layerId: pick.layerId, startX: e.clientX, startY: e.clientY };
+      return;
     }
+
+    // 2. Check if pointer hits the 3D shirt surface
+    const uv = api?.pickSurfaceUv(e.clientX, e.clientY);
+    if (uv) {
+      if (interactionMode === 'drag' && (selectedLayerId || layers.length > 0)) {
+        const targetId = selectedLayerId || layers[0]?.id;
+        if (targetId) {
+          setSelectedLayerId(targetId);
+          updateLayer(targetId, {
+            position_x: uv.position_x,
+            position_y: uv.position_y,
+            side: uv.side,
+            positionId: undefined,
+          });
+          dragRef.current = { mode: 'move', layerId: targetId, startX: e.clientX, startY: e.clientY };
+          return;
+        }
+      }
+      // If in orbit mode or no layers, drag to spin shirt
+      dragRef.current = { mode: 'spin', startX: e.clientX, baseAngle: spinYRef.current };
+      return;
+    }
+
+    // 3. User clicked OUTSIDE the 3D shirt (empty canvas / background):
+    // Switch to orbit mode and deselect the layer (kotak seleksi disappears)
+    setInteractionMode('orbit');
+    setSelectedLayerId(null);
+    dragRef.current = { mode: 'spin', startX: e.clientX, baseAngle: spinYRef.current };
   };
 
   const handlePointerMove = (e) => {
@@ -528,7 +664,8 @@ export default function MockupEditorTab({ design, selectedColor, setSelectedColo
     }
     const config = buildConfig();
     try {
-      localStorage.setItem('mockup-config-last', JSON.stringify(config));
+      const configKey = userId != null ? `mockup-config-u${userId}` : 'mockup-config-guest';
+      localStorage.setItem(configKey, JSON.stringify(config));
     } catch {
       /* storage may be unavailable; download still works */
     }
@@ -582,12 +719,16 @@ export default function MockupEditorTab({ design, selectedColor, setSelectedColo
   const printTypeLabel = PRINT_TYPES.find((p) => p.id === printType)?.label || printType;
 
   return (
-    <div className="flex flex-col gap-4 lg:h-[calc(100vh-15rem)] min-h-[640px]">
+    <div className="flex flex-col gap-3.5 min-h-[760px] sm:min-h-[840px] lg:min-h-[880px] lg:h-[calc(100vh-5rem)]">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#181120]/80 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-xl">
         <div>
-          <h2 className="font-heading text-[24px] text-white tracking-[1px]">MOCKUP EDITOR 3D</h2>
-          <p className="text-gray text-[13px] mt-1">Tempatkan desain bebas di atas kaos 3D. Geser desain untuk memindah posisinya, geser area kosong untuk memutar kaos.</p>
+          <h2 className="font-heading text-xl sm:text-2xl text-white tracking-wide flex items-center gap-2">
+            <Icon name="image" size={20} className="text-primary" /> MOCKUP EDITOR 3D
+          </h2>
+          <p className="text-white/60 text-xs sm:text-sm mt-0.5">
+            Posisikan desain bebas pada kaos 3D interaktif. Putar, atur skala, dan tentukan ukuran sablon DTF/Plastisol.
+          </p>
         </div>
         <button
           type="button"
@@ -596,147 +737,201 @@ export default function MockupEditorTab({ design, selectedColor, setSelectedColo
             setLeftOpen(open);
             setRightOpen(open);
           }}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[11px] font-medium transition-all ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all whitespace-nowrap self-end sm:self-auto ${
             leftOpen || rightOpen
-              ? 'bg-ink border-border text-gray hover:text-white hover:border-fire/50'
-              : 'bg-fire text-ink border-fire font-bold'
+              ? 'bg-white/5 border-white/10 text-white/70 hover:text-white hover:border-primary/40'
+              : 'btn-gradient-primary border-primary font-bold shadow-lg shadow-primary/20'
           }`}
-          title="Tampilkan / sembunyikan semua panel"
+          title="Tampilkan / sembunyikan panel kontrol"
         >
           <Icon name={leftOpen || rightOpen ? 'eye-off' : 'eye'} size={14} />
-          {leftOpen || rightOpen ? 'Sembunyikan Panel' : 'Tampilkan Panel'}
+          {leftOpen || rightOpen ? 'Sembunyikan Panel' : 'Buka Panel Kontrol'}
         </button>
       </div>
 
       {/* Stage: the 3D viewport fills it, panels float on top */}
-      <div className="relative flex-1 overflow-hidden rounded-xl bg-ink border border-border">
+      <div className="relative flex-1 overflow-hidden rounded-3xl bg-[#0a060f] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] min-h-[680px] sm:min-h-[760px] lg:min-h-[800px]">
+        {/* Background Studio Lighting & Effects */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+          {/* Radial Studio Dome Spotlight */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_20%,rgba(168,85,247,0.18)_0%,rgba(255,59,137,0.08)_40%,rgba(10,6,15,0.95)_80%,#060309_100%)]" />
+          
+          {/* Top Beam Cone */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-primary/20 via-purple-600/10 to-transparent blur-3xl opacity-60" />
+          
+          {/* Left & Right Rim Light Auras */}
+          <div className="absolute top-1/4 -left-20 w-80 h-80 bg-pink-500/10 blur-3xl rounded-full" />
+          <div className="absolute top-1/4 -right-20 w-80 h-80 bg-purple-600/15 blur-3xl rounded-full" />
+          
+          {/* 3D Perspective Studio Floor Grid */}
+          <div 
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1200px] h-[350px] opacity-25"
+            style={{
+              perspective: '600px',
+              transformStyle: 'preserve-3d',
+            }}
+          >
+            <div 
+              className="w-full h-full bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_60%,#000_70%,transparent_100%)]"
+              style={{
+                transform: 'rotateX(65deg)',
+                transformOrigin: 'bottom center',
+              }}
+            />
+          </div>
+
+          {/* Direct Shirt Upward Underlight (Cahaya dari Bawah) */}
+          <div className="absolute bottom-16 sm:bottom-24 left-1/2 -translate-x-1/2 w-[320px] sm:w-[460px] h-[180px] sm:h-[240px] bg-[radial-gradient(ellipse_at_bottom,rgba(255,59,137,0.38)_0%,rgba(168,85,247,0.20)_45%,transparent_80%)] blur-2xl opacity-95 pointer-events-none" />
+          
+          {/* Realistic Shirt Contact Drop Shadow (Bayangan di Bawah Kaos) */}
+          <div className="absolute bottom-14 sm:bottom-18 left-1/2 -translate-x-1/2 w-[280px] sm:w-[380px] h-[36px] sm:h-[48px] rounded-[100%] bg-black/90 blur-lg shadow-[0_6px_30px_rgba(0,0,0,0.95)] pointer-events-none" />
+          <div className="absolute bottom-15 sm:bottom-19 left-1/2 -translate-x-1/2 w-[200px] sm:w-[280px] h-[18px] sm:h-[26px] rounded-[100%] bg-black/95 blur-sm pointer-events-none" />
+
+          {/* Studio Pedestal Ground Concentric Rings */}
+          <div className="absolute bottom-10 sm:bottom-14 left-1/2 -translate-x-1/2 w-[440px] sm:w-[600px] h-[85px] sm:h-[120px] rounded-[100%] bg-gradient-to-t from-primary/25 via-purple-600/15 to-transparent blur-2xl opacity-80" />
+          <div className="absolute bottom-14 sm:bottom-18 left-1/2 -translate-x-1/2 w-[340px] sm:w-[460px] h-[38px] sm:h-[52px] rounded-[100%] border-2 border-primary/40 bg-gradient-to-t from-primary/10 to-transparent shadow-[0_0_40px_rgba(255,59,137,0.35)]" />
+          <div className="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 w-[240px] sm:w-[340px] h-[22px] sm:h-[32px] rounded-[100%] border border-white/25 bg-black/75 shadow-inner" />
+          <div className="absolute bottom-17 sm:bottom-21 left-1/2 -translate-x-1/2 w-[150px] sm:w-[220px] h-[12px] sm:h-[18px] rounded-[100%] bg-primary/40 blur-sm" />
+        </div>
+
+        {/* Studio Badge Indicator */}
+        <div className="absolute bottom-3.5 left-3.5 z-20 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/50 text-[10px] pointer-events-none">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <span className="font-semibold tracking-wider uppercase text-white/70">3D Studio Stage</span>
+          <span className="text-white/30">•</span>
+          <span>360&deg; Interactive View</span>
+        </div>
+
         {/* LEFT: floating collapsible panel */}
-        <div className={`absolute left-3 top-16 bottom-16 z-30 rounded-xl border border-ink bg-ink/95 backdrop-blur shadow-xl transition-all duration-200 ${leftOpen ? 'w-[262px] flex flex-col' : 'w-9'}`}>
+        <div className={`absolute left-2 sm:left-3 top-14 sm:top-16 bottom-14 sm:bottom-16 z-30 rounded-2xl border border-white/15 bg-[#120a1a]/65 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] transition-all duration-300 ${leftOpen ? 'w-[270px] sm:w-[290px] flex flex-col' : 'w-10 overflow-hidden bg-black/40 backdrop-blur-md'}`}>
           {leftOpen ? (
             <>
-              <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
-                <span className="text-fire text-[11px] font-medium tracking-[1px] uppercase">Alat &amp; Layer</span>
-<button type="button" onClick={() => setLeftOpen(false)} className="flex items-center gap-1 text-gray hover:text-white text-[11px] transition-colors">
-                  <Icon name="chevron-right" size={12} /> Sembunyikan
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-3 space-y-5">
-                {/* Upload design */}
-          <div>
-            <label className="text-fire text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Upload Desain</label>
-            <DesignUpload onUploadDesign={handleUploadDesign} currentDesign={null} />
-          </div>
-
-          {/* AI Generate */}
-          <div>
-            <button
-              onClick={() => setShowAiPanel((v) => !v)}
-              className="w-full flex items-center justify-between bg-ink border border-border rounded-lg px-4 py-3 text-gray hover:text-white hover:border-fire/50 transition-all"
-            >
-              <span className="flex items-center gap-2 text-[13px] font-medium">
-                <Icon name="zap" size={16} /> Generate Desain AI
-              </span>
-              <Icon name={showAiPanel ? 'chevron-up' : 'chevron-down'} size={16} />
-            </button>
-            {showAiPanel && (
-              <div className="mt-2">
-                <AIGenerateTab onGenerateDesign={handleGenerateDesign} nextLabel="Gunakan Desain" />
-              </div>
-            )}
-          </div>
-
-          {/* Add Text */}
-          <div>
-            <button
-              onClick={() => setShowTextPanel((v) => !v)}
-              className="w-full flex items-center justify-between bg-ink border border-border rounded-lg px-4 py-3 text-gray hover:text-white hover:border-fire/50 transition-all"
-            >
-              <span className="flex items-center gap-2 text-[13px] font-medium">
-                <Icon name="edit" size={16} /> Tambah Teks
-              </span>
-              <Icon name={showTextPanel ? 'chevron-up' : 'chevron-down'} size={16} />
-            </button>
-            {showTextPanel && (
-              <div className="mt-2 bg-ink border border-border rounded-xl p-3 space-y-3">
-                <input
-                  value={textConfig.text}
-                  onChange={(e) => setTextConfig((t) => ({ ...t, text: e.target.value }))}
-                  placeholder="Tulis teks di sini..."
-                  className="w-full bg-dark border border-border rounded-lg px-3 py-2 text-white text-[13px] outline-none focus:border-fire"
-                />
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={textConfig.color}
-                    onChange={(e) => setTextConfig((t) => ({ ...t, color: e.target.value }))}
-                    className="w-10 h-9 rounded-lg border border-border bg-dark cursor-pointer"
-                    title="Warna teks"
-                  />
-                  <input
-                    type="range"
-                    min={24}
-                    max={200}
-                    value={textConfig.size}
-                    onChange={(e) => setTextConfig((t) => ({ ...t, size: Number(e.target.value) }))}
-                    className="flex-1 accent-fire"
-                  />
-                  <span className="text-gray text-[11px] w-8 text-right">{textConfig.size}px</span>
+              <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-white/10 shrink-0 bg-white/[0.03]">
+                <div className="flex items-center gap-2">
+                  <Icon name="layers" size={14} className="text-primary" />
+                  <span className="text-primary text-xs font-bold tracking-[1px] uppercase">Alat &amp; Layer</span>
                 </div>
-                <button
-                  onClick={handleAddText}
-                  className="w-full flex items-center justify-center gap-1.5 bg-fire text-ink font-bold py-2 rounded-lg hover:bg-yellow-400 transition-colors text-[12px]"
-                >
-                  <Icon name="plus" size={14} /> Tambah Layer Teks
+                <button type="button" onClick={() => setLeftOpen(false)} className="flex items-center gap-1 text-white/50 hover:text-white text-xs transition-colors p-1">
+                  <Icon name="chevron-left" size={14} /> <span className="hidden sm:inline">Tutup</span>
                 </button>
               </div>
-            )}
-          </div>
+              <div className="flex-1 overflow-y-auto p-3.5 space-y-4 scrollbar-thin">
+                {/* Upload design */}
+                <div>
+                  <label className="text-white text-xs font-semibold uppercase tracking-wider mb-2 block flex items-center gap-1.5">
+                    <Icon name="upload" size={13} className="text-primary" /> Upload File Desain
+                  </label>
+                  <DesignUpload onUploadDesign={handleUploadDesign} currentDesign={null} />
+                </div>
+
+                {/* Koleksi Desain AI */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={openLibraryModal}
+                    className="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white/80 hover:text-white hover:border-primary/50 transition-all"
+                  >
+                    <span className="flex items-center gap-2 text-xs font-medium">
+                      <FolderOpen className="w-4 h-4 text-purple-400" /> Buka Koleksi Desain AI
+                    </span>
+                    <Icon name="chevron-right" size={15} />
+                  </button>
+                </div>
+
+                {/* Add Text */}
+                <div>
+                  <button
+                    onClick={() => setShowTextPanel((v) => !v)}
+                    className="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white/80 hover:text-white hover:border-primary/50 transition-all"
+                  >
+                    <span className="flex items-center gap-2 text-xs font-medium">
+                      <Icon name="edit" size={15} className="text-pink-400" /> Tambah Layer Teks
+                    </span>
+                    <Icon name={showTextPanel ? 'chevron-up' : 'chevron-down'} size={15} />
+                  </button>
+                  {showTextPanel && (
+                    <div className="mt-2 bg-black/40 border border-white/5 rounded-xl p-3 space-y-3">
+                      <input
+                        value={textConfig.text}
+                        onChange={(e) => setTextConfig((t) => ({ ...t, text: e.target.value }))}
+                        placeholder="Tulis teks custom..."
+                        className="w-full bg-[#120c16] border border-white/10 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-primary transition-colors"
+                      />
+                      <div className="flex items-center gap-2.5">
+                        <input
+                          type="color"
+                          value={textConfig.color}
+                          onChange={(e) => setTextConfig((t) => ({ ...t, color: e.target.value }))}
+                          className="w-9 h-8 rounded-lg border border-white/10 bg-[#120c16] cursor-pointer"
+                          title="Warna teks"
+                        />
+                        <input
+                          type="range"
+                          min={24}
+                          max={200}
+                          value={textConfig.size}
+                          onChange={(e) => setTextConfig((t) => ({ ...t, size: Number(e.target.value) }))}
+                          className="flex-1 accent-primary"
+                        />
+                        <span className="text-white/60 text-[11px] font-mono w-9 text-right">{textConfig.size}px</span>
+                      </div>
+                      <button
+                        onClick={handleAddText}
+                        className="btn-gradient-primary w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider"
+                      >
+                        <Icon name="plus" size={14} /> Pasang Teks di Kaos
+                      </button>
+                    </div>
+                  )}
+                </div>
 
           {/* Layer list */}
-          <div className="bg-ink border border-border rounded-xl p-4">
-            <label className="text-fire text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Layer Desain</label>
+          <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-white/60 text-xs font-semibold uppercase tracking-wider">Layer Desain ({layers.length})</label>
+            </div>
             {layers.length === 0 ? (
-              <p className="text-gray text-[11px] text-center py-3">Belum ada layer. Tambahkan desain di atas.</p>
+              <p className="text-white/40 text-xs text-center py-3">Belum ada layer. Tambahkan desain di atas.</p>
             ) : (
-              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1 scrollbar-thin">
                 {layers.map((l, i) => (
                   <div
                     key={l.id}
                     onClick={() => setSelectedLayerId(l.id)}
-                    className={`flex items-center gap-2.5 p-2 rounded-lg border cursor-pointer transition-all ${
+                    className={`flex items-center gap-2.5 p-2 rounded-xl border cursor-pointer transition-all ${
                       selectedLayerId === l.id
-                        ? 'border-fire bg-fire/10'
-                        : 'border-border hover:border-gray'
+                        ? 'border-primary bg-primary/10 shadow-md shadow-primary/10'
+                        : 'border-white/5 bg-white/[0.02] hover:border-white/20'
                     }`}
                   >
-                    <img src={l.image} alt={l.name} className="w-9 h-9 object-cover rounded-md bg-dark" />
+                    <img src={l.image} alt={l.name} className="w-9 h-9 object-contain rounded-lg bg-black/40 border border-white/5 p-0.5" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-[12px] font-medium truncate">{l.name}</p>
-                      <p className="text-gray text-[10px]">{l.side === 'back' ? 'Belakang' : 'Depan'}</p>
+                      <p className="text-white text-xs font-medium truncate">{l.name}</p>
+                      <p className="text-white/40 text-[10px]">{l.side === 'back' ? 'Sisi Belakang' : 'Sisi Depan'}</p>
                     </div>
                     <div className="flex items-center gap-0.5">
                       <button
                         onClick={(e) => { e.stopPropagation(); moveLayer(l.id, -1); }}
                         disabled={i === 0}
-                        className="w-6 h-6 flex items-center justify-center text-gray hover:text-white disabled:opacity-30 transition-all"
-                        title="Naik"
+                        className="w-6 h-6 flex items-center justify-center text-white/50 hover:text-white disabled:opacity-20 transition-all rounded hover:bg-white/10"
+                        title="Naikkan urutan"
                       >
-                        <Icon name="chevron-up" size={14} />
+                        <Icon name="chevron-up" size={13} />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); moveLayer(l.id, 1); }}
                         disabled={i === layers.length - 1}
-                        className="w-6 h-6 flex items-center justify-center text-gray hover:text-white disabled:opacity-30 transition-all"
-                        title="Turun"
+                        className="w-6 h-6 flex items-center justify-center text-white/50 hover:text-white disabled:opacity-20 transition-all rounded hover:bg-white/10"
+                        title="Turunkan urutan"
                       >
-                        <Icon name="chevron-down" size={14} />
+                        <Icon name="chevron-down" size={13} />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); removeLayer(l.id); }}
-                        className="w-6 h-6 flex items-center justify-center text-gray hover:text-red-400 transition-all"
+                        className="w-6 h-6 flex items-center justify-center text-white/50 hover:text-rose-400 transition-all rounded hover:bg-rose-500/10"
                         title="Hapus layer"
                       >
-                        <Icon name="trash" size={14} />
+                        <Icon name="trash" size={13} />
                       </button>
                     </div>
                   </div>
@@ -750,10 +945,10 @@ export default function MockupEditorTab({ design, selectedColor, setSelectedColo
             <button
               type="button"
               onClick={() => setLeftOpen(true)}
-              className="absolute top-1/2 -translate-y-1/2 left-0 flex items-center justify-center text-gray hover:text-fire transition-colors"
-              title="Tampilkan panel Alat &amp; Layer"
+              className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-12 flex items-center justify-center text-white/60 hover:text-primary transition-colors bg-white/5 hover:bg-white/10"
+              title="Buka panel Alat &amp; Layer"
             >
-              <Icon name="chevron-right" size={16} />
+              <Icon name="chevron-right" size={18} />
             </button>
           )}
         </div>
@@ -802,58 +997,90 @@ export default function MockupEditorTab({ design, selectedColor, setSelectedColo
           )}
 
           {layers.length === 0 && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
-              <Icon name="image" size={40} className="text-gray/50" />
-              <p className="text-gray text-[13px]">Upload, generate, atau tambah teks untuk menambah layer</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none px-4 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/30 mb-1">
+                <Icon name="image" size={28} />
+              </div>
+              <p className="text-white/60 text-xs sm:text-sm font-medium">Kaos 3D Siap Digunakan</p>
+              <p className="text-white/40 text-[11px] max-w-xs">Upload desain, generate dengan AI, atau tambah teks untuk melihat mockup di atas kaos.</p>
             </div>
           )}
 
           {layers.length > 0 && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 pointer-events-none text-gray text-[11px] bg-black/50 border border-white/10 rounded-lg px-3 py-1.5 whitespace-nowrap" style={{ zIndex: 20 }}>
-              Klik desain untuk pilih &amp; geser &middot; geser kosong untuk putar
+            <div className="absolute top-2.5 sm:top-3 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5" style={{ zIndex: 20 }}>
+              {/* Mode Switcher: Geser Desain (Tangan) vs Putar Kaos 3D */}
+              <div className="flex items-center gap-1 bg-black/80 backdrop-blur-md p-1 rounded-2xl border border-white/15 shadow-2xl">
+                <button
+                  type="button"
+                  onClick={() => setInteractionMode('drag')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
+                    interactionMode === 'drag'
+                      ? 'bg-gradient-to-r from-primary via-[#ff58a0] to-primary text-white shadow-md scale-102'
+                      : 'text-white/60 hover:text-white hover:bg-white/10'
+                  }`}
+                  title="Klik / drag di mana saja pada kaos untuk memindahkan desain langsung"
+                >
+                  <Icon name="move" size={13} />
+                  <span>Mode Geser (Tangan)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInteractionMode('orbit')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
+                    interactionMode === 'orbit'
+                      ? 'bg-gradient-to-r from-primary via-[#ff58a0] to-primary text-white shadow-md scale-102'
+                      : 'text-white/60 hover:text-white hover:bg-white/10'
+                  }`}
+                  title="Drag di atas kanvas untuk memutar sudut pandang kaos 3D"
+                >
+                  <Icon name="rotate-cw" size={13} />
+                  <span>Putar Kaos 3D</span>
+                </button>
+              </div>
+
+              {/* View presets + auto rotate toolbar */}
+              <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md p-1 rounded-2xl border border-white/10 shadow-lg overflow-x-auto max-w-[95vw]">
+                {VIEW_PRESETS.map((p) => (
+                  <button
+                    key={p.label}
+                    onClick={() => { spinYRef.current = p.angle; }}
+                    className="px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all whitespace-nowrap"
+                  >
+                    {p.label}
+                  </button>
+                ))}
+                <div className="w-px h-3.5 bg-white/20 mx-0.5" />
+                <button
+                  onClick={() => setAutoRotate((v) => !v)}
+                  className={`px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap ${
+                    autoRotate ? 'bg-primary/20 text-primary border border-primary/30 shadow-md' : 'text-white/70 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  Auto Putar
+                </button>
+              </div>
             </div>
           )}
 
-          {/* View presets + auto rotate */}
-          <div className="absolute top-11 left-1/2 -translate-x-1/2 flex items-center gap-1.5" style={{ zIndex: 20 }}>
-            {VIEW_PRESETS.map((p) => (
-              <button
-                key={p.label}
-                onClick={() => { spinYRef.current = p.angle; }}
-                className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium bg-black/60 border border-white/10 text-gray hover:text-white hover:border-fire/50 transition-all whitespace-nowrap"
-              >
-                {p.label}
-              </button>
-            ))}
-            <button
-              onClick={() => setAutoRotate((v) => !v)}
-              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium border transition-all whitespace-nowrap ${
-                autoRotate ? 'bg-fire text-ink border-fire font-bold' : 'bg-black/60 border-white/10 text-gray hover:text-white'
-              }`}
-            >
-              Auto Putar
-            </button>
-          </div>
-
           {/* Zoom controls */}
-          <div className="absolute top-3 right-20 flex flex-col items-center gap-1.5" style={{ zIndex: 20 }}>
+          <div className="absolute top-3 right-3 sm:right-4 flex flex-col items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-2xl border border-white/10 shadow-lg" style={{ zIndex: 20 }}>
             <button
               onClick={() => setZoomClamped(zoomRef.current * 1.15)}
-              className="w-9 h-9 flex items-center justify-center rounded-lg bg-black/60 border border-white/10 text-gray hover:text-white hover:border-fire/50 transition-all text-[16px] leading-none"
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all text-sm font-bold"
               title="Perbesar"
             >
               +
             </button>
             <button
               onClick={() => setZoomClamped(zoomRef.current * 0.87)}
-              className="w-9 h-9 flex items-center justify-center rounded-lg bg-black/60 border border-white/10 text-gray hover:text-white hover:border-fire/50 transition-all text-[16px] leading-none"
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all text-sm font-bold"
               title="Perkecil"
             >
               &minus;
             </button>
             <button
               onClick={() => setZoomClamped(1)}
-              className="w-9 h-9 flex items-center justify-center rounded-lg bg-black/60 border border-white/10 text-[10px] font-medium text-gray hover:text-white hover:border-fire/50 transition-all"
+              className="w-8 h-7 flex items-center justify-center rounded-xl text-[10px] font-mono text-primary font-bold hover:bg-white/10 transition-all"
               title="Reset zoom"
             >
               {Math.round(zoom * 100)}%
@@ -862,325 +1089,443 @@ export default function MockupEditorTab({ design, selectedColor, setSelectedColo
         </div>
 
         {/* RIGHT: floating collapsible panel */}
-        <div className={`absolute right-3 top-16 bottom-16 z-30 rounded-xl border border-ink bg-ink/95 backdrop-blur shadow-xl transition-all duration-200 ${rightOpen ? 'w-[300px] flex flex-col' : 'w-9'}`}>
+        <div className={`absolute right-2 sm:right-3 top-14 sm:top-16 bottom-14 sm:bottom-16 z-30 rounded-2xl border border-white/15 bg-[#120a1a]/65 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] transition-all duration-300 ${rightOpen ? 'w-[280px] sm:w-[310px] flex flex-col' : 'w-10 overflow-hidden bg-black/40 backdrop-blur-md'}`}>
           {rightOpen ? (
             <>
-              <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
-                <span className="text-fire text-[11px] font-medium tracking-[1px] uppercase">Properti Layer</span>
-<button type="button" onClick={() => setRightOpen(false)} className="flex items-center gap-1 text-gray hover:text-white text-[11px] transition-colors">
-                  <Icon name="chevron-left" size={12} /> Sembunyikan
+              <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-white/10 shrink-0 bg-white/[0.03]">
+                <div className="flex items-center gap-2">
+                  <Icon name="sliders" size={14} className="text-primary" />
+                  <span className="text-primary text-xs font-bold tracking-[1px] uppercase">Pengaturan Kaos</span>
+                </div>
+                <button type="button" onClick={() => setRightOpen(false)} className="flex items-center gap-1 text-white/50 hover:text-white text-xs transition-colors p-1">
+                  <span className="hidden sm:inline">Tutup</span> <Icon name="chevron-right" size={14} />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-3 space-y-5">
-          {/* Layer properties */}
-          <div className="bg-ink border border-border rounded-xl p-4">
-            <label className="text-fire text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Properti Layer</label>
-            {!selectedLayer ? (
-              <p className="text-gray text-[11px] text-center py-3">Pilih sebuah layer untuk mengatur posisi, ukuran, dan rotasi.</p>
-            ) : (
-              <div className="space-y-4">
-                {/* ---- POSISI ---- */}
+              <div className="flex-1 overflow-y-auto p-3.5 space-y-4 scrollbar-thin">
+                {/* Warna Kaos */}
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-gray text-[10px] font-semibold uppercase tracking-wide">Posisi</label>
-                    <button
-                      type="button"
-                      onClick={centerOnBody}
-                      className="text-[10px] px-2 py-0.5 rounded border border-fire/60 text-fire hover:bg-fire/10 transition-all"
-                    >
-                      Tengahkan
-                    </button>
-                  </div>
-                  <p className="text-[9px] text-gray/70 mb-2 leading-tight">Seret desain langsung di kaos, atau geser dengan tombol / slider di bawah.</p>
-                  <div className="grid grid-cols-3 gap-1 mb-2" style={{ width: 108 }}>
-                    <span />
-                    <button
-                      type="button"
-                      aria-label="Geser ke atas"
-                      onClick={() => nudgePosition(0, 0.04)}
-                      className="h-7 flex items-center justify-center rounded border border-border bg-dark text-gray hover:border-fire/60 hover:text-white transition-all text-sm"
-                    >↑</button>
-                    <span />
-                    <button
-                      type="button"
-                      aria-label="Geser ke kiri"
-                      onClick={() => nudgePosition(-0.04, 0)}
-                      className="h-7 flex items-center justify-center rounded border border-border bg-dark text-gray hover:border-fire/60 hover:text-white transition-all text-sm"
-                    >←</button>
-                    <span className="flex items-center justify-center text-gray/50 text-[10px]">±3%</span>
-                    <button
-                      type="button"
-                      aria-label="Geser ke kanan"
-                      onClick={() => nudgePosition(0.04, 0)}
-                      className="h-7 flex items-center justify-center rounded border border-border bg-dark text-gray hover:border-fire/60 hover:text-white transition-all text-sm"
-                    >→</button>
-                    <span />
-                    <button
-                      type="button"
-                      aria-label="Geser ke bawah"
-                      onClick={() => nudgePosition(0, -0.04)}
-                      className="h-7 flex items-center justify-center rounded border border-border bg-dark text-gray hover:border-fire/60 hover:text-white transition-all text-sm"
-                    >↓</button>
-                    <span />
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-gray text-[10px]">Geser kiri ↔ kanan</label>
-                    <span className="text-white text-[10px] font-medium">{Math.round(selectedLayer.position_x * 100)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.005}
-                    value={selectedLayer.position_x}
-                    onChange={(e) => updateLayer(selectedLayer.id, { position_x: Number(e.target.value), positionId: undefined })}
-                    className="w-full accent-fire"
-                  />
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-gray text-[10px]">Geser atas ↔ bawah</label>
-                    <span className="text-white text-[10px] font-medium">{Math.round(selectedLayer.position_y * 100)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.005}
-                    value={selectedLayer.position_y}
-                    onChange={(e) => updateLayer(selectedLayer.id, { position_y: Number(e.target.value), positionId: undefined })}
-                    className="w-full accent-fire"
-                  />
-                  <div className="mt-2">
-                    <label className="text-gray text-[10px] mb-1 block">Posisi Cepat</label>
-                    <div className="flex flex-wrap gap-1">
-                      {PRINT_POSITIONS.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => applyPositionPreset(p)}
-                          className={`text-[10px] px-2 py-1 rounded-lg border transition-all ${
-                            selectedLayer.positionId === p.id
-                              ? 'bg-fire text-ink border-fire font-bold'
-                              : 'bg-dark text-gray border-border hover:border-fire/50'
-                          }`}
-                        >
-                          {p.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* ---- UKURAN ---- */}
-                <div>
-                  <label className="text-gray text-[10px] font-semibold uppercase tracking-wide mb-1 block">Ukuran</label>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-gray text-[10px]">Besar / Kecil</label>
-                    <span className="text-white text-[10px] font-medium">
-                      {readout ? `${readout.widthCm.toFixed(0)} × ${readout.heightCm.toFixed(0)} cm` : `${Math.round(selectedLayer.scale * 100)}%`}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0.05}
-                    max={1.5}
-                    step={0.005}
-                    value={selectedLayer.scale}
-                    onChange={(e) => updateLayer(selectedLayer.id, { scale: Number(e.target.value) })}
-                    className="w-full accent-fire"
-                  />
-                  {readout && (
-                    <p className="mt-1 text-[10px] text-gray">
-                      Ukuran nyata di kaos: <span className="text-white font-medium">&plusmn;{readout.widthCm.toFixed(0)} cm &times; {readout.heightCm.toFixed(0)} cm</span>
-                    </p>
-                  )}
-                  {readout?.overflow && (
-                    <div className="mt-1 flex items-start gap-1.5 bg-yellow-500/10 border border-yellow-500/40 rounded px-2 py-1">
-                      <Icon name="alert-triangle" size={12} className="text-yellow-400 mt-0.5 shrink-0" />
-                      <p className="text-yellow-400 text-[10px]">Ukuran melebihi area cetak dada — sebagian desain bisa terpotong.</p>
-                    </div>
-                  )}
-                  <div className="mt-2">
-                    <label className="text-gray text-[10px] mb-1 block">Ukuran Cepat (cm)</label>
-                    <div className="flex flex-wrap gap-1">
-                      {PRINT_SIZES.map((s) => (
-                        <button
-                          key={s.id}
-                          onClick={() => applySizePreset(s)}
-                          className={`text-[10px] px-2 py-1 rounded-lg border transition-all ${
-                            readout?.sizeId === s.id
-                              ? 'bg-fire text-ink border-fire font-bold'
-                              : 'bg-dark text-gray border-border hover:border-fire/50'
-                          }`}
-                        >
-                          {s.label}
-                        </button>
-                      ))}
+                  <label className="text-white text-xs font-semibold uppercase tracking-wider mb-2 block flex items-center gap-1.5">
+                    <Icon name="palette" size={13} className="text-primary" /> Warna Bahan Kaos
+                  </label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {TSHIRT_COLORS.map((c) => (
                       <button
-                        type="button"
-                        onClick={autoFit}
-                        className="text-[10px] px-2 py-1 rounded-lg border border-fire/60 text-fire hover:bg-fire/10 transition-all"
-                      >
-                        Pas Otomatis
-                      </button>
-                    </div>
-                    <p className="mt-1 text-[9px] text-gray/70 leading-tight">Jumlahkan cm nyata di atas kaos, atau pakai Pas Otomatis supaya muat di dada tanpa distorsi.</p>
-                  </div>
-                </div>
-
-                {/* ---- ROTASI ---- */}
-                <div>
-                  <label className="text-gray text-[10px] font-semibold uppercase tracking-wide mb-1 block">Rotasi</label>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-gray text-[10px]">Sudut</label>
-                    <span className="text-white text-[10px] font-medium">{Math.round(selectedLayer.rotation)}&deg;</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={-180}
-                    max={180}
-                    step={1}
-                    value={selectedLayer.rotation}
-                    onChange={(e) => updateLayer(selectedLayer.id, { rotation: Number(e.target.value) })}
-                    className="w-full accent-fire"
-                  />
-                  <div className="flex gap-1 mt-1">
-                    <button
-                      type="button"
-                      onClick={() => rotateBy(-15)}
-                      className="text-[10px] px-2 py-1 rounded-lg border border-border bg-dark text-gray hover:border-fire/60 hover:text-white transition-all"
-                    >⟲ Putar kiri</button>
-                    <button
-                      type="button"
-                      onClick={() => rotateBy(15)}
-                      className="text-[10px] px-2 py-1 rounded-lg border border-border bg-dark text-gray hover:border-fire/60 hover:text-white transition-all"
-                    >Putar kanan ⟳</button>
-                    <button
-                      type="button"
-                      onClick={() => setRotationExact(0)}
-                      className="text-[10px] px-2 py-1 rounded-lg border border-fire/60 text-fire hover:bg-fire/10 transition-all"
-                    >0°</button>
-                    <button
-                      type="button"
-                      onClick={() => setRotationExact(90)}
-                      className="text-[10px] px-2 py-1 rounded-lg border border-fire/60 text-fire hover:bg-fire/10 transition-all"
-                    >90°</button>
-                  </div>
-                </div>
-
-                {/* ---- SISI ---- */}
-                <div>
-                  <label className="text-gray text-[10px] font-semibold uppercase tracking-wide mb-1 block">Sisi Cetak</label>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {[{ id: 'front', label: 'Depan' }, { id: 'back', label: 'Belakang' }].map((s) => (
-                      <button
-                        key={s.id}
-                        onClick={() => updateLayer(selectedLayer.id, { side: s.id })}
-                        className={`text-[11px] px-2 py-1.5 rounded-lg border transition-all ${
-                          selectedLayer.side === s.id
-                            ? 'bg-fire text-ink border-fire font-bold'
-                            : 'bg-dark text-gray border-border hover:border-fire/50'
+                        key={c.id}
+                        onClick={() => setSelectedColor(c.hex)}
+                        className={`relative w-full aspect-square rounded-xl border-2 transition-all duration-200 shadow-sm flex items-center justify-center ${
+                          selectedColor === c.hex ? 'border-primary ring-2 ring-primary/40 scale-105' : 'border-white/15 hover:border-white/40'
                         }`}
+                        style={{ backgroundColor: c.hex }}
+                        title={c.label}
                       >
-                        {s.label}
+                        {selectedColor === c.hex && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <Icon name="check" size={15} className={c.hex === '#ffffff' ? 'text-black' : 'text-white'} />
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
 
-          {/* Print type */}
-          <div>
-            <label className="text-fire text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Jenis Cetak</label>
-            <div className="space-y-2">
-              {PRINT_TYPES.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrintType(p.id)}
-                  className={`w-full text-left bg-ink border rounded-xl px-4 py-3 transition-all ${
-                    printType === p.id ? 'border-fire bg-fire/10' : 'border-border hover:border-gray'
-                  }`}
-                >
-                  <p className={`text-[13px] font-semibold ${printType === p.id ? 'text-white' : 'text-gray'}`}>
-                    {p.label}
-                  </p>
-                  <p className="text-gray text-[11px] mt-0.5">{p.desc}</p>
-                </button>
-              ))}
-            </div>
-            {printType === 'plastisol' && colorCount > 2 && (
-              <div className="mt-2 flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/40 rounded-lg px-3 py-2">
-                <Icon name="alert-triangle" size={16} className="text-yellow-400 mt-0.5" />
-                <p className="text-yellow-400 text-[11px]">
-                  Desain ini terdeteksi sekitar {colorCount} warna — Plastisol maksimal 2 warna solid. Pertimbangkan DTF atau sederhanakan warna.
-                </p>
-              </div>
-            )}
-          </div>
+                {/* Posisi Area Cetak */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-white text-xs font-semibold uppercase tracking-wider block flex items-center gap-1.5">
+                      <Icon name="crosshair" size={13} className="text-primary" /> Posisi Area Cetak
+                    </label>
+                    <span className="text-[10px] text-white/40 font-mono">Preset Cepat</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {PRINT_POSITIONS.map((pos) => {
+                      const isActive = selectedLayer?.positionId === pos.id;
+                      return (
+                        <button
+                          key={pos.id}
+                          type="button"
+                          onClick={() => applyPositionPreset(pos)}
+                          className={`flex flex-col items-start p-2 rounded-xl border text-left transition-all relative overflow-hidden ${
+                            isActive
+                              ? 'border-primary bg-primary/20 text-white shadow-md shadow-primary/20 scale-[1.02]'
+                              : 'border-white/10 bg-white/[0.03] text-white/70 hover:border-white/25 hover:bg-white/[0.06] hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span className="text-[11px] font-semibold truncate leading-tight">
+                              {pos.label}
+                            </span>
+                            {isActive && (
+                              <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0 ml-1" />
+                            )}
+                          </div>
+                          <span className="text-[9px] text-white/40 mt-0.5">
+                            {pos.id.startsWith('lengan')
+                              ? 'Sisi Lengan'
+                              : pos.id.includes('belakang') || pos.id.includes('punggung')
+                              ? 'Sisi Belakang'
+                              : 'Sisi Depan'}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-          {/* T-shirt color */}
-          <div>
-            <label className="text-fire text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Warna Kaos</label>
-            <div className="grid grid-cols-4 gap-2">
-              {TSHIRT_COLORS.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedColor(c.hex)}
-                  className={`relative w-full aspect-square rounded-lg border-2 transition-all duration-200 ${
-                    selectedColor === c.hex ? 'border-fire scale-110' : 'border-border hover:border-gray'
-                  }`}
-                  style={{ backgroundColor: c.hex }}
-                  title={c.label}
-                >
-                  {selectedColor === c.hex && (
-                    <span className="absolute inset-0 flex items-center justify-center">
-                      <Icon name="check" size={16} className={c.hex === '#ffffff' ? 'text-black' : 'text-white'} />
-                    </span>
+                {/* Jenis Cetak / Sablon */}
+                <div>
+                  <label className="text-white text-xs font-semibold uppercase tracking-wider mb-2 block flex items-center gap-1.5">
+                    <Icon name="tag" size={13} className="text-purple-400" /> Jenis Cetak / Sablon
+                  </label>
+                  <div className="space-y-1.5">
+                    {PRINT_TYPES.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => setPrintType(p.id)}
+                        className={`w-full text-left rounded-xl p-3 border transition-all ${
+                          printType === p.id
+                            ? 'border-primary bg-primary/10 shadow-sm'
+                            : 'border-white/10 bg-white/[0.02] hover:border-white/20'
+                        }`}
+                      >
+                        <p className={`text-xs font-semibold ${printType === p.id ? 'text-primary' : 'text-white'}`}>
+                          {p.label}
+                        </p>
+                        <p className="text-white/50 text-[10px] mt-0.5 leading-snug">{p.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                  {printType === 'plastisol' && colorCount > 2 && (
+                    <div className="mt-2 flex items-start gap-2 bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5">
+                      <Icon name="alert-triangle" size={14} className="text-amber-400 mt-0.5 shrink-0" />
+                      <p className="text-amber-300 text-[11px] leading-snug">
+                        Terdeteksi ~{colorCount} warna. Plastisol optimal 1-2 warna solid. Disarankan pilih DTF.
+                      </p>
+                    </div>
                   )}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+                </div>
+
+                {/* Layer properties */}
+                <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-white text-xs font-semibold uppercase tracking-wider">Properti Layer</label>
+                    {selectedLayer && (
+                      <button
+                        type="button"
+                        onClick={centerOnBody}
+                        className="text-[10px] px-2.5 py-1 rounded-lg border border-primary/40 text-primary bg-primary/10 hover:bg-primary hover:text-white transition-all font-semibold"
+                      >
+                        Tengahkan
+                      </button>
+                    )}
+                  </div>
+                  {!selectedLayer ? (
+                    <p className="text-white/40 text-[11px] text-center py-2">Klik sebuah layer di atas kaos untuk mengatur posisi &amp; ukuran.</p>
+                  ) : (
+                    <div className="space-y-3 pt-1">
+                      {/* Navigasi Arah D-Pad Cepat */}
+                      <div className="bg-black/30 border border-white/5 rounded-xl p-2.5 flex flex-col items-center">
+                        <div className="flex items-center justify-between w-full mb-1.5">
+                          <span className="text-[10px] text-white/50 font-medium">Navigasi Geser Cepat</span>
+                          <span className="text-[9px] text-primary font-semibold">D-Pad</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1 w-28">
+                          <div />
+                          <button
+                            type="button"
+                            onClick={() => nudgePosition(0, 0.02)}
+                            className="h-7 rounded-lg bg-white/5 hover:bg-primary/25 border border-white/10 hover:border-primary/40 flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-95"
+                            title="Geser ke Atas"
+                          >
+                            <Icon name="chevron-up" size={13} />
+                          </button>
+                          <div />
+                          <button
+                            type="button"
+                            onClick={() => nudgePosition(-0.02, 0)}
+                            className="h-7 rounded-lg bg-white/5 hover:bg-primary/25 border border-white/10 hover:border-primary/40 flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-95"
+                            title="Geser ke Kiri"
+                          >
+                            <Icon name="chevron-left" size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={centerOnBody}
+                            className="h-7 rounded-lg bg-primary/20 hover:bg-primary border border-primary/40 flex items-center justify-center text-primary hover:text-white transition-all text-[10px] font-bold active:scale-95"
+                            title="Tengahkan ke Dada"
+                          >
+                            <Icon name="crosshair" size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => nudgePosition(0.02, 0)}
+                            className="h-7 rounded-lg bg-white/5 hover:bg-primary/25 border border-white/10 hover:border-primary/40 flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-95"
+                            title="Geser ke Kanan"
+                          >
+                            <Icon name="chevron-right" size={13} />
+                          </button>
+                          <div />
+                          <button
+                            type="button"
+                            onClick={() => nudgePosition(0, -0.02)}
+                            className="h-7 rounded-lg bg-white/5 hover:bg-primary/25 border border-white/10 hover:border-primary/40 flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-95"
+                            title="Geser ke Bawah"
+                          >
+                            <Icon name="chevron-down" size={13} />
+                          </button>
+                          <div />
+                        </div>
+                      </div>
+
+                      {/* Posisi */}
+                      <div>
+                        <div className="flex items-center justify-between text-[11px] text-white/60 mb-1">
+                          <span>Posisi X</span>
+                          <span className="font-mono text-white">{Math.round(selectedLayer.position_x * 100)}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.005}
+                          value={selectedLayer.position_x}
+                          onChange={(e) => updateLayer(selectedLayer.id, { position_x: Number(e.target.value), positionId: undefined })}
+                          className="w-full accent-primary"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between text-[11px] text-white/60 mb-1">
+                          <span>Posisi Y</span>
+                          <span className="font-mono text-white">{Math.round(selectedLayer.position_y * 100)}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.005}
+                          value={selectedLayer.position_y}
+                          onChange={(e) => updateLayer(selectedLayer.id, { position_y: Number(e.target.value), positionId: undefined })}
+                          className="w-full accent-primary"
+                        />
+                      </div>
+
+                      {/* Ukuran */}
+                      <div>
+                        <div className="flex items-center justify-between text-[11px] text-white/60 mb-1">
+                          <span>Ukuran Dimensi</span>
+                          <span className="font-mono text-primary font-semibold">
+                            {readout ? `${readout.widthCm.toFixed(0)} × ${readout.heightCm.toFixed(0)} cm` : `${Math.round(selectedLayer.scale * 100)}%`}
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0.05}
+                          max={1.5}
+                          step={0.005}
+                          value={selectedLayer.scale}
+                          onChange={(e) => updateLayer(selectedLayer.id, { scale: Number(e.target.value) })}
+                          className="w-full accent-primary"
+                        />
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {PRINT_SIZES.map((s) => (
+                            <button
+                              key={s.id}
+                              onClick={() => applySizePreset(s)}
+                              className={`text-[10px] px-2 py-0.5 rounded-md border transition-all ${
+                                readout?.sizeId === s.id
+                                  ? 'bg-primary text-white border-primary font-bold'
+                                  : 'bg-white/5 text-white/60 border-white/10 hover:border-primary/40'
+                              }`}
+                            >
+                              {s.label}
+                            </button>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={autoFit}
+                            className="text-[10px] px-2 py-0.5 rounded-md border border-primary/40 text-primary bg-primary/10 hover:bg-primary hover:text-white transition-all font-semibold"
+                          >
+                            Pas Dada
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Rotasi & Sisi */}
+                      <div className="pt-2 border-t border-white/5">
+                        <div className="flex items-center justify-between text-[11px] text-white/60 mb-1">
+                          <span>Rotasi Sudut</span>
+                          <span className="font-mono text-white">{Math.round(selectedLayer.rotation)}&deg;</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={-180}
+                          max={180}
+                          step={1}
+                          value={selectedLayer.rotation}
+                          onChange={(e) => updateLayer(selectedLayer.id, { rotation: Number(e.target.value) })}
+                          className="w-full accent-primary"
+                        />
+                        <div className="grid grid-cols-2 gap-1.5 mt-2">
+                          {[{ id: 'front', label: 'Sisi Depan' }, { id: 'back', label: 'Sisi Belakang' }].map((s) => (
+                            <button
+                              key={s.id}
+                              onClick={() => updateLayer(selectedLayer.id, { side: s.id })}
+                              className={`text-xs py-1.5 rounded-lg border transition-all font-semibold ${
+                                selectedLayer.side === s.id
+                                  ? 'btn-gradient-primary text-white border-primary shadow'
+                                  : 'bg-white/5 text-white/60 border-white/10 hover:border-white/20'
+                              }`}
+                            >
+                              {s.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </>
           ) : (
             <button
               type="button"
               onClick={() => setRightOpen(true)}
-              className="absolute top-1/2 -translate-y-1/2 right-0 flex items-center justify-center text-gray hover:text-fire transition-colors"
-              title="Tampilkan panel Properti"
+              className="absolute top-1/2 -translate-y-1/2 right-0 w-full h-12 flex items-center justify-center text-white/60 hover:text-primary transition-colors bg-white/5 hover:bg-white/10"
+              title="Buka panel Pengaturan"
             >
-              <Icon name="chevron-left" size={16} />
+              <Icon name="chevron-left" size={18} />
             </button>
           )}
         </div>
 
-        {/* Floating bottom actions */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-40 flex w-[min(560px,calc(100%-1.5rem))] flex-col sm:flex-row gap-2">
+        {/* Floating bottom action bar */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-40 flex w-[min(580px,calc(100%-1.5rem))] flex-col sm:flex-row gap-2 bg-[#120a1a]/70 backdrop-blur-2xl p-2 rounded-2xl border border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.6)]">
           <button
             onClick={handleSaveDesign}
-            className="flex-1 flex items-center justify-center gap-2 bg-ink border border-fire text-fire font-bold py-2.5 rounded-xl hover:bg-fire/10 transition-colors text-[12px]"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-white/5 border border-white/10 text-white/80 hover:text-white hover:border-primary font-semibold py-2.5 rounded-xl transition-all text-xs"
           >
-            <Icon name="save" size={18} /> Simpan Desain
+            <Icon name="save" size={15} /> Simpan Draft
           </button>
           <button
             onClick={handleContinueOrder}
-            className="flex-1 flex items-center justify-center gap-2 bg-fire text-ink font-bold py-2.5 rounded-xl hover:bg-yellow-400 transition-colors text-[12px]"
+            className="flex-1 btn-gradient-primary flex items-center justify-center gap-1.5 font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-primary/25"
           >
-            <Icon name="send" size={18} /> Lanjut Order ({printTypeLabel})
+            <Icon name="send" size={15} /> Lanjut Pesan ({printTypeLabel})
           </button>
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="flex-1 flex items-center justify-center gap-2 bg-dark border border-border text-white font-bold py-2.5 rounded-xl hover:border-fire/50 transition-colors disabled:opacity-50 text-[12px]"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-white/5 border border-white/10 text-white font-semibold py-2.5 rounded-xl hover:border-primary hover:text-primary transition-all disabled:opacity-50 text-xs"
           >
             {exporting ? (
-              <><div className="w-5 h-5 border-2 border-fire border-t-transparent rounded-full animate-spin" /> Exporting...</>
+              <><Loader2 className="w-4 h-4 animate-spin text-primary" /> Mengekspor...</>
             ) : (
-              <><Icon name="download" size={18} /> Export PNG</>
+              <><Icon name="download" size={15} /> Export PNG</>
             )}
           </button>
         </div>
+
+        {/* Koleksi Desain AI Modal */}
+        {showLibraryModal && (
+          <div
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+            onClick={() => setShowLibraryModal(false)}
+          >
+            <div
+              className="w-full max-w-3xl max-h-[85vh] bg-[#181120] border border-white/10 rounded-3xl flex flex-col overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                    <FolderOpen className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-heading text-lg text-white tracking-wide">
+                    KOLEKSI DESAIN AI SAYA
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={openLibraryModal}
+                    disabled={libraryLoading}
+                    className="p-2 rounded-xl border border-white/10 text-white/60 hover:text-white hover:border-primary transition-colors"
+                    title="Segarkan data"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${libraryLoading ? 'animate-spin text-primary' : ''}`} />
+                  </button>
+                  <button
+                    onClick={() => setShowLibraryModal(false)}
+                    className="p-2 rounded-xl text-white/60 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
+                {libraryLoading ? (
+                  <div className="py-16 text-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
+                    <p className="text-white/60 text-xs">Memuat koleksi desain kamu...</p>
+                  </div>
+                ) : libraryDesigns.length === 0 ? (
+                  <div className="py-16 text-center max-w-sm mx-auto">
+                    <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4 text-white/40">
+                      <Sparkles className="w-7 h-7 text-primary" />
+                    </div>
+                    <p className="text-white font-semibold text-sm mb-1">Belum ada desain tersimpan</p>
+                    <p className="text-white/50 text-xs mb-5">
+                      Buat desain pertama kamu dengan AI di tab AI Generate!
+                    </p>
+                    <button
+                      onClick={() => {
+                        setShowLibraryModal(false);
+                        setShowAiPanel(true);
+                      }}
+                      className="btn-gradient-primary px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-primary/20"
+                    >
+                      Buka AI Generator
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                    {libraryDesigns.map((d) => {
+                      const imgUrl = getImageUrl(d.image_url);
+                      return (
+                        <div
+                          key={d.id}
+                          className="group relative bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden hover:border-primary/50 transition-all flex flex-col hover:shadow-lg"
+                        >
+                          <div className="aspect-square w-full bg-black/40 flex items-center justify-center overflow-hidden p-2">
+                            <img
+                              src={imgUrl}
+                              alt={d.prompt || 'Desain AI'}
+                              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
+                              loading="lazy"
+                            />
+                          </div>
+                          <div className="p-3 flex-1 flex flex-col justify-between">
+                            <p className="text-[11px] text-white/60 line-clamp-2 mb-2 leading-relaxed" title={d.prompt}>
+                              {d.prompt || 'Desain tanpa prompt'}
+                            </p>
+                            <button
+                              onClick={() => handleSelectLibraryDesign(d)}
+                              className="w-full py-2 px-2 btn-gradient-primary font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm"
+                            >
+                              + Pasang di Kaos
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

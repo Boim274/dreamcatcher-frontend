@@ -135,7 +135,7 @@ export default function PaymentHistoryPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="sm:col-span-2 lg:col-span-1">
               <div className="input-icon-wrapper relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none shrink-0" />
                 <input
                   type="text"
                   value={filters.search}
@@ -144,7 +144,7 @@ export default function PaymentHistoryPage() {
                     if (e.key === 'Enter') submitSearch();
                   }}
                   placeholder="Cari kode/nama..."
-                  className="input-dark pr-9 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="input-dark pl-11 pr-9 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 />
                 {filters.search && (
                   <button

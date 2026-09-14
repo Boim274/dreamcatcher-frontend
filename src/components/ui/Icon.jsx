@@ -126,7 +126,7 @@ export default function Icon({ name, size = 24, className = '' }) {
         ref.current.innerHTML = featherIcon.toSvg({
           width: size,
           height: size,
-          class: className
+          class: 'w-full h-full'
         });
       } else {
         const materialName = materialIcons[name];
@@ -137,7 +137,13 @@ export default function Icon({ name, size = 24, className = '' }) {
         }
       }
     }
-  }, [name, size, className]);
+  }, [name, size]);
 
-  return <span ref={ref} className={`inline-flex items-center justify-center ${className}`} />;
+  return (
+    <span
+      ref={ref}
+      style={{ width: size, height: size, minWidth: size, minHeight: size }}
+      className={`inline-flex items-center justify-center shrink-0 ${className}`}
+    />
+  );
 }

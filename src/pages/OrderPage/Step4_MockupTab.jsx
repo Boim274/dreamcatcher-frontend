@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useLanguageStore } from '../../store/languageStore';
 import Icon from '../../components/ui/Icon';
 import ShirtRenderer from '../../components/design-studio/ShirtRenderer';
 import { getImageUrl } from '../../utils/getImageUrl';
@@ -15,11 +16,11 @@ const TSHIRT_COLORS = [
   { id: 'brown', label: 'Coklat', hex: '#5c3d2e' },
 ];
 
-const VIEW_PRESETS = [
-  { label: 'Depan', angle: 0 },
-  { label: 'Kiri', angle: 90 },
-  { label: 'Belakang', angle: 180 },
-  { label: 'Kanan', angle: 270 },
+const getViewPresets = (language) => [
+  { label: language === 'en' ? 'Front' : 'Depan', angle: 0 },
+  { label: language === 'en' ? 'Left' : 'Kiri', angle: 90 },
+  { label: language === 'en' ? 'Back' : 'Belakang', angle: 180 },
+  { label: language === 'en' ? 'Right' : 'Kanan', angle: 270 },
 ];
 
 const ZOOM_MIN = 0.4;
@@ -62,10 +63,10 @@ function parseSizeCm(area) {
   return null;
 }
 
-function getPositionLabel(printAreas, areaIndex) {
+function getPositionLabel(printAreas, areaIndex, td) {
   const pos = normalizePositionId(printAreas[areaIndex]?.position);
   const found = pos ? PRINT_POSITIONS.find((p) => p.id === pos) : null;
-  return found?.label || `Area ${areaIndex + 1}`;
+  return found?.label ? (td ? td(found.label) : found.label) : `Area ${areaIndex + 1}`;
 }
 
 function isBackPosition(positionId) {
@@ -92,6 +93,7 @@ function createLayerFromArea(area, areaIndex) {
 }
 
 export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }) {
+  const { t, td, language } = useLanguageStore();
   const [layers, setLayers] = useState([]);
   const [selectedAreaIndex, setSelectedAreaIndex] = useState(0);
   const [zoom, setZoom] = useState(1);
@@ -297,7 +299,7 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
               >
                 {hasDesign && <div className="w-2 h-2 rounded-full bg-green-400" />}
                 <span>Area {i + 1}</span>
-                <span className="text-[10px] opacity-70">({getPositionLabel(areas, i)})</span>
+                <span className="text-[10px] opacity-70">({getPositionLabel(areas, i, td)})</span>
               </button>
             );
           })}
@@ -312,22 +314,24 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
             <>
               <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
                 <span className="text-fire text-[11px] font-medium tracking-[1px] uppercase">
-                  Alat {areas.length > 1 && `- Area ${selectedAreaIndex + 1}`}
+                  {language === 'en' ? 'Tools' : 'Alat'} {areas.length > 1 && `- Area ${selectedAreaIndex + 1}`}
                 </span>
                 <button type="button" onClick={() => setLeftOpen(false)} className="flex items-center gap-1 text-gray hover:text-white text-[11px] transition-colors">
-                  <Icon name="chevron-right" size={12} /> Sembunyikan
+                  <Icon name="chevron-right" size={12} /> {language === 'en' ? 'Hide' : 'Sembunyikan'}
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-4">
                 {/* Color Picker */}
                 <div>
-                  <label className="text-white text-[11px] font-medium tracking-[1px] uppercase mb-2 block">Warna Kaos</label>
+                  <label className="text-white text-[11px] font-medium tracking-[1px] uppercase mb-2 block">
+                    {language === 'en' ? 'T-Shirt Color' : 'Warna Kaos'}
+                  </label>
                   <div className="flex flex-wrap gap-2">
                     {TSHIRT_COLORS.map((c) => (
                       <button
                         key={c.id}
                         onClick={() => setShirtColor(c.hex)}
-                        title={c.label}
+                        title={td(c.label)}
                         className={`w-7 h-7 rounded-full border-2 transition-all ${
                           shirtColor === c.hex ? 'border-primary ring-2 ring-primary/30 scale-110' : 'border-border hover:border-primary/50'
                         } ${c.id === 'white' ? 'ring-1 ring-gray/30' : ''}`}
@@ -341,7 +345,9 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
                   <>
                     {/* Position Presets */}
                     <div>
-                      <label className="text-white text-[11px] font-medium tracking-[1px] uppercase mb-2 block">Posisi Cepat</label>
+                      <label className="text-white text-[11px] font-medium tracking-[1px] uppercase mb-2 block">
+                        {language === 'en' ? 'Quick Position' : 'Posisi Cepat'}
+                      </label>
                       <div className="grid grid-cols-2 gap-1.5">
                         {PRINT_POSITIONS.map((pos) => (
                           <button
@@ -353,7 +359,7 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
                                 : 'bg-ink border border-border text-gray-light hover:border-primary/40'
                             }`}
                           >
-                            {pos.label}
+                            {td(pos.label)}
                           </button>
                         ))}
                       </div>
@@ -361,7 +367,9 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
 
                     {/* Position Nudge */}
                     <div>
-                      <label className="text-white text-[11px] font-medium tracking-[1px] uppercase mb-2 block">Posisi Manual</label>
+                      <label className="text-white text-[11px] font-medium tracking-[1px] uppercase mb-2 block">
+                        {language === 'en' ? 'Manual Position' : 'Posisi Manual'}
+                      </label>
                       <div className="grid grid-cols-3 gap-1 mb-2">
                         <div />
                         <button onClick={() => nudgePosition(0, 0.02)} className="p-1.5 rounded bg-ink border border-border text-gray hover:text-white hover:border-primary/40"><Icon name="chevron-up" size={14} /></button>
@@ -393,7 +401,9 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
 
                     {/* Scale */}
                     <div>
-                      <label className="text-white text-[11px] font-medium tracking-[1px] uppercase mb-2 block">Ukuran</label>
+                      <label className="text-white text-[11px] font-medium tracking-[1px] uppercase mb-2 block">
+                        {language === 'en' ? 'Size' : 'Ukuran'}
+                      </label>
                       <input type="range" min="0.05" max="1.5" step="0.005" value={activeLayer?.scale || 0.5}
                         onChange={(e) => updateLayer(selectedAreaIndex, { scale: parseFloat(e.target.value) })}
                         className="w-full accent-primary h-1 mb-2" />
@@ -401,7 +411,7 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
                         {PRINT_SIZES.map((sz) => (
                           <button key={sz.id} onClick={() => applySizePreset(sz)}
                             className="px-2 py-1 rounded text-[10px] bg-ink border border-border text-gray-light hover:border-primary/40 transition-colors">
-                            {sz.label}
+                            {td(sz.label)}
                           </button>
                         ))}
                       </div>
@@ -412,7 +422,9 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
 
                     {/* Rotation */}
                     <div>
-                      <label className="text-white text-[11px] font-medium tracking-[1px] uppercase mb-2 block">Rotasi</label>
+                      <label className="text-white text-[11px] font-medium tracking-[1px] uppercase mb-2 block">
+                        {language === 'en' ? 'Rotation' : 'Rotasi'}
+                      </label>
                       <input type="range" min="-180" max="180" step="1" value={activeLayer?.rotation || 0}
                         onChange={(e) => updateLayer(selectedAreaIndex, { rotation: parseFloat(e.target.value) })}
                         className="w-full accent-primary h-1 mb-2" />
@@ -429,8 +441,12 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
                     {/* Remove Background */}
                     <div className="flex items-center justify-between bg-card border border-border rounded-lg px-3 py-2.5">
                       <div>
-                        <label className="text-white text-[11px] font-medium tracking-[1px] uppercase block">Hapus Background</label>
-                        <p className="text-gray text-[10px] mt-0.5">Hapus background putih/terang</p>
+                        <label className="text-white text-[11px] font-medium tracking-[1px] uppercase block">
+                          {language === 'en' ? 'Remove Background' : 'Hapus Background'}
+                        </label>
+                        <p className="text-gray text-[10px] mt-0.5">
+                          {language === 'en' ? 'Remove white/light background' : 'Hapus background putih/terang'}
+                        </p>
                       </div>
                       <button
                         onClick={() => setRemoveBg((v) => !v)}
@@ -442,19 +458,21 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
 
                     {/* Side Toggle */}
                     <div>
-                      <label className="text-white text-[11px] font-medium tracking-[1px] uppercase mb-2 block">Sisi</label>
+                      <label className="text-white text-[11px] font-medium tracking-[1px] uppercase mb-2 block">
+                        {language === 'en' ? 'Side' : 'Sisi'}
+                      </label>
                       <div className="grid grid-cols-2 gap-2">
                         <button onClick={() => updateLayer(selectedAreaIndex, { side: 'front' })}
                           className={`py-2 rounded-lg text-[11px] font-medium transition-all border-2 ${
                             activeLayer?.side === 'front' ? 'border-primary bg-primary/15 text-primary' : 'border-border text-gray-light hover:border-primary/40'
                           }`}>
-                          Depan
+                          {language === 'en' ? 'Front' : 'Depan'}
                         </button>
                         <button onClick={() => updateLayer(selectedAreaIndex, { side: 'back' })}
                           className={`py-2 rounded-lg text-[11px] font-medium transition-all border-2 ${
                             activeLayer?.side === 'back' ? 'border-primary bg-primary/15 text-primary' : 'border-border text-gray-light hover:border-primary/40'
                           }`}>
-                          Belakang
+                          {language === 'en' ? 'Back' : 'Belakang'}
                         </button>
                       </div>
                     </div>
@@ -462,7 +480,7 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
                 ) : (
                   <div className="text-center py-6">
                     <Icon name="image" size={32} className="text-gray/40 mx-auto mb-2" />
-                    <p className="text-gray text-[12px]">Belum ada desain untuk area ini</p>
+                    <p className="text-gray text-[12px]">{language === 'en' ? 'No design yet for this area' : 'Belum ada desain untuk area ini'}</p>
                   </div>
                 )}
               </div>
@@ -470,7 +488,7 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
           ) : (
             <button type="button" onClick={() => setLeftOpen(true)}
               className="w-full h-full flex items-center justify-center text-gray hover:text-white transition-colors"
-              title="Tampilkan panel alat">
+              title={language === 'en' ? 'Show tools panel' : 'Tampilkan panel alat'}>
               <Icon name="chevron-right" size={16} />
             </button>
           )}
@@ -504,13 +522,13 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
           {/* Instruction tooltip */}
           {hasDesigns && (
             <div className="absolute top-3 left-1/2 -translate-x-1/2 pointer-events-none text-gray text-[11px] bg-black/50 border border-white/10 rounded-lg px-3 py-1.5 whitespace-nowrap" style={{ zIndex: 20 }}>
-              Klik desain untuk geser &middot; geser kosong untuk putar kaos
+              {language === 'en' ? 'Click design to move · drag empty space to rotate shirt' : 'Klik desain untuk geser · geser kosong untuk putar kaos'}
             </div>
           )}
 
           {/* View presets */}
           <div className="absolute top-11 left-1/2 -translate-x-1/2 flex items-center gap-1.5" style={{ zIndex: 20 }}>
-            {VIEW_PRESETS.map((p) => (
+            {getViewPresets(language).map((p) => (
               <button
                 key={p.label}
                 onClick={() => { spinYRef.current = p.angle; }}
@@ -526,21 +544,21 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
             <button
               onClick={() => setZoomClamped(zoomRef.current * 1.15)}
               className="w-9 h-9 flex items-center justify-center rounded-lg bg-black/60 border border-white/10 text-gray hover:text-white hover:border-fire/50 transition-all text-[16px] leading-none"
-              title="Perbesar"
+              title={language === 'en' ? 'Zoom in' : 'Perbesar'}
             >
               +
             </button>
             <button
               onClick={() => setZoomClamped(zoomRef.current * 0.87)}
               className="w-9 h-9 flex items-center justify-center rounded-lg bg-black/60 border border-white/10 text-gray hover:text-white hover:border-fire/50 transition-all text-[16px] leading-none"
-              title="Perkecil"
+              title={language === 'en' ? 'Zoom out' : 'Perkecil'}
             >
               &minus;
             </button>
             <button
               onClick={() => setZoomClamped(1)}
               className="w-9 h-9 flex items-center justify-center rounded-lg bg-black/60 border border-white/10 text-[10px] font-medium text-gray hover:text-white hover:border-fire/50 transition-all"
-              title="Reset zoom"
+              title={language === 'en' ? 'Reset zoom' : 'Reset zoom'}
             >
               {Math.round(zoom * 100)}%
             </button>
@@ -550,7 +568,7 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
           {!hasDesigns && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
               <Icon name="image" size={40} className="text-gray/50" />
-              <p className="text-gray text-[13px]">Pilih desain dari tab AI Generate atau History</p>
+              <p className="text-gray text-[13px]">{language === 'en' ? 'Choose design from AI Generate or History tab' : 'Pilih desain dari tab AI Generate atau History'}</p>
             </div>
           )}
         </div>
@@ -560,9 +578,11 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
           {rightOpen ? (
             <>
               <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
-                <span className="text-fire text-[11px] font-medium tracking-[1px] uppercase">Ringkasan</span>
+                <span className="text-fire text-[11px] font-medium tracking-[1px] uppercase">
+                  {language === 'en' ? 'Summary' : 'Ringkasan'}
+                </span>
                 <button type="button" onClick={() => setRightOpen(false)} className="flex items-center gap-1 text-gray hover:text-white text-[11px] transition-colors">
-                  Sembunyikan <Icon name="chevron-left" size={12} />
+                  {language === 'en' ? 'Hide' : 'Sembunyikan'} <Icon name="chevron-left" size={12} />
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-4">
@@ -571,7 +591,7 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
                   <div key={i} className={`rounded-lg border p-2 ${selectedAreaIndex === i ? 'border-primary bg-primary/5' : 'border-border'}`}>
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-fire text-[10px] font-medium tracking-[1px] uppercase">
-                        Area {i + 1}: {getPositionLabel(areas, i)}
+                        Area {i + 1}: {getPositionLabel(areas, i, td)}
                       </span>
                       {l.image && <div className="w-1.5 h-1.5 rounded-full bg-green-400" />}
                     </div>
@@ -581,7 +601,7 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
                       </div>
                     ) : (
                       <div className="aspect-square rounded border border-dashed border-border flex items-center justify-center">
-                        <span className="text-gray text-[10px]">Kosong</span>
+                        <span className="text-gray text-[10px]">{language === 'en' ? 'Empty' : 'Kosong'}</span>
                       </div>
                     )}
                   </div>
@@ -591,26 +611,26 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
                 {activeLayer?.image && (
                   <div className="space-y-2 text-[11px]">
                     <div className="flex justify-between">
-                      <span className="text-gray">Posisi</span>
-                      <span className="text-white font-medium">{PRINT_POSITIONS.find((p) => p.id === activeLayer.positionId)?.label || '-'}</span>
+                      <span className="text-gray">{language === 'en' ? 'Position' : 'Posisi'}</span>
+                      <span className="text-white font-medium">{td(PRINT_POSITIONS.find((p) => p.id === activeLayer.positionId)?.label || '-')}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray">Sisi</span>
-                      <span className="text-white font-medium">{activeLayer.side === 'back' ? 'Belakang' : 'Depan'}</span>
+                      <span className="text-gray">{language === 'en' ? 'Side' : 'Sisi'}</span>
+                      <span className="text-white font-medium">{activeLayer.side === 'back' ? (language === 'en' ? 'Back' : 'Belakang') : (language === 'en' ? 'Front' : 'Depan')}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray">Skala</span>
+                      <span className="text-gray">{language === 'en' ? 'Scale' : 'Skala'}</span>
                       <span className="text-white font-medium">{((activeLayer.scale || 0.5) * 100).toFixed(0)}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray">Rotasi</span>
+                      <span className="text-gray">{language === 'en' ? 'Rotation' : 'Rotasi'}</span>
                       <span className="text-white font-medium">{activeLayer.rotation || 0}°</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray">Warna</span>
+                      <span className="text-gray">{language === 'en' ? 'Color' : 'Warna'}</span>
                       <div className="flex items-center gap-1.5">
                         <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: shirtColor }} />
-                        <span className="text-white font-medium">{TSHIRT_COLORS.find((c) => c.hex === shirtColor)?.label || shirtColor}</span>
+                        <span className="text-white font-medium">{td(TSHIRT_COLORS.find((c) => c.hex === shirtColor)?.label || shirtColor)}</span>
                       </div>
                     </div>
                   </div>
@@ -619,7 +639,9 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
                 {/* Tips */}
                 <div className="bg-card border border-border rounded-lg p-3">
                   <p className="text-gray text-[11px] leading-relaxed">
-                    Geser tombol panah atau slider untuk mengatur posisi desain. Klik <strong className="text-primary">Auto Fit</strong> untuk menyesuaikan ukuran otomatis.
+                    {language === 'en'
+                      ? <>Use arrow buttons or sliders to adjust design placement. Click <strong className="text-primary">Auto Fit</strong> for automatic sizing.</>
+                      : <>Geser tombol panah atau slider untuk mengatur posisi desain. Klik <strong className="text-primary">Auto Fit</strong> untuk menyesuaikan ukuran otomatis.</>}
                   </p>
                 </div>
               </div>
@@ -627,7 +649,7 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
           ) : (
             <button type="button" onClick={() => setRightOpen(true)}
               className="w-full h-full flex items-center justify-center text-gray hover:text-white transition-colors"
-              title="Tampilkan panel ringkasan">
+              title={language === 'en' ? 'Show summary panel' : 'Tampilkan panel ringkasan'}>
               <Icon name="chevron-left" size={16} />
             </button>
           )}

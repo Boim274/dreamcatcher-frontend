@@ -222,10 +222,34 @@ export const adminService = {
     return res.data;
   },
 
-  // Users & AI quota
+  // Users & Role Management
   getUsers: async (params = {}, signal) => {
     const res = await api.get('/admin/users', { params, signal });
-    return extractPaginated(res, 'users');
+    const paginated = extractPaginated(res, 'users');
+    return {
+      ...paginated,
+      stats: res.data.stats || { total: paginated.pagination.total, admin_count: 0, customer_count: 0 },
+    };
+  },
+
+  createUser: async (data) => {
+    const res = await api.post('/admin/users', data);
+    return res.data;
+  },
+
+  updateUser: async (id, data) => {
+    const res = await api.put(`/admin/users/${id}`, data);
+    return res.data;
+  },
+
+  updateUserRole: async (id, role) => {
+    const res = await api.patch(`/admin/users/${id}/role`, { role });
+    return res.data;
+  },
+
+  deleteUser: async (id) => {
+    const res = await api.delete(`/admin/users/${id}`);
+    return res.data;
   },
 
   updateUserQuota: async (id, data) => {

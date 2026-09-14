@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { Send, Loader2, Paperclip } from 'lucide-react';
+import { Send, Loader2, Paperclip, Sparkles } from 'lucide-react';
 
 export default function AIPromptComposer({ value, onChange, onSend, loading, disabled, onSendImage }) {
   const textareaRef = useRef(null);
@@ -25,41 +25,48 @@ export default function AIPromptComposer({ value, onChange, onSend, loading, dis
   const canSend = value.trim().length > 0 && !loading && !disabled;
 
   return (
-    <div className="bg-ink border border-border rounded-xl overflow-hidden">
+    <div className="ai-prompt-composer bg-[#181120]/90 border border-white/10 rounded-2xl overflow-hidden shadow-xl backdrop-blur-md">
       {/* Prompt textarea */}
-      <div className="flex items-center gap-2 px-3 py-2.5">
-        <textarea
-          ref={textareaRef}
-          rows={1}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              if (canSend) handleSend();
-            }
-          }}
-          placeholder="Jelaskan ide desain kaosmu di sini... contoh: kaos streetwear dengan naga hitam"
-          className="flex-1 bg-card border border-border rounded-2xl px-4 py-2.5 text-white text-[14px] placeholder:text-gray focus:outline-none focus:border-fire transition-colors resize-none min-h-[44px] max-h-[120px]"
-          disabled={loading || disabled}
-        />
+      <div className="flex items-center gap-2.5 p-3">
+        <div className="relative flex-1">
+          <textarea
+            ref={textareaRef}
+            rows={1}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (canSend) handleSend();
+              }
+            }}
+            placeholder="Ketik ide atau instruksi sablonmu di sini... (contoh: ilustrasi astronot gaya cyberpunk neon)"
+            className="ai-prompt-textarea w-full bg-[#120a1c] border border-white/10 rounded-xl px-4 py-3 text-white text-[13px] sm:text-[14px] placeholder:text-gray/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 transition-all resize-none min-h-[46px] max-h-[120px]"
+            disabled={loading || disabled}
+          />
+        </div>
         <button
           onClick={handleSend}
           disabled={!canSend}
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-fire text-ink hover:bg-yellow-400 transition-colors disabled:opacity-40 shrink-0"
+          className="btn-gradient-primary w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl bg-gradient-to-r from-primary via-[#ff58a0] to-primary text-white shadow-lg shadow-primary/25 hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:scale-100 shrink-0 p-0 border-0"
           title="Kirim ke AI"
+          aria-label="Kirim ke AI"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          {loading ? (
+            <Loader2 className="w-5 h-5 text-white animate-spin" />
+          ) : (
+            <Send className="w-5 h-5 text-white stroke-[2.2]" />
+          )}
         </button>
         {onSendImage && (
           <>
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={loading || disabled}
-              title="Upload desain sendiri untuk dianalisis & diedit AI"
-              className="w-9 h-9 flex items-center justify-center rounded-full shrink-0 text-gray hover:text-fire hover:bg-dark transition-colors disabled:opacity-40"
+              title="Upload referensi gambar sendiri"
+              className="ai-prompt-btn-clip w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl shrink-0 border border-white/10 bg-white/5 text-gray hover:text-white hover:border-primary/40 hover:bg-primary/10 transition-all disabled:opacity-40 p-0"
             >
-              <Paperclip className="w-4 h-4" />
+              <Paperclip className="w-5 h-5" />
             </button>
             <input
               ref={fileInputRef}

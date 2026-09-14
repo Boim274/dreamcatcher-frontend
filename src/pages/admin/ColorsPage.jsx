@@ -192,14 +192,14 @@ export default function ColorsPage() {
         <div className="bg-card/90 backdrop-blur-md border border-border/80 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
             <div className="sm:col-span-8 lg:col-span-8 relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray pointer-events-none" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none shrink-0" />
               <input
                 type="text"
                 value={filters.search}
                 onChange={(e) => handleFilter('search', e.target.value)}
                 onKeyDown={handleSearchKeyDown}
                 placeholder="Cari nama warna atau kode hex (#ffffff)..."
-                className="input-dark pl-10 pr-9 w-full"
+                className="input-dark pl-11 pr-9 w-full"
               />
               {filters.search && (
                 <button
@@ -445,49 +445,57 @@ export default function ColorsPage() {
               )}
             </div>
           </>
-        )}
-
-        {/* Modal: Tambah / Edit Warna */}
+        )}        {/* Modal: Tambah / Edit Warna */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-card border border-border/80 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden my-8 transform transition-all">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto animate-in fade-in duration-200">
+            <div className="relative bg-[#140b19] border border-white/15 w-full max-w-md rounded-3xl shadow-[0_25px_70px_rgba(0,0,0,0.85)] ring-1 ring-white/10 overflow-hidden my-8 transform transition-all animate-in zoom-in-95 duration-200">
+              {/* Ambient Glow Accent */}
+              <div
+                className="pointer-events-none absolute -top-20 -right-20 w-48 h-48 blur-3xl rounded-full opacity-30"
+                style={{ backgroundColor: form.hex_code || '#ec4899' }}
+              />
+              <div
+                className="absolute inset-x-0 top-0 h-[2px] opacity-80"
+                style={{ background: `linear-gradient(to right, transparent, ${form.hex_code || '#ec4899'}, transparent)` }}
+              />
+
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-5 sm:p-6 border-b border-border/80 bg-ink/50">
-                <div className="flex items-center gap-3">
+              <div className="relative flex items-center justify-between p-6 border-b border-white/10 bg-white/[0.02]">
+                <div className="flex items-center gap-3.5">
                   <div
-                    className="w-10 h-10 rounded-xl border border-white/20 shadow-md flex items-center justify-center flex-shrink-0"
+                    className="w-12 h-12 rounded-2xl border border-white/25 shadow-xl flex items-center justify-center shrink-0 transition-all duration-300"
                     style={{ backgroundColor: form.hex_code }}
                   >
-                    <Palette size={18} className="text-white mix-blend-difference" />
+                    <Palette size={20} className="text-white mix-blend-difference drop-shadow" />
                   </div>
                   <div>
-                    <h3 className="font-heading text-lg sm:text-xl text-white tracking-[0.5px]">
+                    <h3 className="font-heading text-lg sm:text-xl font-bold text-white tracking-[0.5px]">
                       {editingId ? 'Edit Warna' : 'Tambah Warna Baru'}
                     </h3>
-                    <p className="text-gray text-xs mt-0.5">
+                    <p className="text-zinc-400 text-xs mt-0.5">
                       {editingId ? 'Perbarui informasi dan kode hex warna' : 'Daftarkan opsi warna baru ke sistem'}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="p-2 hover:bg-ink text-gray hover:text-white rounded-xl transition-colors"
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer"
                 >
                   <X size={18} />
                 </button>
               </div>
 
               {/* Modal Form */}
-              <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
+              <form onSubmit={handleSubmit} className="p-6 space-y-4 relative z-10">
                 <div>
-                  <label className="text-[11px] font-semibold text-gray uppercase tracking-wider block mb-1.5">
+                  <label className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider block mb-1.5">
                     Nama Warna <span className="text-primary">*</span>
                   </label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="input-dark w-full"
+                    className="w-full px-4 py-3 rounded-xl bg-[#0e0712] border border-white/15 text-white placeholder:text-zinc-600 text-xs font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                     placeholder="Contoh: Merah Marun, Abu Misty, Forest Green"
                     required
                     autoFocus
@@ -495,21 +503,23 @@ export default function ColorsPage() {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-semibold text-gray uppercase tracking-wider block mb-1.5">
+                  <label className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider block mb-1.5">
                     Kode Warna (HEX) <span className="text-primary">*</span>
                   </label>
                   <div className="flex gap-3 items-center">
-                    <input
-                      type="color"
-                      value={form.hex_code}
-                      onChange={(e) => setForm({ ...form, hex_code: e.target.value })}
-                      className="w-11 h-11 rounded-xl border border-border cursor-pointer bg-transparent flex-shrink-0"
-                    />
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={form.hex_code}
+                        onChange={(e) => setForm({ ...form, hex_code: e.target.value })}
+                        className="w-12 h-12 rounded-xl border border-white/25 cursor-pointer bg-transparent shrink-0"
+                      />
+                    </div>
                     <input
                       type="text"
                       value={form.hex_code}
                       onChange={(e) => setForm({ ...form, hex_code: e.target.value })}
-                      className="input-dark flex-1 font-mono uppercase"
+                      className="flex-1 px-4 py-3 rounded-xl bg-[#0e0712] border border-white/15 text-white placeholder:text-zinc-600 font-mono text-xs uppercase focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                       placeholder="#000000"
                       required
                     />
@@ -518,7 +528,7 @@ export default function ColorsPage() {
 
                 {/* Preset Colors */}
                 <div>
-                  <label className="text-[10px] font-semibold text-gray uppercase tracking-wider block mb-1.5">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1.5">
                     Pilihan Cepat Warna Populer
                   </label>
                   <div className="grid grid-cols-4 gap-1.5">
@@ -527,57 +537,57 @@ export default function ColorsPage() {
                         key={preset.hex}
                         type="button"
                         onClick={() => setForm((p) => ({ ...p, name: p.name || preset.name, hex_code: preset.hex }))}
-                        className="flex items-center gap-1.5 p-1.5 rounded-lg bg-ink/60 border border-border hover:border-primary/50 text-[10px] text-gray-light transition-all text-left"
+                        className="flex items-center gap-1.5 p-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-primary/50 text-[10px] text-zinc-300 transition-all text-left cursor-pointer hover:bg-white/5"
                       >
                         <span
-                          className="w-3 h-3 rounded-full border border-white/20 flex-shrink-0"
+                          className="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0 shadow-sm"
                           style={{ backgroundColor: preset.hex }}
                         />
-                        <span className="truncate">{preset.name.split(' ')[0]}</span>
+                        <span className="truncate font-medium">{preset.name.split(' ')[0]}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="grid grid-cols-2 gap-4 pt-1">
                   <div>
-                    <label className="text-[11px] font-semibold text-gray uppercase tracking-wider block mb-1.5">
+                    <label className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider block mb-1.5">
                       Urutan Tampil
                     </label>
                     <input
                       type="number"
                       value={form.sort_order}
                       onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })}
-                      className="input-dark w-full"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#0e0712] border border-white/15 text-white placeholder:text-zinc-600 text-xs font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                       min="0"
                     />
                   </div>
-                  <div className="pt-5">
+                  <div className="flex items-center pt-6">
                     <label className="flex items-center gap-2 cursor-pointer select-none">
                       <input
                         type="checkbox"
                         checked={form.is_active}
                         onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                        className="w-4 h-4 rounded text-primary focus:ring-primary bg-ink border-border"
+                        className="w-4 h-4 rounded text-primary focus:ring-primary bg-[#0e0712] border-white/20 accent-primary cursor-pointer"
                       />
-                      <span className="text-sm font-semibold text-white">Warna Aktif</span>
+                      <span className="text-xs font-bold text-white">Warna Aktif</span>
                     </label>
                   </div>
                 </div>
 
                 {/* Modal Actions */}
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/80">
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="px-4 py-2.5 rounded-xl border border-border hover:bg-ink text-gray-light hover:text-white transition-colors text-xs font-semibold"
+                    className="px-5 py-2.5 rounded-xl border border-white/15 hover:bg-white/5 text-zinc-300 hover:text-white transition-colors text-xs font-bold cursor-pointer"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="btn-primary px-6 py-2.5 text-xs flex items-center gap-2"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary via-[#ff60a8] to-purple-600 text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 shadow-lg shadow-primary/30 transition-all flex items-center gap-2 cursor-pointer border-none disabled:opacity-50"
                   >
                     {saving ? (
                       <>
@@ -585,7 +595,7 @@ export default function ColorsPage() {
                       </>
                     ) : (
                       <>
-                        <CheckCircle2 size={16} /> Simpan Warna
+                        <Check size={16} /> Simpan Warna
                       </>
                     )}
                   </button>

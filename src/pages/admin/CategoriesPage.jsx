@@ -13,6 +13,7 @@ import {
   Search,
   CheckCircle2,
   Package,
+  Check,
 } from 'lucide-react';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
 
@@ -120,13 +121,13 @@ export default function CategoriesPage() {
         {/* Filter Card */}
         <div className="bg-card/90 backdrop-blur-md border border-border/80 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray pointer-events-none" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none shrink-0" />
             <input
               type="text"
               placeholder="Cari nama kategori..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="input-dark pl-10 pr-9 w-full"
+              className="input-dark pl-11 pr-9 w-full"
             />
             {search && (
               <button
@@ -286,26 +287,30 @@ export default function CategoriesPage() {
 
         {/* Modal: Tambah / Edit Kategori */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-card border border-border/80 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden my-8 transform transition-all">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto animate-in fade-in duration-200">
+            <div className="relative bg-[#140b19] border border-white/15 w-full max-w-md rounded-3xl shadow-[0_25px_70px_rgba(0,0,0,0.85)] ring-1 ring-white/10 overflow-hidden my-8 transform transition-all animate-in zoom-in-95 duration-200">
+              {/* Ambient Glow Accent */}
+              <div className="pointer-events-none absolute -top-20 -right-20 w-48 h-48 bg-primary/20 blur-3xl rounded-full" />
+              <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-80" />
+
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-5 sm:p-6 border-b border-border/80 bg-ink/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                    <FolderTree size={20} />
+              <div className="relative flex items-center justify-between p-6 border-b border-white/10 bg-white/[0.02]">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary/20 to-purple-600/20 border border-primary/30 flex items-center justify-center text-primary shadow-lg shadow-primary/15 shrink-0">
+                    <FolderTree size={22} />
                   </div>
                   <div>
-                    <h3 className="font-heading text-lg sm:text-xl text-white tracking-[0.5px]">
+                    <h3 className="font-heading text-lg sm:text-xl font-bold text-white tracking-[0.5px]">
                       {editingId ? 'Edit Kategori' : 'Tambah Kategori Baru'}
                     </h3>
-                    <p className="text-gray text-xs mt-0.5">
+                    <p className="text-zinc-400 text-xs mt-0.5">
                       {editingId ? 'Perbarui nama atau urutan kategori produk' : 'Buat kelompok kategori baru untuk katalog'}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="p-2 hover:bg-ink text-gray hover:text-white rounded-xl transition-colors"
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer"
                 >
                   <X size={18} />
                 </button>
@@ -317,17 +322,17 @@ export default function CategoriesPage() {
                   e.preventDefault();
                   handleSubmit();
                 }}
-                className="p-5 sm:p-6 space-y-4"
+                className="p-6 space-y-4 relative z-10"
               >
                 <div>
-                  <label className="text-[11px] font-semibold text-gray uppercase tracking-wider block mb-1.5">
+                  <label className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider block mb-1.5">
                     Nama Kategori <span className="text-primary">*</span>
                   </label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                    className="input-dark w-full"
+                    className="w-full px-4 py-3 rounded-xl bg-[#0e0712] border border-white/15 text-white placeholder:text-zinc-600 text-xs font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                     placeholder="Contoh: Kaos Polos Combed, Jaket Hoodie..."
                     required
                     autoFocus
@@ -335,34 +340,34 @@ export default function CategoriesPage() {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-semibold text-gray uppercase tracking-wider block mb-1.5">
+                  <label className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider block mb-1.5">
                     Urutan Prioritas Tampil
                   </label>
                   <input
                     type="number"
                     value={form.sort_order}
                     onChange={(e) => setForm((p) => ({ ...p, sort_order: parseInt(e.target.value) || 0 }))}
-                    className="input-dark w-full"
+                    className="w-full px-4 py-3 rounded-xl bg-[#0e0712] border border-white/15 text-white placeholder:text-zinc-600 text-xs font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                     min="0"
                   />
-                  <p className="text-gray text-[11px] mt-1.5">
+                  <p className="text-zinc-500 text-[11px] mt-1.5">
                     Nomor lebih kecil akan ditampilkan lebih awal pada navigasi dan filter.
                   </p>
                 </div>
 
                 {/* Modal Actions */}
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/80">
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="px-4 py-2.5 rounded-xl border border-border hover:bg-ink text-gray-light hover:text-white transition-colors text-xs font-semibold"
+                    className="px-5 py-2.5 rounded-xl border border-white/15 hover:bg-white/5 text-zinc-300 hover:text-white transition-colors text-xs font-bold cursor-pointer"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="btn-primary px-6 py-2.5 text-xs flex items-center gap-2"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary via-[#ff60a8] to-purple-600 text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 shadow-lg shadow-primary/30 transition-all flex items-center gap-2 cursor-pointer border-none disabled:opacity-50"
                   >
                     {saving ? (
                       <>
@@ -370,7 +375,7 @@ export default function CategoriesPage() {
                       </>
                     ) : (
                       <>
-                        <CheckCircle2 size={16} /> Simpan Kategori
+                        <Check size={16} /> Simpan Kategori
                       </>
                     )}
                   </button>

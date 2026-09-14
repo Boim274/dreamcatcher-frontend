@@ -1,92 +1,116 @@
+import { useLanguageStore } from '../../store/languageStore';
+
 const statusConfig = {
   pending: {
-    label: 'Pending',
+    labelId: 'Pending',
+    labelEn: 'Pending',
     className: 'bg-amber-500/10 text-amber-400 border border-amber-500/25',
     dotClass: 'bg-amber-400',
   },
   waiting_payment: {
-    label: 'Menunggu Pembayaran',
+    labelId: 'Menunggu Pembayaran',
+    labelEn: 'Awaiting Payment',
     className: 'bg-amber-500/10 text-amber-400 border border-amber-500/25',
     dotClass: 'bg-amber-400 animate-pulse',
   },
   waiting_verification: {
-    label: 'Menunggu Verifikasi',
+    labelId: 'Menunggu Verifikasi',
+    labelEn: 'Awaiting Verification',
     className: 'bg-orange-500/10 text-orange-400 border border-orange-500/25',
     dotClass: 'bg-orange-400 animate-pulse',
   },
   ready_to_process: {
-    label: 'Siap Diproses',
+    labelId: 'Siap Diproses',
+    labelEn: 'Ready to Process',
     className: 'bg-sky-500/10 text-sky-400 border border-sky-500/25',
     dotClass: 'bg-sky-400',
   },
   ready_for_pickup: {
-    label: 'Siap Diambil / Dikirim',
+    labelId: 'Siap Diambil / Dikirim',
+    labelEn: 'Shipped / Ready for Pickup',
     className: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/25',
     dotClass: 'bg-cyan-400',
   },
   paid: {
-    label: 'Lunas',
+    labelId: 'Lunas',
+    labelEn: 'Paid in Full',
     className: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25',
     dotClass: 'bg-emerald-400',
   },
   dp: {
-    label: 'DP Terverifikasi',
+    labelId: 'DP Terverifikasi',
+    labelEn: 'DP Verified',
     className: 'bg-sky-500/10 text-sky-400 border border-sky-500/25',
     dotClass: 'bg-sky-400',
   },
   rejected: {
-    label: 'Ditolak',
+    labelId: 'Ditolak',
+    labelEn: 'Rejected',
     className: 'bg-rose-500/10 text-rose-400 border border-rose-500/25',
     dotClass: 'bg-rose-400',
   },
   processed: {
-    label: 'Diproses',
+    labelId: 'Diproses',
+    labelEn: 'Processed',
     className: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/25',
     dotClass: 'bg-indigo-400 animate-pulse',
   },
   delivered: {
-    label: 'Dikirim / Siap Diambil',
+    labelId: 'Dikirim / Siap Diambil',
+    labelEn: 'Shipped / Ready for Pickup',
     className: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/25',
     dotClass: 'bg-cyan-400',
   },
   processing: {
-    label: 'Sedang Diproses',
+    labelId: 'Sedang Diproses',
+    labelEn: 'In Production',
     className: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/25',
     dotClass: 'bg-indigo-400 animate-pulse',
   },
   completed: {
-    label: 'Selesai',
+    labelId: 'Selesai',
+    labelEn: 'Completed',
     className: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25',
     dotClass: 'bg-emerald-400',
   },
   cancelled: {
-    label: 'Dibatalkan',
+    labelId: 'Dibatalkan',
+    labelEn: 'Cancelled',
     className: 'bg-rose-500/10 text-rose-400 border border-rose-500/25',
     dotClass: 'bg-rose-400',
   },
   cancel_requested: {
-    label: 'Permintaan Batal',
+    labelId: 'Permintaan Batal',
+    labelEn: 'Cancellation Requested',
     className: 'bg-orange-500/10 text-orange-400 border border-orange-500/25',
     dotClass: 'bg-orange-400 animate-pulse',
   },
   confirmed: {
-    label: 'Dikonfirmasi',
+    labelId: 'Dikonfirmasi',
+    labelEn: 'Confirmed',
     className: 'bg-sky-500/10 text-sky-400 border border-sky-500/25',
     dotClass: 'bg-sky-400',
   },
   ready: {
-    label: 'Siap Diambil',
+    labelId: 'Siap Diambil',
+    labelEn: 'Ready for Pickup',
     className: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25',
     dotClass: 'bg-emerald-400',
   },
 };
 
 export function StatusBadge({ status, showDot = true, className = '' }) {
+  const { language, td } = useLanguageStore();
   const config = statusConfig[status] || {
-    label: status || 'Unknown',
+    labelId: status || 'Unknown',
+    labelEn: status || 'Unknown',
     className: 'bg-slate-500/10 text-slate-400 border border-slate-500/25',
     dotClass: 'bg-slate-400',
   };
+
+  const label = language === 'en'
+    ? (config.labelEn || td(config.labelId))
+    : config.labelId;
 
   return (
     <span
@@ -95,7 +119,8 @@ export function StatusBadge({ status, showDot = true, className = '' }) {
       {showDot && (
         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${config.dotClass}`} />
       )}
-      <span>{config.label}</span>
+      <span>{label}</span>
     </span>
   );
 }
+

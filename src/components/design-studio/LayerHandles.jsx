@@ -33,6 +33,7 @@ export default function LayerHandles({ rendererApiRef, layer, onPatch, onDuplica
   actionsRef.current = { onDuplicate, onFlip, onDelete, onReset };
 
   const wrapRef = useRef(null);
+  const polyRef = useRef(null);
   const cornerRefs = useRef([null, null, null, null]);
   const edgeRefs = useRef([null, null, null, null]);
   const rotRef = useRef(null);
@@ -60,6 +61,10 @@ export default function LayerHandles({ rendererApiRef, layer, onPatch, onDuplica
         show(false);
       } else {
         show(true);
+        if (polyRef.current && h.corners && h.corners.length === 4) {
+          const pts = h.corners.map((c) => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ');
+          polyRef.current.setAttribute('points', pts);
+        }
         place(rotRef.current, h.rot.x, h.rot.y);
         place(lineRef.current, h.center.x, h.center.y);
         const len = Math.max(1, Math.hypot(h.rot.x - h.center.x, h.rot.y - h.center.y));
@@ -179,6 +184,16 @@ export default function LayerHandles({ rendererApiRef, layer, onPatch, onDuplica
 
   return (
     <div ref={wrapRef} className="absolute inset-0 pointer-events-none" style={{ display: 'none', zIndex: 15 }}>
+      {/* Visual Bounding Box (Kotak Seleksi Desain) */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
+        <polygon
+          ref={polyRef}
+          fill="rgba(255, 59, 137, 0.08)"
+          stroke="#ff3b89"
+          strokeWidth="1.5"
+          strokeDasharray="5 3"
+        />
+      </svg>
       <div
         ref={lineRef}
         className="absolute bg-fire/70"

@@ -17,7 +17,8 @@ import {
   CheckCircle2,
   Layers,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Check,
 } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
@@ -26,6 +27,8 @@ export default function ProductsPage() {
   const toast = useToast();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [masterSizes, setMasterSizes] = useState([]);
+  const [masterColors, setMasterColors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -59,6 +62,8 @@ export default function ProductsPage() {
   useEffect(() => {
     const controller = new AbortController();
     adminService.getCategories(controller.signal).then(setCategories).catch(() => {});
+    adminService.getSizes({}, controller.signal).then((res) => setMasterSizes(res.data || [])).catch(() => {});
+    adminService.getColors({}, controller.signal).then((res) => setMasterColors(res.data || [])).catch(() => {});
     return () => controller.abort();
   }, []);
 
@@ -147,13 +152,15 @@ export default function ProductsPage() {
   };
 
   const handleImageSelect = (e) => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
     setImageFiles((prev) => [...prev, ...files]);
     files.forEach((f) => {
       const reader = new FileReader();
       reader.onload = (ev) => setImagePreviews((prev) => [...prev, ev.target.result]);
       reader.readAsDataURL(f);
     });
+    e.target.value = '';
   };
 
   const removeNewImage = (index) => {
@@ -166,33 +173,68 @@ export default function ProductsPage() {
   };
 
   const addSize = () => setSizes((prev) => [...prev, { name: '', stock: 0 }]);
+  const addMasterSize = (sz) => {
+    const sName = sz.name || sz.code || '';
+    if (!sName) return;
+    if (!sizes.some((s) => s.name?.toLowerCase() === sName.toLowerCase())) {
+      setSizes((prev) => [...prev, { name: sName, stock: 10 }]);
+    }
+  };
   const updateSize = (i, field, value) =>
     setSizes((prev) => prev.map((s, idx) => (idx === i ? { ...s, [field]: value } : s)));
   const removeSize = (i) => setSizes((prev) => prev.filter((_, idx) => idx !== i));
 
   const addColor = () => setColors((prev) => [...prev, { name: '', hex_code: '#111827' }]);
+  const addMasterColor = (c) => {
+    const cName = c.name || '';
+    if (!cName) return;
+    if (!colors.some((col) => col.name?.toLowerCase() === cName.toLowerCase())) {
+      setColors((prev) => [...prev, { name: cName, hex_code: c.hex_code || '#111827' }]);
+    }
+  };
   const updateColor = (i, field, value) =>
     setColors((prev) => prev.map((c, idx) => (idx === i ? { ...c, [field]: value } : c)));
   const removeColor = (i) => setColors((prev) => prev.filter((_, idx) => idx !== i));
 
   const handleSubmit = async () => {
-    if (!form.name || !form.base_price) {
-      toast.warning('Lengkapi nama dan harga produk');
+    if (!form.name || form.name.trim() === '') {
+      toast.warning('Nama produk wajib diisi');
+      return;
+    }
+    const cleanPrice = String(form.base_price).replace(/[^0-9]/g, '');
+    if (!cleanPrice) {
+      toast.warning('Harga dasar produk wajib diisi angka valid');
       return;
     }
     setSaving(true);
     try {
       const fd = new FormData();
-      fd.append('name', form.name);
-      fd.append('description', form.description);
-      fd.append('base_price', form.base_price);
-      fd.append('stock', form.stock);
+      fd.append('name', form.name.trim());
+      if (form.description) fd.append('description', form.description.trim());
+      fd.append('base_price', cleanPrice);
+      fd.append('stock', parseInt(form.stock) || 0);
       fd.append('is_active', form.is_active ? '1' : '0');
-      fd.append('sort_order', form.sort_order);
-      if (form.category_id) fd.append('category_id', form.category_id);
+      fd.append('sort_order', parseInt(form.sort_order) || 0);
+      if (form.category_id && form.category_id !== '') {
+        fd.append('category_id', form.category_id);
+      }
       imageFiles.forEach((f) => fd.append('images[]', f));
-      fd.append('sizes', JSON.stringify(sizes));
-      fd.append('colors', JSON.stringify(colors));
+
+      const validSizes = sizes
+        .filter((s) => s && s.name && s.name.trim() !== '')
+        .map((s) => ({
+          name: s.name.trim(),
+          stock: parseInt(s.stock) || 0,
+        }));
+      fd.append('sizes', JSON.stringify(validSizes));
+
+      const validColors = colors
+        .filter((c) => c && c.name && c.name.trim() !== '')
+        .map((c) => ({
+          name: c.name.trim(),
+          hex_code: c.hex_code && c.hex_code.trim() !== '' ? c.hex_code.trim() : '#111827',
+        }));
+      fd.append('colors', JSON.stringify(validColors));
 
       if (editingId) {
         fd.append('existing_images', JSON.stringify(existingImages));
@@ -205,7 +247,15 @@ export default function ProductsPage() {
       setShowModal(false);
       fetchData(null, 1, filters);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal menyimpan produk');
+      console.error('Submit product error:', err?.response?.data || err);
+      const errData = err.response?.data;
+      let errDetail = 'Gagal menyimpan produk';
+      if (errData?.errors && typeof errData.errors === 'object') {
+        errDetail = Object.values(errData.errors).flat().join(', ');
+      } else if (errData?.message) {
+        errDetail = errData.message;
+      }
+      toast.error(errDetail);
     } finally {
       setSaving(false);
     }
@@ -272,14 +322,14 @@ export default function ProductsPage() {
         <div className="bg-card/90 backdrop-blur-md border border-border/80 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
             <div className="sm:col-span-6 lg:col-span-5 relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray pointer-events-none" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none shrink-0" />
               <input
                 type="text"
                 placeholder="Cari produk (nama / SKU)..."
                 value={filters.search}
                 onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value }))}
                 onKeyDown={handleSearchKeyDown}
-                className="input-dark pl-10 pr-9 w-full"
+                className="input-dark pl-11 pr-9 w-full"
               />
               {filters.search && (
                 <button
@@ -576,26 +626,30 @@ export default function ProductsPage() {
 
         {/* Modal: Tambah / Edit Produk */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-card border border-border/80 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden my-8 transform transition-all">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto animate-in fade-in duration-200">
+            <div className="relative bg-[#140b19] border border-white/15 w-full max-w-3xl rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.85)] ring-1 ring-white/10 overflow-hidden my-8 transform transition-all animate-in zoom-in-95 duration-200">
+              {/* Ambient Glow Accent */}
+              <div className="pointer-events-none absolute -top-24 -right-24 w-60 h-60 bg-primary/20 blur-3xl rounded-full" />
+              <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-80" />
+
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-5 sm:p-6 border-b border-border/80 bg-ink/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                    <Package size={20} />
+              <div className="relative flex items-center justify-between p-6 border-b border-white/10 bg-white/[0.02]">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary/20 to-purple-600/20 border border-primary/30 flex items-center justify-center text-primary shadow-lg shadow-primary/15 shrink-0">
+                    <Package size={22} />
                   </div>
                   <div>
-                    <h3 className="font-heading text-lg sm:text-xl text-white tracking-[0.5px]">
+                    <h3 className="font-heading text-lg sm:text-xl font-bold text-white tracking-[0.5px]">
                       {editingId ? 'Edit Produk' : 'Tambah Produk Baru'}
                     </h3>
-                    <p className="text-gray text-xs mt-0.5">
+                    <p className="text-zinc-400 text-xs mt-0.5">
                       {editingId ? 'Perbarui informasi dan spesifikasi produk katalog' : 'Isi rincian informasi katalog produk baru'}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="p-2 hover:bg-ink text-gray hover:text-white rounded-xl transition-colors"
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer"
                 >
                   <X size={18} />
                 </button>
@@ -797,9 +851,39 @@ export default function ProductsPage() {
                       onClick={addSize}
                       className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
                     >
-                      <Plus size={14} /> Tambah Ukuran
+                      <Plus size={14} /> Tambah Ukuran Custom
                     </button>
                   </div>
+
+                  {masterSizes.length > 0 && (
+                    <div className="mb-3 p-2.5 rounded-xl bg-ink/30 border border-border/50">
+                      <p className="text-[10px] font-semibold text-gray uppercase tracking-wider mb-1.5">
+                        Pilih Cepat dari Master Ukuran:
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {masterSizes.map((sz) => {
+                          const sName = sz.name || sz.code || '';
+                          const isAdded = sizes.some((s) => s.name?.toLowerCase() === sName.toLowerCase());
+                          return (
+                            <button
+                              key={sz.id || sName}
+                              type="button"
+                              onClick={() => addMasterSize(sz)}
+                              disabled={isAdded}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
+                                isAdded
+                                  ? 'bg-primary/20 text-primary border border-primary/30 opacity-60 cursor-default'
+                                  : 'bg-card hover:bg-primary hover:text-white border border-border text-gray-300'
+                              }`}
+                            >
+                              {isAdded ? <Check size={11} /> : <Plus size={11} />}
+                              {sName}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     {sizes.map((size, i) => (
@@ -835,7 +919,7 @@ export default function ProductsPage() {
                     ))}
                     {sizes.length === 0 && (
                       <p className="text-gray text-xs italic py-2">
-                        Belum ada varian ukuran. Klik tombol &quot;+ Tambah Ukuran&quot; di atas.
+                        Belum ada varian ukuran. Klik tombol &quot;+ Tambah Ukuran Custom&quot; atau pilih cepat di atas.
                       </p>
                     )}
                   </div>
@@ -852,9 +936,42 @@ export default function ProductsPage() {
                       onClick={addColor}
                       className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
                     >
-                      <Plus size={14} /> Tambah Warna
+                      <Plus size={14} /> Tambah Warna Custom
                     </button>
                   </div>
+
+                  {masterColors.length > 0 && (
+                    <div className="mb-3 p-2.5 rounded-xl bg-ink/30 border border-border/50">
+                      <p className="text-[10px] font-semibold text-gray uppercase tracking-wider mb-1.5">
+                        Pilih Cepat dari Master Warna Katalog:
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {masterColors.map((col) => {
+                          const isAdded = colors.some((c) => c.name?.toLowerCase() === col.name?.toLowerCase());
+                          return (
+                            <button
+                              key={col.id || col.name}
+                              type="button"
+                              onClick={() => addMasterColor(col)}
+                              disabled={isAdded}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+                                isAdded
+                                  ? 'bg-primary/20 text-primary border border-primary/30 opacity-60 cursor-default'
+                                  : 'bg-card hover:bg-white/10 border border-border text-gray-300'
+                              }`}
+                            >
+                              <span
+                                className="w-2.5 h-2.5 rounded-full border border-white/20 inline-block"
+                                style={{ backgroundColor: col.hex_code || '#111827' }}
+                              />
+                              {isAdded ? <Check size={11} /> : <Plus size={11} />}
+                              {col.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     {colors.map((color, i) => (
@@ -895,25 +1012,25 @@ export default function ProductsPage() {
                     ))}
                     {colors.length === 0 && (
                       <p className="text-gray text-xs italic py-2">
-                        Belum ada varian warna khusus. Klik tombol &quot;+ Tambah Warna&quot; jika produk memiliki pilihan warna.
+                        Belum ada varian warna khusus. Klik &quot;+ Tambah Warna Custom&quot; atau pilih dari katalog di atas.
                       </p>
                     )}
                   </div>
                 </div>
 
                 {/* Modal Actions */}
-                <div className="flex items-center justify-end gap-3 pt-5 border-t border-border/80">
+                <div className="flex items-center justify-end gap-3 pt-5 border-t border-white/10">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="px-4 py-2.5 rounded-xl border border-border hover:bg-ink text-gray-light hover:text-white transition-colors text-xs font-semibold"
+                    className="px-5 py-2.5 rounded-xl border border-white/15 hover:bg-white/5 text-zinc-300 hover:text-white transition-colors text-xs font-bold cursor-pointer"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="btn-primary px-6 py-2.5 text-xs flex items-center gap-2"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary via-[#ff60a8] to-purple-600 text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 shadow-lg shadow-primary/30 transition-all flex items-center gap-2 cursor-pointer border-none disabled:opacity-50"
                   >
                     {saving ? (
                       <>
@@ -921,7 +1038,7 @@ export default function ProductsPage() {
                       </>
                     ) : (
                       <>
-                        <CheckCircle2 size={16} /> Simpan Produk
+                        <Check size={16} /> Simpan Produk
                       </>
                     )}
                   </button>

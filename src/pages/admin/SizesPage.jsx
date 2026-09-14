@@ -15,6 +15,7 @@ import {
   RotateCcw,
   CheckCircle2,
   Wrench,
+  Check,
 } from 'lucide-react';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
 
@@ -169,14 +170,14 @@ export default function SizesPage() {
         <div className="bg-card/90 backdrop-blur-md border border-border/80 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
             <div className="sm:col-span-7 lg:col-span-7 relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray pointer-events-none" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none shrink-0" />
               <input
                 type="text"
                 value={filters.search}
                 onChange={(e) => handleFilter('search', e.target.value)}
                 onKeyDown={handleSearchKeyDown}
                 placeholder="Cari nama ukuran atau dimensi..."
-                className="input-dark pl-10 pr-9 w-full"
+                className="input-dark pl-11 pr-9 w-full"
               />
               {filters.search && (
                 <button
@@ -398,42 +399,46 @@ export default function SizesPage() {
 
         {/* Modal: Tambah / Edit Ukuran */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-card border border-border/80 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden my-8 transform transition-all">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto animate-in fade-in duration-200">
+            <div className="relative bg-[#140b19] border border-white/15 w-full max-w-md rounded-3xl shadow-[0_25px_70px_rgba(0,0,0,0.85)] ring-1 ring-white/10 overflow-hidden my-8 transform transition-all animate-in zoom-in-95 duration-200">
+              {/* Ambient Glow Accent */}
+              <div className="pointer-events-none absolute -top-20 -right-20 w-48 h-48 bg-primary/20 blur-3xl rounded-full" />
+              <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-80" />
+
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-5 sm:p-6 border-b border-border/80 bg-ink/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                    <Ruler size={20} />
+              <div className="relative flex items-center justify-between p-6 border-b border-white/10 bg-white/[0.02]">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary/20 to-purple-600/20 border border-primary/30 flex items-center justify-center text-primary shadow-lg shadow-primary/15 shrink-0">
+                    <Ruler size={22} />
                   </div>
                   <div>
-                    <h3 className="font-heading text-lg sm:text-xl text-white tracking-[0.5px]">
+                    <h3 className="font-heading text-lg sm:text-xl font-bold text-white tracking-[0.5px]">
                       {editingId ? 'Edit Ukuran' : 'Tambah Ukuran Baru'}
                     </h3>
-                    <p className="text-gray text-xs mt-0.5">
+                    <p className="text-zinc-400 text-xs mt-0.5">
                       {editingId ? 'Perbarui spesifikasi dan dimensi ukuran' : 'Tambahkan ukuran baru untuk katalog atau sablon'}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="p-2 hover:bg-ink text-gray hover:text-white rounded-xl transition-colors"
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer"
                 >
                   <X size={18} />
                 </button>
               </div>
 
               {/* Modal Form */}
-              <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
+              <form onSubmit={handleSubmit} className="p-6 space-y-4 relative z-10">
                 <div>
-                  <label className="text-[11px] font-semibold text-gray uppercase tracking-wider block mb-1.5">
+                  <label className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider block mb-1.5">
                     Nama / Label Ukuran <span className="text-primary">*</span>
                   </label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="input-dark w-full"
+                    className="w-full px-4 py-3 rounded-xl bg-[#0e0712] border border-white/15 text-white placeholder:text-zinc-600 text-xs font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                     placeholder="Contoh: S, M, L, XL, A3, A4..."
                     required
                     autoFocus
@@ -442,7 +447,7 @@ export default function SizesPage() {
 
                 {/* Preset Chips */}
                 <div>
-                  <label className="text-[10px] font-semibold text-gray uppercase tracking-wider block mb-1.5">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1.5">
                     Pilihan Cepat Standar
                   </label>
                   <div className="flex flex-wrap gap-1.5">
@@ -456,7 +461,7 @@ export default function SizesPage() {
                           const dim = isA ? preset.match(/\((.*?)\)/)?.[1] || '' : '';
                           setForm((p) => ({ ...p, name, dimensions: dim || p.dimensions }));
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-ink border border-border hover:border-primary/50 text-xs text-gray-light hover:text-white transition-colors"
+                        className="px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-primary/50 text-xs text-zinc-300 hover:text-white transition-all cursor-pointer hover:bg-white/5"
                       >
                         {preset}
                       </button>
@@ -465,65 +470,65 @@ export default function SizesPage() {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-semibold text-gray uppercase tracking-wider block mb-1.5">
+                  <label className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider block mb-1.5">
                     Dimensi / Spesifikasi Fisik
                   </label>
                   <input
                     type="text"
                     value={form.dimensions}
                     onChange={(e) => setForm({ ...form, dimensions: e.target.value })}
-                    className="input-dark w-full"
+                    className="w-full px-4 py-3 rounded-xl bg-[#0e0712] border border-white/15 text-white placeholder:text-zinc-600 text-xs font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                     placeholder="Contoh: Lebar 50cm, Panjang 70cm atau 29x42 cm"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-semibold text-gray uppercase tracking-wider block mb-1.5">
+                  <label className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider block mb-1.5">
                     Layanan Terkait (Opsional)
                   </label>
                   <select
                     value={form.service_id}
                     onChange={(e) => setForm({ ...form, service_id: e.target.value })}
-                    className="input-dark w-full"
+                    className="w-full px-4 py-3 rounded-xl bg-[#0e0712] border border-white/15 text-white text-xs font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                   >
                     <option value="">Umum (Semua Layanan)</option>
                     {services.map((s) => (
-                      <option key={s.id} value={s.id}>
+                      <option key={s.id} value={s.id} className="bg-[#120a16] text-white">
                         {s.name}
                       </option>
                     ))}
                   </select>
-                  <p className="text-gray text-[11px] mt-1">
+                  <p className="text-zinc-500 text-[11px] mt-1">
                     Biarkan kosong jika ukuran ini berlaku universal untuk semua jenis produk.
                   </p>
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-semibold text-gray uppercase tracking-wider block mb-1.5">
+                  <label className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider block mb-1.5">
                     Urutan Tampil
                   </label>
                   <input
                     type="number"
                     value={form.sort_order}
                     onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })}
-                    className="input-dark w-full"
+                    className="w-full px-4 py-3 rounded-xl bg-[#0e0712] border border-white/15 text-white placeholder:text-zinc-600 text-xs font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                     min="0"
                   />
                 </div>
 
                 {/* Modal Actions */}
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/80">
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="px-4 py-2.5 rounded-xl border border-border hover:bg-ink text-gray-light hover:text-white transition-colors text-xs font-semibold"
+                    className="px-5 py-2.5 rounded-xl border border-white/15 hover:bg-white/5 text-zinc-300 hover:text-white transition-colors text-xs font-bold cursor-pointer"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="btn-primary px-6 py-2.5 text-xs flex items-center gap-2"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary via-[#ff60a8] to-purple-600 text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 shadow-lg shadow-primary/30 transition-all flex items-center gap-2 cursor-pointer border-none disabled:opacity-50"
                   >
                     {saving ? (
                       <>
@@ -531,7 +536,7 @@ export default function SizesPage() {
                       </>
                     ) : (
                       <>
-                        <CheckCircle2 size={16} /> Simpan Ukuran
+                        <Check size={16} /> Simpan Ukuran
                       </>
                     )}
                   </button>

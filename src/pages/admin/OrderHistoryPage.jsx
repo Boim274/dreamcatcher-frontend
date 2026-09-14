@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { Search, Eye, ChevronLeft, ChevronRight, History, X, RotateCcw } from 'lucide-react';
+import { Search, Eye, ChevronLeft, ChevronRight, History, X, RotateCcw, Package } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
+import { getImageUrl } from '../../utils/getImageUrl';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
 
 const paymentStatusBadge = {
@@ -128,7 +129,7 @@ export default function OrderHistoryPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <div className="sm:col-span-2 lg:col-span-1">
               <div className="input-icon-wrapper relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none shrink-0" />
                 <input
                   type="text"
                   value={filters.search}
@@ -137,7 +138,7 @@ export default function OrderHistoryPage() {
                     if (e.key === 'Enter') submitSearch();
                   }}
                   placeholder="Cari kode/nama/HP..."
-                  className="input-dark pr-9 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="input-dark pl-11 pr-9 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 />
                 {filters.search && (
                   <button
@@ -238,7 +239,31 @@ export default function OrderHistoryPage() {
                         <p className="text-gray text-sm">{order.phone}</p>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-light">
-                        {order.items?.map((i) => i.product?.name || i.service?.name || i.product_name).filter(Boolean).join(', ') || '-'}
+                        {(() => {
+                          const firstItem = order.items?.[0];
+                          const thumb = firstItem?.design?.image_url
+                            ? getImageUrl(firstItem.design.image_url)
+                            : firstItem?.product?.images?.[0]?.image_url
+                            ? getImageUrl(firstItem.product.images[0].image_url)
+                            : null;
+                          const names = order.items?.map((i) => i.product?.name || i.service?.name || i.product_name).filter(Boolean).join(', ') || '-';
+                          return (
+                            <div className="flex items-center gap-2.5 max-w-[240px]">
+                              {thumb ? (
+                                <img
+                                  src={thumb}
+                                  alt=""
+                                  className="w-8 h-8 rounded-lg object-contain bg-ink border border-border flex-shrink-0"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-lg bg-ink border border-border flex items-center justify-center text-gray flex-shrink-0">
+                                  <Package size={14} />
+                                </div>
+                              )}
+                              <span className="truncate">{names}</span>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-4 py-3 font-bold text-white">{formatRupiah(order.total_price)}</td>
                       <td className="px-4 py-3">

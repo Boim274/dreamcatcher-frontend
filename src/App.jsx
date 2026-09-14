@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { useAuthStore } from './store/authStore';
 import { useAuthModalStore } from './store/authModalStore';
 import { useCartStore } from './store/cartStore';
+import { useOrderStore } from './store/orderStore';
 import { authService } from './services/authService';
 import feather from 'feather-icons';
 
@@ -19,6 +20,7 @@ import PricelistPage from './pages/PricelistPage';
 import DesignStudioPage from './pages/DesignStudio';
 import SizeChartPage from './pages/SizeChartPage';
 import AboutPage from './pages/AboutPage';
+import ProfilePage from './pages/ProfilePage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import DashboardPage from './pages/admin/DashboardPage';
@@ -38,7 +40,7 @@ import SettingsPage from './pages/admin/SettingsPage';
 import ReportsPage from './pages/admin/ReportsPage';
 import UsersPage from './pages/admin/UsersPage';
 import AuthModal from './components/ui/AuthModal';
-import WhatsAppButton from './components/common/WhatsAppButton';
+import FloatingCustomerBar from './components/common/FloatingCustomerBar';
 import { ToastProvider } from './components/ui/Toast';
 
 function ProtectedRoute({ children }) {
@@ -78,8 +80,8 @@ function AppContent() {
     checkAuth();
   }, [checkAuth]);
 
-  // Keep the cart scoped to the logged-in user: switching accounts (or logging
-  // out) loads that account's own cart instead of a shared global one.
+  // Keep cart & order draft scoped to the logged-in user: switching accounts (or logging
+  // out) loads that account's own state instead of a shared global one.
   useEffect(() => {
     const syncCart = () => {
       const id = authService.getUser()?.id;
@@ -96,8 +98,32 @@ function AppContent() {
       }
     };
 
+    const syncOrder = () => {
+      const id = authService.getUser()?.id;
+      if (id == null) {
+        useOrderStore.getState().resetAll();
+        return;
+      }
+      try {
+        const raw = localStorage.getItem(`order-u${id}`);
+        const stored = raw ? JSON.parse(raw) : null;
+        if (stored?.state) {
+          useOrderStore.setState(stored.state);
+        } else if (stored) {
+          useOrderStore.setState(stored);
+        } else {
+          useOrderStore.getState().resetAll();
+        }
+      } catch {
+        useOrderStore.getState().resetAll();
+      }
+    };
+
     const unsubscribe = useAuthStore.subscribe((state, prev) => {
-      if (state.user?.id !== prev.user?.id) syncCart();
+      if (state.user?.id !== prev.user?.id) {
+        syncCart();
+        syncOrder();
+      }
     });
     return unsubscribe;
   }, []);
@@ -145,6 +171,7 @@ function AppContent() {
         } />
         <Route path="/size-chart" element={<SizeChartPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/tentang" element={<AboutPage />} />
         <Route path="/pesanan-saya" element={
           <CustomerProtectedRoute>
             <MyOrdersPage />
@@ -153,6 +180,16 @@ function AppContent() {
         <Route path="/histori-pesanan" element={
           <CustomerProtectedRoute>
             <CustomerOrderHistoryPage />
+          </CustomerProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <CustomerProtectedRoute>
+            <ProfilePage />
+          </CustomerProtectedRoute>
+        } />
+        <Route path="/profil" element={
+          <CustomerProtectedRoute>
+            <ProfilePage />
           </CustomerProtectedRoute>
         } />
 
@@ -178,12 +215,13 @@ function AppContent() {
           <Route path="pengaturan" element={<SettingsPage />} />
           <Route path="laporan" element={<ReportsPage />} />
           <Route path="pengguna" element={<UsersPage />} />
+          <Route path="users" element={<UsersPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <AuthModal />
-      <WhatsAppButton />
+      <FloatingCustomerBar />
     </BrowserRouter>
   );
 }

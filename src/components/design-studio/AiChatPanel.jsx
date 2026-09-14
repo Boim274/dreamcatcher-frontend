@@ -41,21 +41,21 @@ function groupMessages(messages) {
 
 function AvatarAI() {
   return (
-    <div className="w-7 h-7 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
-      <Sparkles className="w-3.5 h-3.5 text-primary" />
+    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 via-primary to-pink-500 border border-white/20 flex items-center justify-center shrink-0 shadow-md shadow-primary/20">
+      <Sparkles className="w-4 h-4 text-white" />
     </div>
   );
 }
 
 function TypingIndicator() {
   return (
-    <div className="flex justify-start mb-1">
-      <div className="flex items-end gap-2">
+    <div className="flex justify-start mb-2">
+      <div className="flex items-end gap-2.5">
         <AvatarAI />
-        <div className="bg-gray-100 border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-gray animate-bounce [animation-delay:-0.3s]" />
-          <span className="w-1.5 h-1.5 rounded-full bg-gray animate-bounce [animation-delay:-0.15s]" />
-          <span className="w-1.5 h-1.5 rounded-full bg-gray animate-bounce" />
+        <div className="ai-typing-bubble bg-[#181120] border border-white/10 rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5 shadow-lg">
+          <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+          <span className="w-2 h-2 rounded-full bg-[#ff8ac8] animate-bounce [animation-delay:-0.15s]" />
+          <span className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" />
         </div>
       </div>
     </div>
@@ -105,12 +105,15 @@ function InteractiveOptions({ questions, onConfirm }) {
   };
 
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-md px-4 py-3 mt-1 space-y-3">
-      <p className="text-[10px] font-bold tracking-[1px] uppercase text-primary">Pilih opsi di bawah</p>
+    <div className="ai-interactive-card bg-[#181120]/95 border border-white/10 rounded-2xl rounded-tl-sm px-4 py-3.5 mt-1.5 space-y-3.5 shadow-xl">
+      <div className="flex items-center gap-1.5">
+        <Sparkles className="w-3.5 h-3.5 text-primary" />
+        <p className="text-[10px] font-bold tracking-wider uppercase text-primary">Pilih Opsi di Bawah</p>
+      </div>
       {questions.map((q) => (
         <div key={q.key}>
-          <p className="text-gray-800 text-[12px] font-semibold mb-1.5">{q.title}</p>
-          <div className="flex flex-wrap gap-1.5">
+          <p className="ai-interactive-title text-white text-[12px] font-semibold mb-2">{q.title}</p>
+          <div className="flex flex-wrap gap-2">
             {q.options.map((option) => {
               const active = q.type === 'radio'
                 ? selected[q.key] === option
@@ -119,14 +122,14 @@ function InteractiveOptions({ questions, onConfirm }) {
                 <button
                   key={option}
                   onClick={() => toggle(q, option)}
-                  className={`flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full border transition-colors ${
+                  className={`ai-interactive-opt flex items-center gap-1.5 text-[11px] px-3.5 py-2 rounded-xl border transition-all cursor-pointer ${
                     active
-                      ? 'border-primary bg-primary/15 text-primary'
-                      : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
+                      ? 'ai-interactive-opt-active border-primary bg-primary/20 text-white font-medium shadow-md shadow-primary/20 ring-1 ring-primary/40'
+                      : 'ai-interactive-opt-idle border-white/10 bg-[#120a1c] text-gray-300 hover:border-white/30 hover:text-white'
                   }`}
                 >
-                  <span className={`w-3 h-3 flex items-center justify-center rounded-full border ${
-                    active ? 'border-primary bg-primary text-white' : 'border-gray-400'
+                  <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full border transition-all ${
+                    active ? 'border-primary bg-primary text-white' : 'border-white/20 bg-white/5'
                   }`}>
                     {active && (q.type === 'radio' ? <span className="w-1.5 h-1.5 rounded-full bg-white" /> : <Check className="w-2.5 h-2.5" />)}
                   </span>
@@ -140,9 +143,9 @@ function InteractiveOptions({ questions, onConfirm }) {
       <button
         onClick={handleConfirm}
         disabled={!hasSelection}
-        className="flex items-center justify-center gap-1.5 w-full bg-primary text-white font-bold py-2 rounded-lg text-[12px] hover:bg-primary-dark transition-colors disabled:opacity-50"
+        className="btn-gradient-primary flex items-center justify-center gap-2 w-full text-white font-bold py-2.5 rounded-xl text-[12px] shadow-lg shadow-primary/20 disabled:opacity-40 transition-all"
       >
-        <Check className="w-3.5 h-3.5" /> Konfirmasi Pilihan
+        <Check className="w-4 h-4" /> Konfirmasi Pilihan
       </button>
     </div>
   );
@@ -158,44 +161,46 @@ function BubbleGroup({ role, items, onConfirm, isLatest }) {
   }));
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}>
-      <div className={`flex items-end gap-2 max-w-[85%] ${isUser ? 'flex-row-reverse' : ''}`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3.5`}>
+      <div className={`flex items-end gap-2.5 max-w-[90%] sm:max-w-[85%] ${isUser ? 'flex-row-reverse' : ''}`}>
         {!isUser && <AvatarAI />}
-        <div className="flex flex-col gap-[3px]">
+        <div className="flex flex-col gap-1 w-full">
           {displayItems.map((msg, i) => {
             const isFirst = i === 0;
             const isLast = i === items.length - 1;
             const roundedCorner = isUser
-              ? `${isFirst ? 'rounded-tr-2xl' : 'rounded-tr-md'} ${isLast ? 'rounded-br-md' : 'rounded-br-md'}`
-              : `${isFirst ? 'rounded-tl-2xl' : 'rounded-tl-md'} ${isLast ? 'rounded-bl-md' : 'rounded-bl-md'}`;
+              ? `${isFirst ? 'rounded-tr-2xl' : 'rounded-tr-md'} ${isLast ? 'rounded-br-sm' : 'rounded-br-md'}`
+              : `${isFirst ? 'rounded-tl-2xl' : 'rounded-tl-md'} ${isLast ? 'rounded-bl-sm' : 'rounded-bl-md'}`;
             return (
               <div
                 key={i}
-                className={`rounded-2xl ${roundedCorner} ${
-                  isUser ? 'bg-primary text-white' : 'bg-gray-100 border border-gray-200 text-gray-800'
+                className={`rounded-2xl ${roundedCorner} shadow-md overflow-hidden ${
+                  isUser
+                    ? 'ai-bubble-user bg-gradient-to-r from-primary via-[#a855f7] to-[#ec4899] text-white shadow-primary/15'
+                    : 'ai-bubble-assistant bg-[#181120]/95 border border-white/10 text-gray-100 shadow-xl'
                 }`}
               >
                 {msg.imageUrl && (
-                  <div className={isUser ? '' : 'p-2.5'}>
+                  <div className={isUser ? 'p-2' : 'p-2.5 bg-[#120a1c]/80 border-b border-white/5 ai-bubble-img-wrapper'}>
                     <img
                       src={msg.imageUrl}
                       alt="Lampiran desain"
-                      className="w-36 h-36 object-contain rounded-xl mb-1.5"
+                      className="w-40 h-40 object-contain rounded-xl mb-1.5 mx-auto bg-black/40"
                     />
-                    <p className="text-[10px] opacity-80 text-center">Desain saya</p>
+                    <p className="text-[10px] text-white/70 text-center font-medium">Desain Terlampir</p>
                   </div>
                 )}
-                <div className="px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                <div className="px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap break-words ai-bubble-text">
                   <span>{msg.displayText}</span>
                 </div>
-                <span
-                  className={`flex items-center gap-1 float-right ml-3 mt-1 select-none text-[10px] py-2 pr-3 ${
-                    isUser ? 'text-white/70' : 'text-gray-400'
+                <div
+                  className={`flex items-center justify-end gap-1 px-3 pb-2 select-none text-[10px] ${
+                    isUser ? 'text-white/80' : 'text-gray/60 ai-bubble-time'
                   }`}
                 >
-                  {formatTime(msg.time)}
-                  {isUser && <CheckCheck className="w-3 h-3" />}
-                </span>
+                  <span>{formatTime(msg.time)}</span>
+                  {isUser && <CheckCheck className="w-3.5 h-3.5 text-white/90" />}
+                </div>
               </div>
             );
           })}
@@ -212,8 +217,8 @@ export default function AiChatPanel({
   onSend,
   onSendImage,
   heightClass = 'h-72',
-  headerTitle = 'AI Designer',
-  headerSubtitle = 'Konsultan desain — siapkan konsep, lalu buat gambarnya',
+  headerTitle = 'AI Designer Consultant',
+  headerSubtitle = 'Konsultan desain cerdas — diskusikan konsep hingga siap render',
   disabled = false,
   showInput = true,
   references = null,
@@ -228,8 +233,7 @@ export default function AiChatPanel({
   const lastUploadRef = useRef(0);
 
   useEffect(() => {
-    // Scroll only the message container instead of the whole page, so a long AI
-    // reply doesn't "push" the layout down.
+    // Scroll only the message container smoothly
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, chatLoading]);
 
@@ -237,7 +241,7 @@ export default function AiChatPanel({
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
-    el.style.height = `${Math.min(el.scrollHeight, 96)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 100)}px`;
   };
 
   useEffect(() => {
@@ -271,23 +275,28 @@ export default function AiChatPanel({
   const groupedMessages = groupMessages(messages);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 bg-gray-50">
+    <div className="ai-chat-panel bg-[#120a1c]/95 border border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-2xl backdrop-blur-xl">
+      {/* Header */}
+      <div className="ai-chat-header flex items-center gap-2.5 px-4 py-3.5 border-b border-white/10 bg-[#181120]/90">
         <AvatarAI />
         <div>
-          <p className="text-gray-900 text-sm font-semibold leading-tight">{headerTitle}</p>
-          <p className="text-gray-500 text-[11px] leading-tight">
-            {chatLoading ? 'Sedang mengetik...' : headerSubtitle}
+          <p className="ai-chat-header-title text-white text-sm font-semibold leading-tight font-heading tracking-wide">{headerTitle}</p>
+          <p className="ai-chat-header-sub text-gray/70 text-[11px] leading-tight mt-0.5">
+            {chatLoading ? '⚡ Sedang merumuskan jawaban...' : headerSubtitle}
           </p>
         </div>
       </div>
 
-      <div ref={scrollRef} className={`${heightClass} min-h-0 overscroll-contain overflow-y-auto px-4 py-4`}>
+      {/* Messages Scroll Area */}
+      <div ref={scrollRef} className={`ai-chat-scroll ${heightClass} min-h-0 overscroll-contain overflow-y-auto p-4 space-y-2 bg-[#0e0717]/60`}>
         {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center px-4">
-            <Sparkles className="w-8 h-8 text-primary/50 mb-2" />
-            <p className="text-gray-500 text-xs">
-              Jelaskan ide desain kaosmu di sini. AI Designer akan menggali detail konsep, lalu membuat gambar untukmu.
+          <div className="h-full flex flex-col items-center justify-center text-center px-4 py-8">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-3">
+              <Sparkles className="w-6 h-6 text-primary" />
+            </div>
+            <p className="ai-chat-empty-title text-white font-medium text-sm mb-1">Mulai Diskusi Desain dengan AI</p>
+            <p className="ai-chat-empty-desc text-gray/70 text-xs max-w-sm">
+              Jelaskan ide desain kaosmu di sini. AI Designer akan menyempurnakan komposisi, warna, gaya, dan menyiapkan prompt visual terbaik.
             </p>
           </div>
         ) : (
@@ -295,7 +304,7 @@ export default function AiChatPanel({
             {groupedMessages.map((g, gi) =>
               g.type === 'day' ? (
                 <div key={g.key} className="flex justify-center my-3">
-                  <span className="bg-gray-100 border border-gray-200 text-gray-500 text-[10px] px-3 py-1 rounded-full">
+                  <span className="ai-day-badge bg-[#181120] border border-white/10 text-gray/80 text-[10px] px-3.5 py-1 rounded-full shadow-sm">
                     {g.label}
                   </span>
                 </div>
@@ -316,10 +325,11 @@ export default function AiChatPanel({
         )}
       </div>
 
+      {/* Context References */}
       {references && references.length > 0 && (
-        <div className="px-3 py-2.5 border-t border-gray-200 bg-gray-50">
-          <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-[1px] uppercase text-primary mb-1.5">
-            <Sparkles className="w-3 h-3" /> Referensi sesuai konteks
+        <div className="ai-references-panel px-4 py-3 border-t border-white/10 bg-[#181120]/80">
+          <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider uppercase text-primary mb-2">
+            <Sparkles className="w-3 h-3" /> Rekomendasi Konsep Terkait
           </p>
           <div className="flex flex-wrap gap-1.5">
             {references.map((ref, i) => (
@@ -327,10 +337,10 @@ export default function AiChatPanel({
                 key={i}
                 onClick={() => onApplyReference?.(ref.phrase)}
                 title={ref.phrase}
-                className={`text-[11px] px-2.5 py-1 rounded-full border transition-colors ${
+                className={`ai-ref-chip text-[11px] px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
                   ref.kind === 'rec'
-                    ? 'border-yellow-500/40 bg-yellow-500/10 text-yellow-700 hover:bg-yellow-500/20'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
+                    ? 'ai-ref-chip-highlight border-yellow-500/40 bg-yellow-500/10 text-yellow-300 hover:bg-yellow-500/20'
+                    : 'ai-ref-chip-idle border-white/10 bg-[#120a1c] text-gray/90 hover:border-primary/50 hover:text-white'
                 }`}
               >
                 {ref.label}
@@ -340,15 +350,16 @@ export default function AiChatPanel({
         </div>
       )}
 
+      {/* Input Row */}
       {showInput && (
-<div className="flex items-center gap-2 px-3 py-2.5 border-t border-gray-200 bg-gray-50">
+        <div className="ai-chat-footer flex items-center gap-2 px-3.5 py-3 border-t border-white/10 bg-[#181120]/95">
           {onSendImage && (
             <>
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={chatLoading || disabled}
-                title="Upload desain sendiri untuk diedit AI"
-                className="w-9 h-9 flex items-center justify-center rounded-full shrink-0 text-gray-500 hover:text-primary hover:bg-gray-100 transition-colors disabled:opacity-50"
+                title="Upload desain sendiri untuk dianalisis AI"
+                className="ai-chat-btn-clip w-10 h-10 flex items-center justify-center rounded-xl shrink-0 border border-white/10 bg-white/5 text-gray hover:text-white hover:border-primary/40 hover:bg-primary/10 transition-all disabled:opacity-40"
               >
                 <Paperclip className="w-4 h-4" />
               </button>
@@ -367,14 +378,15 @@ export default function AiChatPanel({
             value={localInput}
             onChange={(e) => setLocalInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Tanya AI tentang desain..."
-            className="flex-1 bg-white border border-gray-200 rounded-2xl px-4 py-2.5 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-primary transition-colors resize-none max-h-24"
+            placeholder="Tanya ide atau diskusikan konsep sablon ke AI..."
+            className="ai-chat-textarea flex-1 bg-[#120a1c] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-gray/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 transition-all resize-none max-h-28"
             disabled={chatLoading || disabled}
           />
           <button
             onClick={() => handleSend()}
             disabled={chatLoading || disabled || !localInput.trim()}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50 shrink-0"
+            className="btn-gradient-primary w-10 h-10 flex items-center justify-center rounded-xl text-white shadow-lg shadow-primary/20 hover:scale-105 transition-all disabled:opacity-40 disabled:scale-100 shrink-0"
+            title="Kirim pesan"
           >
             {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>

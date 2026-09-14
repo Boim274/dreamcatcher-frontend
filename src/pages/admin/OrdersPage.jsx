@@ -221,7 +221,7 @@ export default function OrdersPage() {
             {/* Search Input */}
             <div className="sm:col-span-2 lg:col-span-5">
               <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none shrink-0" />
                 <input
                   type="text"
                   value={filters.search}
@@ -230,7 +230,7 @@ export default function OrdersPage() {
                     if (e.key === 'Enter') submitSearch();
                   }}
                   placeholder="Cari kode pesanan, produk, layanan, atau customer..."
-                  className="input-dark pl-10 pr-9 text-xs sm:text-sm"
+                  className="input-dark pl-11 pr-9 text-xs sm:text-sm"
                 />
                 {filters.search && (
                   <button
@@ -345,7 +345,9 @@ export default function OrdersPage() {
                     const items = order.items || [];
                     const firstItem = items[0];
                     const firstTitle = firstItem?.product?.name || firstItem?.service?.name || firstItem?.product_name || 'Item';
-                    const itemThumb = firstItem?.product?.images?.[0]?.image_url
+                    const itemThumb = firstItem?.design?.image_url
+                      ? getImageUrl(firstItem.design.image_url)
+                      : firstItem?.product?.images?.[0]?.image_url
                       ? getImageUrl(firstItem.product.images[0].image_url)
                       : null;
 

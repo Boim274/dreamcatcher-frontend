@@ -8,6 +8,7 @@ import ScrollReveal from '../components/ui/ScrollReveal';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import Icon from '../components/ui/Icon';
 import { useToast } from '../components/ui/Toast';
+import { useLanguageStore } from '../store/languageStore';
 import { useCartStore } from '../store/cartStore';
 import { useAuthModalStore } from '../store/authModalStore';
 import { useAuthStore } from '../store/authStore';
@@ -18,6 +19,9 @@ export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
+  const { t, td, language } = useLanguageStore();
+  const isEn = language === 'en';
+
   const { addItem } = useCartStore();
   const { isAuthenticated } = useAuthStore();
   const { openLogin } = useAuthModalStore();
@@ -39,16 +43,16 @@ export default function ProductDetailPage() {
         if (p.colors?.length > 0) setSelectedColor(p.colors[0].name);
       })
       .catch(() => {
-        toast.error('Produk tidak ditemukan');
+        toast.error(isEn ? 'Product not found' : 'Produk tidak ditemukan');
         navigate('/produk');
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, isEn]);
 
   const handleAddToCart = () => {
     if (!isAuthenticated) { openLogin(); return; }
     addItem(product, selectedSize, selectedColor, quantity);
-    toast.success('Ditambahkan ke keranjang!');
+    toast.success(isEn ? 'Added to cart!' : 'Ditambahkan ke keranjang!');
   };
 
   const handleBuyNow = () => {
@@ -59,7 +63,7 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-cream flex items-center justify-center">
+      <div className="min-h-screen bg-[#120c16] text-white flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -74,18 +78,24 @@ export default function ProductDetailPage() {
   const outOfStock = selectedSizeStock <= 0;
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream">
+    <div className="min-h-screen flex flex-col bg-[#120c16] text-white relative overflow-hidden selection:bg-primary selection:text-white">
+      {/* Background Ambient Glows */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-primary/15 via-purple-600/10 to-transparent blur-3xl rounded-full" />
+      <div className="pointer-events-none absolute top-1/3 -left-48 w-96 h-96 bg-primary/10 blur-3xl rounded-full" />
+      <div className="pointer-events-none absolute bottom-1/4 -right-48 w-96 h-96 bg-purple-600/10 blur-3xl rounded-full" />
+
       <Navbar />
-      <main className="flex-1 py-12">
+      <main className="flex-1 py-12 relative z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Header */}
           <div className="text-center mb-12 relative">
-            <div className="graffiti-deco">DETAIL</div>
             <ScrollReveal>
-              <div className="section-tag">&mdash; {product.category?.name || 'produk'}</div>
-              <h1 className="section-title">{product.name}</h1>
-              <div className="divider mx-auto"></div>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary uppercase tracking-wider mb-3">
+                {td(product.category?.name || (isEn ? 'Product Details' : 'Detail Produk'))}
+              </div>
+              <h1 className="font-heading text-3xl sm:text-4xl text-white tracking-wide mb-3">{td(product.name)}</h1>
+              <div className="w-16 h-1 bg-gradient-to-r from-primary to-purple-500 rounded-full mx-auto" />
             </ScrollReveal>
           </div>
 
@@ -94,24 +104,25 @@ export default function ProductDetailPage() {
             {/* Image Gallery */}
             <ScrollReveal>
               <div>
-                <div className="bg-ink border border-border rounded-xl overflow-hidden mb-4 aspect-square">
+                <div className="glass-card border border-white/10 rounded-3xl overflow-hidden mb-4 aspect-square flex items-center justify-center bg-black/40 p-4">
                   <img
                     src={images[activeImage]?.image_url || 'https://placehold.co/600x600/333/888?text=No+Image'}
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain max-h-full"
                   />
                 </div>
                 {images.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto pb-2">
+                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                     {images.map((img, i) => (
                       <button
                         key={i}
+                        type="button"
                         onClick={() => setActiveImage(i)}
-                        className={`w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
-                          activeImage === i ? 'border-primary' : 'border-border hover:border-primary/50'
+                        className={`w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all p-1 bg-black/20 ${
+                          activeImage === i ? 'border-primary shadow-lg shadow-primary/25 scale-105' : 'border-white/10 hover:border-white/30'
                         }`}
                       >
-                        <img src={img.image_url} alt="" className="w-full h-full object-cover" />
+                        <img src={img.image_url} alt="" className="w-full h-full object-contain rounded-xl" />
                       </button>
                     ))}
                   </div>
@@ -123,36 +134,37 @@ export default function ProductDetailPage() {
             <ScrollReveal>
               <div>
                 {/* Price + Stock */}
-                <div className="flex items-center gap-3 mb-6">
-                  <p className="text-primary font-bold text-[28px]">{formatRupiah(product.base_price)}</p>
-                  <span className={`px-3 py-1 text-[11px] font-semibold rounded-lg ${
-                    product.stock > 0 ? 'bg-green-500/20 text-green-400' : 'bg-fire/20 text-fire'
+                <div className="flex items-center gap-4 mb-6">
+                  <p className="text-3xl sm:text-4xl font-bold text-gradient-primary">{formatRupiah(product.base_price)}</p>
+                  <span className={`px-3 py-1 text-xs font-bold rounded-full ${
+                    product.stock > 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                   }`}>
-                    {product.stock > 0 ? `Stok: ${product.stock}` : 'Stok Habis'}
+                    {product.stock > 0 ? (isEn ? `In Stock (${product.stock})` : `Stok Tersedia (${product.stock})`) : (isEn ? 'Out of Stock' : 'Stok Habis')}
                   </span>
                 </div>
 
                 {/* Description */}
                 {product.description && (
-                  <div className="bg-card border border-border rounded-lg p-4 mb-6">
-                    <p className="text-fire text-[11px] uppercase tracking-[1px] mb-2 font-medium">Deskripsi</p>
-                    <p className="text-gray-light text-[13px] leading-relaxed">{product.description}</p>
+                  <div className="glass-card border border-white/10 rounded-3xl p-5 mb-5">
+                    <p className="text-primary text-xs uppercase tracking-wider mb-2 font-bold">{t('productDetail.descTab', 'Deskripsi')}</p>
+                    <p className="text-white/70 text-xs sm:text-sm leading-relaxed">{td(product.description)}</p>
                   </div>
                 )}
 
                 {/* Size Selection */}
                 {sizes.length > 0 && (
-                  <div className="bg-card border border-border/50 rounded-lg p-4 mb-4">
-                    <p className="text-fire text-[11px] uppercase tracking-[1px] mb-3 font-medium">Ukuran</p>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="glass-card border border-white/10 rounded-3xl p-5 mb-5">
+                    <p className="text-primary text-xs uppercase tracking-wider mb-3 font-bold">{t('productDetail.selectSize', 'Pilih Ukuran')}</p>
+                    <div className="flex flex-wrap gap-2.5">
                       {sizes.map((size) => (
                         <button
                           key={size.name}
+                          type="button"
                           onClick={() => setSelectedSize(size.name)}
-                          className={`min-w-[48px] px-4 py-2 rounded-lg border-2 text-sm font-semibold transition-all ${
+                          className={`min-w-[50px] px-4 py-2.5 rounded-2xl border text-xs sm:text-sm font-semibold transition-all ${
                             selectedSize === size.name
-                              ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-border text-white hover:border-primary/50'
+                              ? 'border-primary bg-primary text-white shadow-lg shadow-primary/25'
+                              : 'border-white/10 bg-white/[0.03] text-white/80 hover:border-white/30'
                           } ${size.stock <= 0 ? 'opacity-30 cursor-not-allowed line-through' : ''}`}
                           disabled={size.stock <= 0}
                         >
@@ -165,23 +177,24 @@ export default function ProductDetailPage() {
 
                 {/* Color Selection */}
                 {colors.length > 0 && (
-                  <div className="bg-card border border-border/50 rounded-lg p-4 mb-4">
-                    <p className="text-fire text-[11px] uppercase tracking-[1px] mb-3 font-medium">Warna</p>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="glass-card border border-white/10 rounded-3xl p-5 mb-5">
+                    <p className="text-primary text-xs uppercase tracking-wider mb-3 font-bold">{t('productDetail.selectColor', 'Pilih Warna')}</p>
+                    <div className="flex flex-wrap gap-2.5">
                       {colors.map((color) => (
                         <button
                           key={color.name}
+                          type="button"
                           onClick={() => setSelectedColor(color.name)}
-                          className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-xs sm:text-sm font-medium transition-all ${
                             selectedColor === color.name
-                              ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-border text-white hover:border-primary/50'
+                              ? 'border-primary bg-primary/15 text-white shadow-lg shadow-primary/20'
+                              : 'border-white/10 bg-white/[0.03] text-white/80 hover:border-white/30'
                           }`}
                         >
                           {color.hex_code && (
-                            <span className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: color.hex_code }} />
+                            <span className="w-4 h-4 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: color.hex_code }} />
                           )}
-                          {color.name}
+                          {td(color.name)}
                         </button>
                       ))}
                     </div>
@@ -189,69 +202,75 @@ export default function ProductDetailPage() {
                 )}
 
                 {/* Quantity */}
-                <div className="bg-card border border-border/50 rounded-lg p-4 mb-6">
-                  <p className="text-fire text-[11px] uppercase tracking-[1px] mb-3 font-medium">Jumlah</p>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="w-10 h-10 flex items-center justify-center border border-border rounded-lg hover:border-primary hover:bg-primary/10 transition-colors"
-                    >
-                      <Minus size={16} className="text-white" />
-                    </button>
-                    <input
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-16 text-center text-lg font-bold text-primary bg-transparent border-b-2 border-border focus:border-primary outline-none"
-                      min={1}
-                      max={selectedSizeStock}
-                    />
-                    <button
-                      onClick={() => setQuantity((q) => Math.min(selectedSizeStock, q + 1))}
-                      className="w-10 h-10 flex items-center justify-center border border-border rounded-lg hover:border-primary hover:bg-primary/10 transition-colors"
-                    >
-                      <Plus size={16} className="text-white" />
-                    </button>
-                    <span className="text-gray text-[12px]">
-                      Stok: <strong className="text-white">{selectedSizeStock}</strong>
+                <div className="glass-card border border-white/10 rounded-3xl p-5 mb-6">
+                  <p className="text-primary text-xs uppercase tracking-wider mb-3 font-bold">{t('productDetail.quantity', 'Jumlah')}</p>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center bg-white/[0.03] border border-white/10 rounded-2xl p-1">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors text-white"
+                      >
+                        <Minus size={15} />
+                      </button>
+                      <input
+                        type="number"
+                        value={quantity}
+                        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-14 text-center text-base font-bold text-primary bg-transparent outline-none"
+                        min={1}
+                        max={selectedSizeStock}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.min(selectedSizeStock, q + 1))}
+                        className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors text-white"
+                      >
+                        <Plus size={15} />
+                      </button>
+                    </div>
+                    <span className="text-white/50 text-xs">
+                      {isEn ? 'Stock for this option:' : 'Stok untuk pilihan ini:'} <strong className="text-white">{selectedSizeStock} pcs</strong>
                     </span>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row gap-4 mb-6">
                   <button
+                    type="button"
                     onClick={handleBuyNow}
                     disabled={outOfStock}
-                    className="flex-1 bg-primary text-ink font-bold py-3 px-6 rounded-xl hover:bg-primary-dark transition-colors text-[14px] uppercase tracking-[1px] disabled:opacity-50"
+                    className="btn-gradient-primary flex-1 py-4 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold disabled:opacity-50"
                   >
-                    {outOfStock ? 'Stok Habis' : 'Beli Sekarang'}
+                    {outOfStock ? (isEn ? 'Out of Stock' : 'Stok Habis') : (isEn ? 'Buy Now' : 'Beli Sekarang')}
                   </button>
                   <button
+                    type="button"
                     onClick={handleAddToCart}
                     disabled={outOfStock}
-                    className="flex items-center justify-center gap-2 border-2 border-primary text-primary font-semibold py-3 px-6 rounded-xl hover:bg-primary hover:text-ink transition-colors text-[14px] uppercase tracking-[1px] disabled:opacity-50"
+                    className="btn-glass flex items-center justify-center gap-2 py-4 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold disabled:opacity-50"
                   >
-                    <ShoppingCart size={18} /> + Keranjang
+                    <ShoppingCart size={16} /> {outOfStock ? (isEn ? 'Out of Stock' : 'Stok Habis') : (isEn ? '+ Cart' : '+ Keranjang')}
                   </button>
                 </div>
 
                 {/* Info Produk */}
-                <div className="bg-card border border-border rounded-lg p-4 mt-6">
-                  <p className="text-fire text-[11px] uppercase tracking-[1px] mb-3 font-medium">Informasi Produk</p>
-                  <div className="space-y-2 text-[13px]">
-                    <div className="flex justify-between">
-                      <span className="text-gray">Kategori</span>
-                      <span className="text-white">{product.category?.name || '-'}</span>
+                <div className="glass-card border border-white/10 rounded-3xl p-5 mb-6">
+                  <p className="text-primary text-xs uppercase tracking-wider mb-3 font-bold">{isEn ? 'Product Information' : 'Informasi Produk'}</p>
+                  <div className="space-y-2.5 text-xs">
+                    <div className="flex justify-between py-1.5 border-b border-white/5">
+                      <span className="text-white/50">{t('productDetail.categoryPrefix', 'Kategori')}</span>
+                      <span className="text-white font-medium">{td(product.category?.name || '-')}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray">Stok</span>
-                      <span className="text-white">{product.stock > 0 ? `${product.stock} pcs` : 'Habis'}</span>
+                    <div className="flex justify-between py-1.5 border-b border-white/5">
+                      <span className="text-white/50">{isEn ? 'Total Stock' : 'Total Stok'}</span>
+                      <span className="text-white font-medium">{product.stock > 0 ? `${product.stock} pcs` : (isEn ? 'Out of Stock' : 'Habis')}</span>
                     </div>
                     {product.sizes?.length > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray">Ukuran</span>
-                        <span className="text-white">{product.sizes.map(s => s.name).join(', ')}</span>
+                      <div className="flex justify-between py-1.5">
+                        <span className="text-white/50">{isEn ? 'Available Sizes' : 'Ukuran Tersedia'}</span>
+                        <span className="text-white font-medium">{product.sizes.map(s => s.name).join(', ')}</span>
                       </div>
                     )}
                   </div>
@@ -260,9 +279,9 @@ export default function ProductDetailPage() {
                 {/* Back Link */}
                 <Link
                   to="/produk"
-                  className="inline-flex items-center gap-2 text-gray hover:text-primary transition-colors text-[13px] mt-6"
+                  className="inline-flex items-center gap-2 text-white/50 hover:text-primary transition-colors text-xs font-semibold"
                 >
-                  <ChevronLeft size={16} /> Kembali ke Produk
+                  <ChevronLeft size={16} /> {t('productDetail.backToCatalog', 'Kembali ke Katalog Produk')}
                 </Link>
               </div>
             </ScrollReveal>

@@ -1,110 +1,398 @@
-import { useState, useRef } from 'react';
-import { Star, Upload, X } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  Star,
+  X,
+  Sparkles,
+  ShieldCheck,
+  Check,
+  Send,
+  UserCheck
+} from 'lucide-react';
 import api from '../../services/api';
-import { LoadingSpinner as Spinner } from '../common/LoadingSpinner';
-import { getImageUrl } from '../../utils/getImageUrl';
+import { LoadingSpinner } from '../common/LoadingSpinner';
+import UserAvatar from '../common/UserAvatar';
+import { useLanguageStore } from '../../store/languageStore';
+import { useThemeStore } from '../../store/themeStore';
+import { useAuthStore } from '../../store/authStore';
+import { useToast } from '../ui/Toast';
+
+const RATING_SENTIMENTS = {
+  5: {
+    emoji: '⭐',
+    label_id: 'Luar Biasa! Kualitas Sempurna',
+    label_en: 'Outstanding! Perfect Quality',
+    badgeClassDark: 'bg-amber-400/10 text-amber-300 border-amber-400/30',
+    badgeClassLight: 'bg-amber-50 text-amber-700 border-amber-300',
+  },
+  4: {
+    emoji: '👍',
+    label_id: 'Sangat Puas & Rekomended',
+    label_en: 'Very Satisfied & Recommended',
+    badgeClassDark: 'bg-emerald-400/10 text-emerald-300 border-emerald-400/30',
+    badgeClassLight: 'bg-emerald-50 text-emerald-700 border-emerald-300',
+  },
+  3: {
+    emoji: '👌',
+    label_id: 'Cukup Baik, Sesuai Ekspektasi',
+    label_en: 'Good Enough, Met Expectations',
+    badgeClassDark: 'bg-sky-400/10 text-sky-300 border-sky-400/30',
+    badgeClassLight: 'bg-sky-50 text-sky-700 border-sky-300',
+  },
+  2: {
+    emoji: '⚠️',
+    label_id: 'Kurang Puas, Ada Kekurangan',
+    label_en: 'Below Expectations',
+    badgeClassDark: 'bg-orange-400/10 text-orange-300 border-orange-400/30',
+    badgeClassLight: 'bg-orange-50 text-orange-700 border-orange-300',
+  },
+  1: {
+    emoji: '❌',
+    label_id: 'Mengecewakan, Butuh Perbaikan',
+    label_en: 'Needs Improvement',
+    badgeClassDark: 'bg-rose-400/10 text-rose-300 border-rose-400/30',
+    badgeClassLight: 'bg-rose-50 text-rose-700 border-rose-300',
+  },
+};
+
+const QUICK_TAGS = [
+  { id: 'presisi', label_id: 'Sablon Presisi', label_en: 'Crisp Print', text_id: 'Hasil sablon sangat presisi dan rapi.', text_en: 'The print is very crisp and precise.' },
+  { id: 'bahan', label_id: 'Bahan Adem & Lembut', label_en: 'Soft & Comfy Fabric', text_id: 'Bahan kaos nyaman dan adem.', text_en: 'The fabric is comfortable and soft.' },
+  { id: 'warna', label_id: 'Warna Tajam', label_en: 'Accurate Colors', text_id: 'Warnanya tajam dan sesuai desain.', text_en: 'Colors match the design nicely.' },
+  { id: 'cepat', label_id: 'Tepat Waktu', label_en: 'Delivered on Time', text_id: 'Pengerjaan cepat dan tepat waktu.', text_en: 'Finished right on schedule.' },
+  { id: 'ramah', label_id: 'CS Ramah', label_en: 'Helpful CS', text_id: 'Pelayanan admin sangat ramah dan komunikatif.', text_en: 'Customer support was friendly and helpful.' },
+  { id: 'packing', label_id: 'Packing Rapi', label_en: 'Neat Packaging', text_id: 'Pengemasan rapi dan aman.', text_en: 'Neatly and securely packaged.' },
+];
 
 export default function TestimonialForm({ order, existingTestimonial, onClose, onSuccess }) {
+  const { language } = useLanguageStore();
+  const { theme } = useThemeStore();
+  const { user } = useAuthStore();
+  const toast = useToast();
+
+  const isEn = language === 'en';
+  const isLight = theme === 'light';
+
   const [rating, setRating] = useState(existingTestimonial?.rating || 5);
+  const [hoverRating, setHoverRating] = useState(0);
   const [review, setReview] = useState(existingTestimonial?.review || '');
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(existingTestimonial ? getImageUrl(existingTestimonial.image_url) : '');
   const [saving, setSaving] = useState(false);
-  const fileInputRef = useRef(null);
+  const [selectedTags, setSelectedTags] = useState([]);
+
   const isEdit = !!existingTestimonial;
 
+  // Handle ESC key to close
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Escape') onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [handleKeyDown]);
+
+  // Quick tag toggle handler
+  const handleTagClick = (tag) => {
+    const tagText = isEn ? tag.text_en : tag.text_id;
+    const isSelected = selectedTags.includes(tag.id);
+
+    if (isSelected) {
+      setSelectedTags(prev => prev.filter(id => id !== tag.id));
+      setReview(prev => prev.replace(tagText, '').replace(/\s{2,}/g, ' ').trim());
+    } else {
+      setSelectedTags(prev => [...prev, tag.id]);
+      setReview(prev => (prev.trim() ? `${prev.trim()} ${tagText}` : tagText));
+    }
+  };
+
+  // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!rating || rating < 1) {
+      toast.error(isEn ? 'Please select a star rating (1-5).' : 'Silakan pilih rating (1-5 bintang).');
+      return;
+    }
+
     setSaving(true);
     try {
-      const data = new FormData();
-      data.append('rating', rating);
-      data.append('review', review);
-      if (imageFile) data.append('image', imageFile);
+      const payload = {
+        order_id: order.id,
+        rating,
+        review: review.trim(),
+        image_url: user?.avatar || order?.user?.avatar || existingTestimonial?.image_url || null,
+      };
 
-      if (isEdit) {
-        data.append('_method', 'PUT');
-        await api.post(`/testimonials/${existingTestimonial.id}`, data, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
+      if (isEdit && existingTestimonial?.id) {
+        const res = await api.put(`/testimonials/${existingTestimonial.id}`, payload);
+        toast.success(res.data?.message || (isEn ? 'Review updated successfully!' : 'Testimoni berhasil diperbarui!'));
       } else {
-        data.append('order_id', order.id);
-        await api.post('/testimonials', data, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        const res = await api.post('/testimonials', payload);
+        toast.success(res.data?.message || (isEn ? 'Thank you! Your review has been submitted.' : 'Terima kasih! Testimoni Anda berhasil dikirim.'));
       }
+
       onSuccess();
     } catch (error) {
-      alert(error.response?.data?.message || 'Gagal menyimpan testimoni');
+      const errorMsg = error.response?.data?.message || (isEn ? 'Failed to save testimonial.' : 'Gagal menyimpan testimoni.');
+      toast.error(errorMsg);
     } finally {
       setSaving(false);
     }
   };
 
+  const activeRating = hoverRating || rating;
+  const currentSentiment = RATING_SENTIMENTS[activeRating] || RATING_SENTIMENTS[5];
+  const customerName = user?.name || order.customer_name || 'Pelanggan Dreamcatcher';
+  const customerAvatar = user?.avatar || order?.user?.avatar || existingTestimonial?.image_url;
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-card border border-border w-full max-w-md rounded-2xl">
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <h3 className="font-heading text-xl font-bold text-white">{isEdit ? 'Edit Testimoni' : 'Beri Testimoni'}</h3>
-          <button onClick={onClose} className="p-2 hover:bg-border rounded-xl">
-            <X className="w-5 h-5 text-gray-light" />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <p className="text-gray-light text-sm">
-            Pesanan <span className="text-primary font-mono font-bold">#{order.order_code}</span>
+    <div
+      className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-200 animate-in fade-in"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        className={`relative w-full max-w-lg rounded-2xl border transition-all duration-200 animate-in zoom-in-95 p-6 sm:p-7 shadow-2xl ${
+          isLight
+            ? 'bg-white text-slate-900 border-slate-200 shadow-slate-900/10'
+            : 'bg-[#18121c] text-white border-white/10 shadow-black/80'
+        }`}
+      >
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className={`absolute top-5 right-5 w-8 h-8 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
+            isLight
+              ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-500 hover:text-slate-800'
+              : 'bg-white/5 hover:bg-white/15 border-white/10 text-zinc-400 hover:text-white'
+          }`}
+          aria-label={isEn ? 'Close' : 'Tutup'}
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* Header */}
+        <div className="mb-5 pr-8">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-primary font-bold text-xs uppercase tracking-wider flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5" />
+              {isEn ? 'Order Review' : 'Ulasan Pesanan'}
+            </span>
+          </div>
+
+          <h2 className={`font-heading text-2xl sm:text-[26px] font-bold tracking-wide sm:tracking-wider ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            {isEdit
+              ? (isEn ? 'Edit Testimonial' : 'Edit Testimoni')
+              : (isEn ? 'Give Testimonial' : 'Beri Testimoni')}
+          </h2>
+
+          <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+            {isEn
+              ? 'Tell us how satisfied you are with your custom apparel.'
+              : 'Ceritakan kepuasan Anda mengenai hasil sablon dan pakaian pesanan ini.'}
           </p>
 
-          <div>
-            <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Rating</label>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <button key={i} type="button" onClick={() => setRating(i)}>
-                  <Star
-                    className={`w-8 h-8 transition-colors ${i <= rating ? 'text-amber-400' : 'text-gray-dark hover:text-gray-light'}`}
-                    fill={i <= rating ? 'currentColor' : 'none'}
-                  />
-                </button>
-              ))}
+          {isEdit && existingTestimonial?.order_id && existingTestimonial.order_id !== order.id && (
+            <div className={`mt-3 p-2.5 px-3 rounded-xl text-xs flex items-center gap-2 border ${
+              isLight ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-amber-500/10 text-amber-300 border-amber-500/20'
+            }`}>
+              <Sparkles className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+              <span>
+                {isEn
+                  ? 'Updating will refresh your testimonial with this latest order.'
+                  : 'Ulasan ini akan memperbarui testimoni Anda dengan pesanan terbaru ini.'}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* User Profile & Order Context (Minimalist) */}
+        <div
+          className={`p-3 rounded-xl border mb-5 flex items-center justify-between gap-3 ${
+            isLight ? 'bg-slate-50 border-slate-200/80' : 'bg-white/[0.03] border-white/10'
+          }`}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <UserAvatar
+              user={user}
+              src={customerAvatar}
+              name={customerName}
+              size="md"
+              border
+              className="shrink-0"
+            />
+            <div className="min-w-0">
+              <p className={`font-bold text-xs sm:text-sm truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                {customerName}
+              </p>
+              <div className="flex items-center gap-2 text-[11px]">
+                <span className={`font-mono ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                  #{order.order_code}
+                </span>
+                <span className={`w-1 h-1 rounded-full ${isLight ? 'bg-slate-300' : 'bg-zinc-600'}`} />
+                <span className="text-emerald-500 font-semibold flex items-center gap-1">
+                  <UserCheck className="w-3 h-3" />
+                  {isEn ? 'Profile Photo Synced' : 'Foto Profil Otomatis'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* Star Rating Section */}
+          <div
+            className={`p-4 rounded-xl border text-center ${
+              isLight ? 'bg-slate-50/60 border-slate-200' : 'bg-white/[0.02] border-white/5'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2 sm:gap-2.5">
+              {[1, 2, 3, 4, 5].map((starIndex) => {
+                const isFilled = starIndex <= activeRating;
+                return (
+                  <button
+                    key={starIndex}
+                    type="button"
+                    onClick={() => setRating(starIndex)}
+                    onMouseEnter={() => setHoverRating(starIndex)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="p-1 rounded-lg transition-transform hover:scale-115 active:scale-95 cursor-pointer focus:outline-none"
+                    aria-label={`${starIndex} Star`}
+                  >
+                    <Star
+                      className={`w-8 h-8 transition-colors ${
+                        isFilled
+                          ? 'text-amber-400 fill-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]'
+                          : isLight
+                            ? 'text-slate-300 hover:text-slate-400'
+                            : 'text-zinc-600 hover:text-zinc-400'
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Sentiment label */}
+            <div className="mt-2.5">
+              <span
+                className={`inline-block px-3 py-1 rounded-full border text-xs font-semibold tracking-wide transition-all ${
+                  isLight ? currentSentiment.badgeClassLight : currentSentiment.badgeClassDark
+                }`}
+              >
+                {currentSentiment.emoji} {isEn ? currentSentiment.label_en : currentSentiment.label_id}
+              </span>
             </div>
           </div>
 
+          {/* Quick Impression Tags (Pilihan Kesan Ringkas) */}
           <div>
-            <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Review</label>
+            <label className={`block text-xs font-semibold mb-2 ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+              {isEn ? 'Quick Highlights (Optional)' : 'Pilihan Kesan Cepat (Opsional)'}
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {QUICK_TAGS.map((tag) => {
+                const isSelected = selectedTags.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => handleTagClick(tag)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-150 flex items-center gap-1 cursor-pointer border ${
+                      isSelected
+                        ? 'bg-primary/15 text-primary border-primary font-semibold'
+                        : isLight
+                          ? 'bg-slate-100 text-slate-600 border-slate-200 hover:border-slate-300 hover:text-slate-900'
+                          : 'bg-white/[0.03] text-zinc-400 border-white/10 hover:border-white/20 hover:text-white'
+                    }`}
+                  >
+                    {isSelected && <Check className="w-3 h-3 text-primary shrink-0" />}
+                    <span>{isEn ? tag.label_en : tag.label_id}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Review Textarea */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                {isEn ? 'Review Details' : 'Tulis Ulasan'}
+              </label>
+              <span className={`text-[11px] font-mono ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
+                {review.length}/1000
+              </span>
+            </div>
             <textarea
               value={review}
-              onChange={(e) => setReview(e.target.value)}
-              className="input-dark min-h-[100px] resize-none"
-              placeholder="Ceritakan pengalaman Anda..."
+              onChange={(e) => setReview(e.target.value.slice(0, 1000))}
+              rows={3}
+              placeholder={
+                isEn
+                  ? 'Share details about the fabric, screen print result, or delivery...'
+                  : 'Ceritakan tentang kenyamanan bahan kaos, kerapian sablon, atau kepuasan Anda...'
+              }
+              className={`w-full rounded-xl p-3 text-sm transition-all outline-none resize-none leading-relaxed border ${
+                isLight
+                  ? 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/10'
+                  : 'bg-white/[0.04] border-white/10 text-white placeholder-zinc-500 focus:border-primary/70 focus:bg-white/[0.06] focus:ring-2 focus:ring-primary/20'
+              }`}
             />
           </div>
 
-          <div>
-            <label className="text-chrome text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Foto (Opsional)</label>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => {
-              const f = e.target.files[0];
-              if (f) { setImageFile(f); setImagePreview(URL.createObjectURL(f)); }
-            }} className="hidden" />
-            <div className="flex gap-3 items-center">
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="px-4 py-2 rounded-xl bg-dark border border-border text-gray-light hover:text-white text-sm font-medium flex items-center gap-2">
-                <Upload className="w-4 h-4" /> {imagePreview ? 'Ganti Foto' : 'Pilih Foto'}
-              </button>
-              {imagePreview && (
-                <div className="relative">
-                  <img src={imagePreview} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-border" />
-                </div>
-              )}
-            </div>
+          {/* Minimalist Trust & Moderation Note */}
+          <div
+            className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs ${
+              isLight
+                ? 'bg-emerald-50/70 border-emerald-200/80 text-emerald-800'
+                : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-500" />
+            <p className="leading-snug">
+              {isEn
+                ? 'Testimonials are published with your profile name & avatar once approved.'
+                : 'Testimoni akan tampil dengan nama & foto profil Anda setelah diverifikasi admin.'}
+            </p>
           </div>
 
-          <p className="text-gray-dark text-xs">Testimoni akan ditinjau admin sebelum tampil di halaman utama.</p>
-
-          <div className="flex gap-4 pt-2">
-            <button type="button" onClick={onClose} className="btn-secondary flex-1">Batal</button>
-            <button type="submit" disabled={saving} className="btn-primary flex-1">
-              {saving ? <Spinner size="sm" /> : (isEdit ? 'Simpan Perubahan' : 'Kirim')}
+          {/* Action Buttons */}
+          <div className="pt-2 flex items-center justify-end gap-2.5">
+            <button
+              type="button"
+              onClick={onClose}
+              className={`py-2.5 px-4 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
+                isLight
+                  ? 'text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border-slate-200'
+                  : 'text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 border-white/10'
+              }`}
+            >
+              {isEn ? 'Cancel' : 'Batal'}
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="py-2.5 px-5 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-primary to-[#ff58a0] hover:brightness-110 active:scale-[0.98] shadow-md shadow-primary/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? (
+                <LoadingSpinner size="sm" />
+              ) : (
+                <>
+                  <span>
+                    {isEdit
+                      ? (isEn ? 'Update Review' : 'Perbarui Testimoni')
+                      : (isEn ? 'Submit Review' : 'Kirim Testimoni')}
+                  </span>
+                  <Send className="w-3.5 h-3.5" />
+                </>
+              )}
             </button>
           </div>
+
         </form>
       </div>
     </div>

@@ -14,6 +14,17 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Automatically propagate user's active language preference to backend
+    try {
+      const langState = localStorage.getItem('user-language');
+      const lang = langState ? JSON.parse(langState)?.state?.language || 'id' : 'id';
+      config.headers['Accept-Language'] = lang;
+    } catch {
+      config.headers['Accept-Language'] = 'id';
+    }
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
     return config;
   },
   (error) => Promise.reject(error)

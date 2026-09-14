@@ -7,6 +7,7 @@ import { adminService } from '../../services/adminService';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import AdminProfileModal from '../../components/admin/AdminProfileModal';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
+import UserAvatar from '../../components/common/UserAvatar';
 import { formatRupiah } from '../../utils/formatRupiah';
 import {
   LayoutDashboard,
@@ -38,13 +39,17 @@ import {
   ArrowRight,
   ExternalLink,
   ChevronRight,
+  Sparkles,
+  Layers,
+  Tag,
+  Scissors,
 } from 'lucide-react';
 
 const adminNavSections = [
   {
     label: 'Ringkasan & Analitik',
     items: [
-      { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/admin', label: 'Dashboard Utama', icon: LayoutDashboard },
       { to: '/admin/laporan', label: 'Laporan Penjualan', icon: BarChart3 },
     ],
   },
@@ -58,12 +63,21 @@ const adminNavSections = [
     ],
   },
   {
-    label: 'Katalog & Sablon',
+    label: 'Kelola Layanan Spesifik',
+    items: [
+      { to: '/admin/layanan?type=sablon', label: 'Sablon Kaos', icon: Shirt },
+      { to: '/admin/layanan?type=banner', label: 'Printing Banner', icon: Layers },
+      { to: '/admin/layanan?type=stiker', label: 'Cetak Stiker', icon: Tag },
+      { to: '/admin/layanan?type=bordir', label: 'Bordir Komputer', icon: Scissors },
+      { to: '/admin/layanan', label: 'Semua Layanan', icon: Package },
+    ],
+  },
+  {
+    label: 'Katalog & Pakaian',
     items: [
       { to: '/admin/produk', label: 'Produk Pakaian', icon: Shirt },
       { to: '/admin/kategori', label: 'Kategori Produk', icon: Tags },
-      { to: '/admin/layanan', label: 'Layanan Sablon', icon: Package },
-      { to: '/admin/warna', label: 'Warna Sablon', icon: Palette },
+      { to: '/admin/warna', label: 'Warna Kaos', icon: Palette },
       { to: '/admin/ukuran', label: 'Ukuran Kaos', icon: Ruler },
     ],
   },
@@ -72,7 +86,7 @@ const adminNavSections = [
     items: [
       { to: '/admin/portfolio', label: 'Portfolio Galeri', icon: Image },
       { to: '/admin/testimoni', label: 'Testimoni Customer', icon: MessageSquare },
-      { to: '/admin/pengguna', label: 'User & Kuota AI', icon: Users },
+      { to: '/admin/pengguna', label: 'Kelola User & Role', icon: Users },
       { to: '/admin/pengaturan', label: 'Pengaturan Toko', icon: Settings },
     ],
   },
@@ -93,7 +107,8 @@ const pageTitles = {
   '/admin/testimoni': 'Kelola Testimoni',
   '/admin/pengaturan': 'Pengaturan',
   '/admin/laporan': 'Laporan',
-  '/admin/pengguna': 'User & Kuota AI',
+  '/admin/pengguna': 'Kelola User & Role',
+  '/admin/users': 'Kelola User & Role',
 };
 
 export default function AdminLayout() {
@@ -265,58 +280,69 @@ export default function AdminLayout() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen admin-theme bg-cream" data-theme={theme}>
+      <div className={`min-h-screen admin-theme selection:bg-primary selection:text-white ${theme === 'light' ? 'bg-[#f8fafc] text-slate-900' : 'bg-[#0c0711] text-white'}`} data-theme={theme}>
       {/* Mobile overlay */}
       {mobileOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed left-0 top-0 h-full ${sidebarWidth} bg-ink text-white shadow-2xl z-50 transition-all duration-300 flex flex-col border-r border-border ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside className={`fixed left-0 top-0 h-full ${sidebarWidth} ${theme === 'light' ? 'bg-white text-slate-800 border-r border-slate-200 shadow-xl' : 'bg-[#120a16]/95 text-white border-r border-white/10 shadow-2xl backdrop-blur-2xl'} z-50 transition-all duration-300 flex flex-col ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         {/* Logo & Workspace Header */}
-        <div className={`p-4 border-b border-border ${sidebarCollapsed ? 'flex justify-center' : ''}`}>
+        <div className={`p-4 ${theme === 'light' ? 'border-b border-slate-200' : 'border-b border-white/10'} ${sidebarCollapsed ? 'flex justify-center' : ''}`}>
           <div className="flex items-center gap-2.5">
-            <img src="/logo.png" alt="Dreamcatcher" className="h-8 flex-shrink-0" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-[#ff60a8] p-[1.5px] shadow-md shadow-primary/20 shrink-0">
+              <div className="w-full h-full rounded-[9px] bg-[#120817] flex items-center justify-center">
+                <img src="/logo.png" alt="Dreamcatcher" className="h-5 w-5 object-contain" />
+              </div>
+            </div>
             {!sidebarCollapsed && (
               <div className="min-w-0">
-                <span className="font-heading text-[18px] text-primary tracking-[2px] block leading-none">
-                  Dream<span className="text-fire">catcher</span>
+                <span className="font-heading text-[17px] font-bold tracking-[1px] block leading-none text-white">
+                  DREAM<span className="text-gradient">CATCHER</span>
                 </span>
-                <span className="text-[10px] text-gray uppercase tracking-widest font-mono">Studio Admin</span>
+                <span className="text-[9px] text-zinc-400 uppercase tracking-widest font-mono">Studio Admin</span>
               </div>
             )}
             <button
               onClick={() => setMobileOpen(false)}
-              className="lg:hidden ml-auto text-gray-light hover:text-white p-1 rounded-lg hover:bg-white/5"
+              className="lg:hidden ml-auto text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/5 cursor-pointer"
             >
               <X size={18} />
             </button>
           </div>
           {!sidebarCollapsed && (
-            <div className="mt-3 flex items-center justify-between px-2.5 py-1 rounded-lg bg-card/60 border border-border/80 text-[11px]">
-              <span className="text-gray font-medium flex items-center gap-1.5">
+            <div className={`mt-3 flex items-center justify-between px-2.5 py-1.5 rounded-xl border text-[11px] ${
+              theme === 'light' ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-white/[0.04] border-white/10 text-zinc-300'
+            }`}>
+              <span className="font-medium flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 Sistem Aktif
               </span>
-              <span className="text-gray-dark text-[10px] font-mono">v2.4</span>
+              <span className="text-zinc-500 text-[10px] font-mono">v2.4</span>
             </div>
           )}
         </div>
 
         {/* Nav */}
-        <nav className={`flex-1 mt-3 ${sidebarCollapsed ? 'px-2' : 'px-3'} overflow-y-auto`}>
+        <nav className={`flex-1 mt-3 ${sidebarCollapsed ? 'px-2' : 'px-3'} overflow-y-auto custom-scrollbar`}>
           {adminNavSections.map((section) => (
             <div key={section.label} className="mb-4">
               {!sidebarCollapsed && (
-                <p className="px-3 mb-1.5 text-[10px] font-bold tracking-[1.5px] uppercase text-gray/70">
+                <p className={`px-3 mb-1.5 text-[10px] font-bold tracking-[1.5px] uppercase ${
+                  theme === 'light' ? 'text-slate-400' : 'text-zinc-500'
+                }`}>
                   {section.label}
                 </p>
               )}
               {sidebarCollapsed && (
-                <div className="mx-auto my-2 w-6 h-px bg-border" />
+                <div className={`mx-auto my-2 w-6 h-px ${theme === 'light' ? 'bg-slate-200' : 'bg-white/10'}`} />
               )}
               {section.items.map((item) => {
-                const isActive = location.pathname === item.to;
+                const currentUrl = location.pathname + (location.search || '');
+                const isActive = item.to.includes('?')
+                  ? currentUrl === item.to
+                  : (location.pathname === item.to && !location.search);
                 const badge = item.to === '/admin/pesanan' ? pendingOrders + cancelRequests : item.to === '/admin/pembayaran' ? pendingPayments : 0;
                 return (
                   <Link
@@ -324,15 +350,17 @@ export default function AdminLayout() {
                     to={item.to}
                     onClick={() => setMobileOpen(false)}
                     title={sidebarCollapsed ? item.label : undefined}
-                    className={`relative flex items-center gap-3 rounded-xl mb-1 transition-all duration-200 no-underline ${
+                    className={`relative flex items-center gap-3 rounded-xl mb-1 transition-all duration-200 no-underline cursor-pointer ${
                       sidebarCollapsed ? 'justify-center px-2 py-3' : 'px-3 py-2.5'
                     } ${
                       isActive
-                        ? 'bg-primary text-white shadow-lg shadow-primary/25 font-semibold'
-                        : 'text-gray-light hover:bg-white/5 hover:text-white'
+                        ? 'bg-gradient-to-r from-primary to-[#ff60a8] text-white shadow-lg shadow-primary/30 font-bold'
+                        : theme === 'light'
+                        ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                        : 'text-zinc-400 hover:bg-white/[0.06] hover:text-white'
                     }`}
                   >
-                    <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-gray'}`} />
+                    <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : theme === 'light' ? 'text-slate-500' : 'text-zinc-400'}`} />
                     {!sidebarCollapsed && (
                       <>
                         <span className="text-[13px]">{item.label}</span>
@@ -346,7 +374,7 @@ export default function AdminLayout() {
                       </>
                     )}
                     {sidebarCollapsed && badge > 0 && (
-                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-2 ring-ink" />
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-2 ring-[#120a16]" />
                     )}
                   </Link>
                 );
@@ -359,28 +387,39 @@ export default function AdminLayout() {
         <div className="hidden lg:block px-3 pb-2">
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="flex items-center justify-center w-full py-2 rounded-xl text-gray hover:bg-white/5 hover:text-white transition-colors"
+            className={`flex items-center justify-center w-full py-2 rounded-xl transition-colors cursor-pointer ${
+              theme === 'light' ? 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+            }`}
           >
             {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
           </button>
         </div>
 
         {/* User + Logout */}
-        <div className={`border-t border-border p-3 ${sidebarCollapsed ? 'hidden' : ''}`}>
-          <div className="px-3 mb-2">
-            <p className="font-medium text-white text-[13px] truncate">{user?.name || 'Admin'}</p>
-            <p className="text-[11px] text-gray truncate">{user?.email}</p>
+        <div className={`border-t ${theme === 'light' ? 'border-slate-200' : 'border-white/10'} p-3 ${sidebarCollapsed ? 'hidden' : ''}`}>
+          <div className="px-3 mb-2 flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className={`font-semibold text-[13px] truncate ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{user?.name || 'Admin'}</p>
+              <p className={`text-[11px] truncate ${theme === 'light' ? 'text-slate-500' : 'text-zinc-400'}`}>{user?.email}</p>
+            </div>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20 shrink-0">
+              Admin
+            </span>
           </div>
           <button
             onClick={toggleTheme}
-            className="flex items-center gap-2 px-3 py-2 w-full rounded-xl hover:bg-white/5 transition-colors text-gray-light text-[13px] mb-1"
+            className={`flex items-center gap-2 px-3 py-2 w-full rounded-xl transition-colors text-[12px] font-medium mb-1 cursor-pointer ${
+              theme === 'light' ? 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' : 'text-zinc-300 hover:bg-white/5 hover:text-white'
+            }`}
           >
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-primary" />}
             <span>{theme === 'dark' ? 'Tema Terang' : 'Tema Gelap'}</span>
           </button>
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="flex items-center gap-2 px-3 py-2 w-full rounded-xl hover:bg-white/5 transition-colors text-gray-light text-[13px]"
+            className={`flex items-center gap-2 px-3 py-2 w-full rounded-xl transition-colors text-[12px] font-medium cursor-pointer ${
+              theme === 'light' ? 'text-rose-600 hover:bg-rose-50' : 'text-rose-400 hover:bg-rose-500/10 hover:text-rose-300'
+            }`}
           >
             <LogOut className="w-4 h-4" />
             Logout
@@ -389,7 +428,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Top Navbar */}
-      <header className={`fixed top-0 left-0 right-0 h-16 glass-header border-b border-border flex items-center justify-between px-4 lg:px-6 z-40 ${mainMargin} transition-all duration-300`}>
+      <header className={`fixed top-0 left-0 right-0 h-16 glass-header border-b ${theme === 'light' ? 'bg-white/92 border-slate-200 text-slate-800 shadow-sm' : 'bg-[#120a16]/90 border-white/10 text-white shadow-xl backdrop-blur-2xl'} flex items-center justify-between px-4 lg:px-6 z-40 ${mainMargin} transition-all duration-300`}>
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => {
@@ -399,19 +438,19 @@ export default function AdminLayout() {
                 setSidebarCollapsed(!sidebarCollapsed);
               }
             }}
-            className="p-2 rounded-xl border border-border/70 hover:bg-white/5 transition-colors text-gray-light hover:text-white"
+            className={`p-2 rounded-xl border transition-colors cursor-pointer ${theme === 'light' ? 'border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100' : 'border-white/10 text-zinc-300 hover:text-white hover:bg-white/5'}`}
           >
             <Menu size={18} />
           </button>
           <div className="min-w-0">
-            <h2 className="font-heading text-[18px] text-white tracking-[1px] leading-tight truncate">
+            <h2 className={`font-heading text-[18px] tracking-[1px] leading-tight truncate ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
               {getPageTitle()}
             </h2>
-            <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-gray">
-              <span>Admin</span>
+            <div className={`hidden sm:flex items-center gap-1.5 text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-zinc-400'}`}>
+              <span>Admin Studio</span>
               {location.pathname !== '/admin' && (
                 <>
-                  <ChevronRight size={10} className="text-gray/60" />
+                  <ChevronRight size={10} className={theme === 'light' ? 'text-slate-400' : 'text-zinc-500'} />
                   <span className="text-primary font-medium truncate">{getPageTitle()}</span>
                 </>
               )}
@@ -425,7 +464,11 @@ export default function AdminLayout() {
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/70 bg-card/60 text-gray-light hover:text-white hover:border-primary/40 text-[12px] font-medium transition-all no-underline"
+            className={`hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-medium transition-all no-underline ${
+              theme === 'light'
+                ? 'border-slate-200 bg-slate-100/90 text-slate-700 hover:text-slate-900 hover:border-primary/50'
+                : 'border-border/70 bg-card/60 text-gray-light hover:text-white hover:border-primary/40'
+            }`}
             title="Buka Website Toko di Tab Baru"
           >
             <ExternalLink size={13} className="text-primary" />
@@ -438,7 +481,7 @@ export default function AdminLayout() {
                 setShowNotifs(!showNotifs);
                 setShowProfileDropdown(false);
               }}
-              className="relative p-2 rounded-lg hover:bg-white/5 transition-colors text-gray-light"
+              className={`relative p-2 rounded-lg transition-colors ${theme === 'light' ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' : 'text-gray-light hover:bg-white/5'}`}
               title="Notifikasi"
             >
               <Bell className="w-5 h-5" />
@@ -450,14 +493,18 @@ export default function AdminLayout() {
             </button>
 
             {showNotifs && (
-              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-card border border-border shadow-2xl rounded-xl overflow-hidden z-50">
+              <div className={`absolute right-0 top-full mt-2.5 w-80 sm:w-96 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${
+                theme === 'light'
+                  ? 'bg-white/98 border border-slate-200 text-slate-800 shadow-2xl shadow-slate-400/25'
+                  : 'bg-[#160d1c]/98 border border-white/10 text-white shadow-2xl shadow-black/90 ring-1 ring-white/10'
+              } backdrop-blur-2xl`}>
                 {/* Header */}
-                <div className="p-4 border-b border-border bg-ink/50">
+                <div className={`p-4 border-b ${theme === 'light' ? 'border-slate-200 bg-slate-50/90' : 'border-white/10 bg-gradient-to-br from-white/[0.04] to-transparent'}`}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-heading text-[15px] font-bold text-white tracking-wide">Notifikasi</h4>
+                      <h4 className={`font-heading text-[16px] font-bold tracking-wide ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Notifikasi Masuk</h4>
                       {totalNotifs > 0 && (
-                        <span className="px-2 py-0.5 text-[10px] font-bold bg-fire/20 text-fire rounded-full border border-fire/30">
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-primary/20 text-primary rounded-full border border-primary/30 animate-pulse">
                           {totalNotifs} Baru
                         </span>
                       )}
@@ -465,33 +512,35 @@ export default function AdminLayout() {
                   </div>
 
                   {/* Filter Tabs */}
-                  <div className="flex items-center gap-1.5 bg-ink p-1 rounded-lg border border-border/50 text-[11px]">
+                  <div className={`flex items-center gap-1 p-1 rounded-xl border text-[11px] ${
+                    theme === 'light' ? 'bg-slate-100 border-slate-200' : 'bg-[#120a16] border-white/10'
+                  }`}>
                     <button
                       onClick={() => setNotifFilter('all')}
-                      className={`flex-1 py-1 px-2 rounded-md font-medium transition-all ${
+                      className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition-all cursor-pointer ${
                         notifFilter === 'all'
                           ? 'bg-primary text-white shadow-sm'
-                          : 'text-gray-light hover:text-white'
+                          : theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
                       }`}
                     >
                       Semua ({totalNotifs})
                     </button>
                     <button
                       onClick={() => setNotifFilter('orders')}
-                      className={`flex-1 py-1 px-2 rounded-md font-medium transition-all ${
+                      className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition-all cursor-pointer ${
                         notifFilter === 'orders'
                           ? 'bg-primary text-white shadow-sm'
-                          : 'text-gray-light hover:text-white'
+                          : theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
                       }`}
                     >
                       Pesanan ({pendingOrders + cancelRequests})
                     </button>
                     <button
                       onClick={() => setNotifFilter('payments')}
-                      className={`flex-1 py-1 px-2 rounded-md font-medium transition-all ${
+                      className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition-all cursor-pointer ${
                         notifFilter === 'payments'
                           ? 'bg-primary text-white shadow-sm'
-                          : 'text-gray-light hover:text-white'
+                          : theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
                       }`}
                     >
                       Bayar ({pendingPayments})
@@ -501,7 +550,7 @@ export default function AdminLayout() {
 
                 {/* Items List */}
                 {filteredNotifs.length > 0 ? (
-                  <div className="max-h-80 overflow-y-auto divide-y divide-border/40">
+                  <div className={`max-h-80 overflow-y-auto divide-y ${theme === 'light' ? 'divide-slate-100' : 'divide-white/5'} custom-scrollbar`}>
                     {filteredNotifs.map((item) => {
                       const IconComponent = item.icon;
                       return (
@@ -509,25 +558,31 @@ export default function AdminLayout() {
                           key={item.id}
                           to={item.link}
                           onClick={() => setShowNotifs(false)}
-                          className="flex items-start gap-3 p-3.5 hover:bg-ink/60 transition-colors no-underline group"
+                          className={`flex items-start gap-3 p-3.5 transition-colors no-underline group ${
+                            theme === 'light' ? 'hover:bg-slate-50' : 'hover:bg-white/[0.04]'
+                          }`}
                         >
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${item.iconColor}`}>
-                            <IconComponent size={16} />
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 border ${
+                            theme === 'light' ? 'border-slate-200' : 'border-white/10'
+                          } ${item.iconColor}`}>
+                            <IconComponent size={15} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-1 mb-0.5">
-                              <span className="font-semibold text-white text-[13px] group-hover:text-primary transition-colors truncate">
+                              <span className={`font-semibold text-[13px] group-hover:text-primary transition-colors truncate ${
+                                theme === 'light' ? 'text-slate-900' : 'text-white'
+                              }`}>
                                 {item.title}
                               </span>
-                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${item.badgeColor}`}>
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider ${item.badgeColor}`}>
                                 {item.badge}
                               </span>
                             </div>
-                            <p className="text-gray-light text-[12px] leading-snug">
+                            <p className={`text-[12px] leading-snug ${theme === 'light' ? 'text-slate-600' : 'text-zinc-400'}`}>
                               {item.message}
                             </p>
-                            <div className="flex items-center justify-between mt-1 text-[10px] text-gray-medium">
-                              <span className="font-medium text-white/80">{item.detail}</span>
+                            <div className={`flex items-center justify-between mt-1 text-[10px] ${theme === 'light' ? 'text-slate-500' : 'text-zinc-500'}`}>
+                              <span className={`font-medium ${theme === 'light' ? 'text-slate-700' : 'text-zinc-300'}`}>{item.detail}</span>
                               <span>
                                 {new Date(item.createdAt).toLocaleString('id-ID', {
                                   day: 'numeric',
@@ -544,9 +599,9 @@ export default function AdminLayout() {
                   </div>
                 ) : (
                   <div className="p-8 text-center">
-                    <Bell size={28} className="text-gray-medium mx-auto mb-2 opacity-50" />
-                    <p className="text-white text-[13px] font-medium">Tidak ada notifikasi baru</p>
-                    <p className="text-gray text-[11px] mt-0.5">
+                    <Bell size={28} className={`mx-auto mb-2 opacity-50 ${theme === 'light' ? 'text-slate-400' : 'text-zinc-600'}`} />
+                    <p className={`text-[13px] font-medium ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Tidak ada notifikasi baru</p>
+                    <p className={`text-[11px] mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-zinc-400'}`}>
                       {notifFilter === 'orders'
                         ? 'Semua pesanan sudah diproses'
                         : notifFilter === 'payments'
@@ -557,18 +612,24 @@ export default function AdminLayout() {
                 )}
 
                 {/* Footer */}
-                <div className="p-2.5 bg-ink/70 border-t border-border flex items-center justify-between text-[11px]">
+                <div className={`p-2.5 border-t flex items-center justify-between text-[11px] ${
+                  theme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#120a16] border-white/10 text-zinc-400'
+                }`}>
                   <Link
                     to="/admin/pesanan"
                     onClick={() => setShowNotifs(false)}
-                    className="flex items-center gap-1 text-gray-light hover:text-primary transition-colors font-medium px-2 py-1 rounded"
+                    className={`flex items-center gap-1 transition-colors font-medium px-2 py-1 rounded-lg ${
+                      theme === 'light' ? 'text-slate-600 hover:text-primary' : 'text-zinc-400 hover:text-primary'
+                    }`}
                   >
                     Semua Pesanan <ArrowRight size={12} />
                   </Link>
                   <Link
                     to="/admin/pembayaran"
                     onClick={() => setShowNotifs(false)}
-                    className="flex items-center gap-1 text-gray-light hover:text-primary transition-colors font-medium px-2 py-1 rounded"
+                    className={`flex items-center gap-1 transition-colors font-medium px-2 py-1 rounded-lg ${
+                      theme === 'light' ? 'text-slate-600 hover:text-primary' : 'text-zinc-400 hover:text-primary'
+                    }`}
                   >
                     Semua Pembayaran <ArrowRight size={12} />
                   </Link>
@@ -581,43 +642,89 @@ export default function AdminLayout() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => { setShowProfileDropdown(!showProfileDropdown); setShowNotifs(false); }}
-              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors"
+              className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-full border transition-colors cursor-pointer ${
+                theme === 'light'
+                  ? 'border-slate-200 hover:bg-slate-100 text-slate-800'
+                  : 'border-white/10 hover:bg-white/5 text-white'
+              }`}
             >
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold text-[12px]">
-                {(user?.name || 'A')[0].toUpperCase()}
-              </div>
-              <span className="text-[13px] font-medium text-white hidden md:block">{user?.name || 'Admin'}</span>
-              <ChevronDown className="w-4 h-4 text-gray-light" />
+              <UserAvatar user={user} size="sm" rounded="rounded-full" border />
+              <span className={`text-[13px] font-semibold hidden md:block max-w-[120px] truncate ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{user?.name || 'Admin'}</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${theme === 'light' ? 'text-slate-500' : 'text-zinc-400'} ${showProfileDropdown ? 'rotate-180' : ''}`} />
             </button>
 
             {showProfileDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-52 bg-card border border-border shadow-2xl rounded-xl overflow-hidden">
-                <div className="p-3 border-b border-border">
-                  <p className="text-white font-medium text-[13px]">{user?.name}</p>
-                  <p className="text-gray text-[11px]">{user?.email}</p>
+              <div className={`absolute right-0 top-full mt-2.5 w-60 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${
+                theme === 'light'
+                  ? 'bg-white/98 border border-slate-200 text-slate-800 shadow-2xl shadow-slate-400/25'
+                  : 'bg-[#160d1c]/98 border border-white/10 text-white shadow-2xl shadow-black/90 ring-1 ring-white/10'
+              } backdrop-blur-2xl`}>
+                {/* Header User Info */}
+                <div className={`p-4 border-b ${theme === 'light' ? 'border-slate-200 bg-slate-50/80' : 'border-white/10 bg-gradient-to-br from-white/[0.04] to-transparent'}`}>
+                  <div className="flex items-center gap-3">
+                    <UserAvatar user={user} size="md" rounded="rounded-xl" border showGlow />
+                    <div className="min-w-0 flex-1">
+                      <p className={`font-semibold text-[13px] truncate leading-tight ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{user?.name || 'Administrator'}</p>
+                      <p className={`text-[11px] truncate mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-zinc-400'}`}>{user?.email}</p>
+                      <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">
+                        Super Admin
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="py-1">
+
+                {/* Dropdown Navigation Actions */}
+                <div className="p-1.5 space-y-0.5">
                   <button
                     onClick={() => openProfile('profile')}
-                    className="flex items-center gap-3 px-4 py-2.5 w-full text-left text-gray-light hover:bg-ink/50 hover:text-white transition-colors text-[13px]"
+                    className={`flex items-center gap-3 px-3 py-2.5 w-full text-left rounded-xl transition-all text-[13px] font-medium group cursor-pointer ${
+                      theme === 'light'
+                        ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                        : 'text-zinc-300 hover:text-white hover:bg-white/[0.07]'
+                    }`}
                   >
-                    <User className="w-4 h-4" />
-                    Profil Saya
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
+                      theme === 'light'
+                        ? 'bg-slate-100 text-slate-600 group-hover:bg-primary/10 group-hover:text-primary'
+                        : 'bg-white/5 text-zinc-400 group-hover:bg-primary/20 group-hover:text-primary'
+                    }`}>
+                      <User size={15} />
+                    </div>
+                    <span>Profil Administrator</span>
                   </button>
+
                   <button
                     onClick={() => openProfile('password')}
-                    className="flex items-center gap-3 px-4 py-2.5 w-full text-left text-gray-light hover:bg-ink/50 hover:text-white transition-colors text-[13px]"
+                    className={`flex items-center gap-3 px-3 py-2.5 w-full text-left rounded-xl transition-all text-[13px] font-medium group cursor-pointer ${
+                      theme === 'light'
+                        ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                        : 'text-zinc-300 hover:text-white hover:bg-white/[0.07]'
+                    }`}
                   >
-                    <Lock className="w-4 h-4" />
-                    Ganti Password
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
+                      theme === 'light'
+                        ? 'bg-slate-100 text-slate-600 group-hover:bg-primary/10 group-hover:text-primary'
+                        : 'bg-white/5 text-zinc-400 group-hover:bg-primary/20 group-hover:text-primary'
+                    }`}>
+                      <Lock size={15} />
+                    </div>
+                    <span>Keamanan Sandi</span>
                   </button>
-                  <div className="my-1 border-t border-border" />
+
+                  <div className={`my-1 border-t ${theme === 'light' ? 'border-slate-200' : 'border-white/10'}`} />
+
                   <button
                     onClick={() => { setShowProfileDropdown(false); setShowLogoutConfirm(true); }}
-                    className="flex items-center gap-3 px-4 py-2.5 w-full text-left text-danger hover:bg-ink/50 transition-colors text-[13px]"
+                    className={`flex items-center gap-3 px-3 py-2.5 w-full text-left rounded-xl transition-all text-[13px] font-medium group cursor-pointer ${
+                      theme === 'light'
+                        ? 'text-rose-600 hover:text-rose-700 hover:bg-rose-50'
+                        : 'text-rose-400 hover:text-rose-300 hover:bg-rose-500/10'
+                    }`}
                   >
-                    <LogOut className="w-4 h-4" />
-                    Logout
+                    <div className="w-7 h-7 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform">
+                      <LogOut size={15} />
+                    </div>
+                    <span>Keluar / Logout</span>
                   </button>
                 </div>
               </div>
@@ -627,7 +734,7 @@ export default function AdminLayout() {
       </header>
 
       {/* Main Content */}
-      <main className={`${mainMargin} pt-16 min-h-screen transition-all duration-300 bg-card`}>
+      <main className={`${mainMargin} pt-16 min-h-screen transition-all duration-300 ${theme === 'light' ? 'bg-[#f8fafc] text-slate-800' : 'bg-[#0f0a13] text-white'}`}>
         <div className="p-6 lg:p-8 max-w-7xl mx-auto">
           <Outlet />
         </div>

@@ -1,6 +1,12 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import api from '../services/api';
+import { authService } from '../services/authService';
+
+const orderStorageKey = () => {
+  const user = authService.getUser();
+  return user?.id != null ? `order-u${user.id}` : null;
+};
 
 const initialService = null;
 const initialConfig = {};
@@ -19,6 +25,28 @@ const initialCustomer = {
   phone: '',
   address: '',
   deliveryMethod: 'pickup',
+};
+
+const parseConfig = (cfg) => {
+  if (!cfg) return {};
+  if (typeof cfg === 'string') {
+    try {
+      const parsed = JSON.parse(cfg);
+      return typeof parsed === 'string' ? JSON.parse(parsed) : parsed;
+    } catch (e) {
+      return {};
+    }
+  }
+  return cfg;
+};
+
+const normalizeService = (service) => {
+  if (!service) return null;
+  return {
+    ...service,
+    options_config: parseConfig(service.options_config),
+    pricing_config: parseConfig(service.pricing_config),
+  };
 };
 
 export const useOrderStore = create(
@@ -41,9 +69,10 @@ export const useOrderStore = create(
       nextStep: () => set((state) => ({ currentStep: Math.min(state.currentStep + 1, 6) })),
       prevStep: () => set((state) => ({ currentStep: Math.max(state.currentStep - 1, 1) })),
 
-      setServices: (services) => set({ services }),
+      setServices: (services) => set({ services: (services || []).map(normalizeService) }),
 
-      selectService: (service) => {
+      selectService: (rawService) => {
+        const service = normalizeService(rawService);
         const sizes = service?.options_config?.sizes || [];
         const sizeQuantities = {};
         sizes.forEach((s) => { sizeQuantities[s] = 0; });
@@ -243,7 +272,8 @@ export const useOrderStore = create(
       fetchServices: async () => {
         try {
           const response = await api.get('/services');
-          const freshServices = response.data.services || [];
+          const rawServices = response.data.services || [];
+          const freshServices = rawServices.map(normalizeService);
           set((state) => {
             const updates = { services: freshServices };
             if (state.selectedService) {
@@ -266,6 +296,17 @@ export const useOrderStore = create(
     }),
     {
       name: 'order-storage',
+      storage: createJSONStorage(() => ({
+        getItem: () => (orderStorageKey() ? localStorage.getItem(orderStorageKey()) : null),
+        setItem: (_name, value) => {
+          const key = orderStorageKey();
+          if (key) localStorage.setItem(key, value);
+        },
+        removeItem: () => {
+          const key = orderStorageKey();
+          if (key) localStorage.removeItem(key);
+        },
+      })),
       partialize: (state) => ({
         selectedService: state.selectedService,
         config: state.config,

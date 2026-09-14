@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
 import {
   Shape, PlaneGeometry, ShapeGeometry, BoxGeometry, Box3, Vector2, Vector3, Mesh, Group, Scene,
-  PerspectiveCamera, WebGLRenderer, AmbientLight, DirectionalLight,
+  PerspectiveCamera, WebGLRenderer, AmbientLight, DirectionalLight, PointLight,
   MeshStandardMaterial, Raycaster,
   LineSegments, LineBasicMaterial, EdgesGeometry, MeshBasicMaterial,
-  DoubleSide, FrontSide, CanvasTexture, SRGBColorSpace, MathUtils, Euler, Quaternion,
+  DoubleSide, FrontSide, CanvasTexture, SRGBColorSpace, MathUtils, Euler, Quaternion, Float32BufferAttribute,
+  RepeatWrapping, ClampToEdgeWrapping,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
@@ -531,62 +532,100 @@ function normalizeGarmentGeometries(geometries, rotateXDeg) {
 function assignBakeUvs(geometries) {
   let minX = Infinity;
   let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+
   for (const { geometry } of geometries) {
     const pos = geometry.attributes.position;
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
+      const y = pos.getY(i);
+      const z = pos.getZ(i);
       if (x < minX) minX = x;
       if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+      if (z < minZ) minZ = z;
+      if (z > maxZ) maxZ = z;
     }
   }
+
   const spanX = (maxX - minX) || 1e-6;
+  const spanY = (maxY - minY) || 1e-6;
+  const midZ = (minZ + maxZ) / 2;
+
   for (const { geometry } of geometries) {
     const pos = geometry.attributes.position;
     const nrm = geometry.attributes.normal;
-    const uv = geometry.attributes.uv;
-    const index = geometry.index;
+    let uv = geometry.attributes.uv;
+    if (!uv || uv.count !== pos.count) {
+      uv = new Float32BufferAttribute(new Float32Array(pos.count * 2), 2);
+      geometry.setAttribute('uv', uv);
+    }
     const n = pos.count;
-    const us = new Float32Array(n);
-    const vs = new Float32Array(n);
-    for (let i = 0; i < n; i++) {
-      us[i] = (pos.getX(i) - minX) / spanX;
-      vs[i] = clamp(pos.getY(i), 0, 1);
-    }
-    const half = new Uint8Array(n);
-    const stamp = (ia, ib, ic) => {
-      let back;
-      if (nrm) {
-        back = nrm.getZ(ia) + nrm.getZ(ib) + nrm.getZ(ic) < -3 * BACK_UV_Z ? 1 : 0;
-      } else {
-        const vA = new Vector3();
-        const vB = new Vector3();
-        const vC = new Vector3();
-        const ab = new Vector3();
-        const ac = new Vector3();
-        const faceN = new Vector3();
-        vA.fromBufferAttribute(pos, ia);
-        vB.fromBufferAttribute(pos, ib);
-        vC.fromBufferAttribute(pos, ic);
-        ab.subVectors(vB, vA);
-        ac.subVectors(vC, vA);
-        faceN.crossVectors(ab, ac);
-        back = faceN.z < -BACK_UV_Z ? 1 : 0;
+
+    for (let i = 0; i < n; i += 3) {
+      const avgZ = (pos.getZ(i) + pos.getZ(i + 1) + pos.getZ(i + 2)) / 3;
+      const avgX = (pos.getX(i) + pos.getX(i + 1) + pos.getX(i + 2)) / 3;
+      const avgY = (pos.getY(i) + pos.getY(i + 1) + pos.getY(i + 2)) / 3;
+      const uRawAvg = (avgX - minX) / spanX;
+
+      // Determine whether this triangle is on sleeve vs torso:
+      const isLeftSleeve = uRawAvg > 0.78 && avgY > minY + spanY * 0.35;
+      const isRightSleeve = uRawAvg < 0.22 && avgY > minY + spanY * 0.35;
+
+      let isBack = false;
+      if (!isLeftSleeve && !isRightSleeve) {
+        if (nrm) {
+          const avgNrmZ = (nrm.getZ(i) + nrm.getZ(i + 1) + nrm.getZ(i + 2)) / 3;
+          isBack = avgNrmZ < -0.1 || (avgZ < midZ && avgNrmZ <= 0.1);
+        } else {
+          isBack = avgZ < midZ;
+        }
       }
-      half[ia] = back;
-      half[ib] = back;
-      half[ic] = back;
-    };
-    if (index) {
-      for (let i = 0; i < index.count; i += 3) {
-        stamp(index.getX(i), index.getX(i + 1), index.getX(i + 2));
+
+      for (let j = 0; j < 3; j++) {
+        const idx = i + j;
+        const vx = pos.getX(idx);
+        const vy = pos.getY(idx);
+        const vz = pos.getZ(idx);
+        const uRaw = clamp((vx - minX) / spanX, 0, 1);
+        const v = clamp((vy - minY) / spanY, 0, 1);
+
+        let finalU;
+        if (isLeftSleeve) {
+          // Left sleeve: continuous wrapping across the entire sleeve depth Z so designs are never cut in half
+          const k = clamp((uRaw - 0.78) / 0.18, 0, 1);
+          let sleeveU;
+          if (vz >= midZ) {
+            const frac = clamp((vz - midZ) / (maxZ - midZ || 1), 0, 1);
+            sleeveU = 0.78 + 0.22 * (0.5 + 0.5 * frac);
+          } else {
+            const frac = clamp((midZ - vz) / (midZ - minZ || 1), 0, 1);
+            sleeveU = 0.78 + 0.22 * (0.5 - 0.5 * frac);
+          }
+          finalU = ((1 - k) * uRaw + k * sleeveU) * 0.5;
+        } else if (isRightSleeve) {
+          // Right sleeve: continuous wrapping across the entire sleeve depth Z so designs are never cut in half
+          const k = clamp((0.22 - uRaw) / 0.18, 0, 1);
+          let sleeveU;
+          if (vz >= midZ) {
+            const frac = clamp((vz - midZ) / (maxZ - midZ || 1), 0, 1);
+            sleeveU = 0.22 * (0.5 - 0.5 * frac);
+          } else {
+            const frac = clamp((midZ - vz) / (midZ - minZ || 1), 0, 1);
+            sleeveU = 0.22 * (0.5 + 0.5 * frac);
+          }
+          finalU = ((1 - k) * uRaw + k * sleeveU) * 0.5;
+        } else {
+          // Torso: standard planar mapping on front or back tile
+          finalU = (isBack ? 0.5 : 0.0) + uRaw * 0.5;
+        }
+
+        uv.setXY(idx, finalU, v);
       }
-    } else {
-      for (let i = 0; i < n; i += 3) {
-        stamp(i, i + 1, i + 2);
-      }
-    }
-    for (let i = 0; i < n; i++) {
-      uv.setXY(i, (half[i] ? 0.5 : 0) + us[i] * 0.5, vs[i]);
     }
     uv.needsUpdate = true;
   }
@@ -607,7 +646,10 @@ function loadModel(id) {
       if (child.isMesh) {
         const name = child.name || '';
         if (drop.has(name)) return;
-        const g = child.geometry.clone();
+        let g = child.geometry.clone();
+        if (g.index) {
+          g = g.toNonIndexed();
+        }
         g.applyMatrix4(child.matrixWorld);
         if (!g.attributes.normal) g.computeVertexNormals();
         geometries.push({ geometry: g, name });
@@ -1129,11 +1171,11 @@ function createLayerPickMesh(layer, aspect, frame, hf) {
   geometry.rotateZ(MathUtils.degToRad(layer.rotation));
   if (isBack) geometry.rotateY(Math.PI);
 
-  const mesh = new Mesh(geometry, new MeshBasicMaterial({ visible: false }));
+  const mesh = new Mesh(geometry, new MeshBasicMaterial({ visible: false, transparent: true, opacity: 0 }));
   mesh.userData.layerId = layer.id;
   mesh.userData.layerSide = isBack ? 'back' : 'front';
   mesh.position.set(cx, cy, surf + lift);
-  mesh.visible = false;
+  mesh.visible = true;
   return mesh;
 }
 
@@ -1507,6 +1549,8 @@ export default function ShirtRenderer({
     }
     const ctx = canvas.getContext('2d');
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.clearRect(0, 0, totalW, H);
     // Bake the shirt color as the canvas background so the design layers keep
     // their own colors instead of being multiplied (tinted) by the garment
@@ -1524,14 +1568,21 @@ export default function ShirtRenderer({
       const h = (w / imgAspect) * (layer.stretchY || 1);
       const cx = layer.position_x * W + (isBack ? W : 0);
       const cy = (1 - layer.position_y) * H;
+      const drawImg = propsRef.current.removeBg ? removeBackground(img) : img;
+
       ctx.save();
+      ctx.beginPath();
+      // Strictly clip to the respective half so front designs never spill into the back tile (which would cause opposite-arm ghosting)
+      if (isBack) {
+        ctx.rect(W, 0, W, H);
+      } else {
+        ctx.rect(0, 0, W, H);
+      }
+      ctx.clip();
+
       ctx.translate(cx, cy);
-      // Back layers are viewed through a 180°Y turn (horizontal reversed on
-      // screen), so mirror them around their center here to cancel it out and
-      // keep the design readable and aligned with its selection outline.
       if (isBack) ctx.scale(-1, 1);
       ctx.rotate(MathUtils.degToRad(layer.rotation));
-      const drawImg = propsRef.current.removeBg ? removeBackground(img) : img;
       ctx.drawImage(drawImg, -w / 2, -h / 2, w, h);
       ctx.restore();
     }
@@ -1540,11 +1591,29 @@ export default function ShirtRenderer({
     if (!tex) {
       tex = new CanvasTexture(canvas);
       tex.colorSpace = SRGBColorSpace;
+      tex.wrapS = ClampToEdgeWrapping;
+      tex.wrapT = ClampToEdgeWrapping;
+      tex.generateMipmaps = true;
+      if (rendererRef.current) {
+        tex.anisotropy = rendererRef.current.capabilities.getMaxAnisotropy();
+      }
       printTextureRef.current = tex;
+      for (const mat of garmentMaterialsRef.current) {
+        mat.map = tex;
+        mat.needsUpdate = true;
+      }
     } else {
       tex.image = canvas;
+      tex.wrapS = ClampToEdgeWrapping;
+      tex.wrapT = ClampToEdgeWrapping;
+      tex.needsUpdate = true;
+      for (const mat of garmentMaterialsRef.current) {
+        if (!mat.map) {
+          mat.map = tex;
+          mat.needsUpdate = true;
+        }
+      }
     }
-    tex.needsUpdate = true;
   };
 
   // Keep the layer pick/outline proxies in sync with the designLayers prop and
@@ -1625,21 +1694,38 @@ export default function ShirtRenderer({
       typeof window !== 'undefined' &&
       (window.matchMedia?.('(max-width: 767px)').matches || 'ontouchstart' in window);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 2));
-    renderer.setClearColor(staticModeRef.current ? MOCKUP_BG : 0x000000, staticModeRef.current ? 1 : 0);
+    renderer.setClearColor(0x000000, 0);
     mount.appendChild(renderer.domElement);
     rendererRef.current = renderer;
     raycasterRef.current = new Raycaster();
 
-    const ambientLight = new AmbientLight(0xffffff, 0.5);
+    const ambientLight = new AmbientLight(0xffffff, 0.65);
     scene.add(ambientLight);
 
-    const dirLight = new DirectionalLight(0xffffff, 1);
+    const dirLight = new DirectionalLight(0xffffff, 1.1);
     dirLight.position.set(2, 3, 4);
     scene.add(dirLight);
 
-    const backLight = new DirectionalLight(0xffffff, 0.4);
-    backLight.position.set(-1, 0, -2);
+    const backLight = new DirectionalLight(0xffffff, 0.45);
+    backLight.position.set(-1, 1, -3);
     scene.add(backLight);
+
+    const fillLight = new DirectionalLight(0xd946ef, 0.2);
+    fillLight.position.set(-3, -1, 2);
+    scene.add(fillLight);
+
+    // Upward bottom uplight illuminating the shirt from below
+    const bottomLight = new DirectionalLight(0xff3b89, 0.65);
+    bottomLight.position.set(0, -3, 1.5);
+    scene.add(bottomLight);
+
+    const bottomBackLight = new DirectionalLight(0x9333ea, 0.45);
+    bottomBackLight.position.set(0, -3, -1.5);
+    scene.add(bottomBackLight);
+
+    const bottomPointLight = new PointLight(0xff58a0, 0.85, 4.5, 1.2);
+    bottomPointLight.position.set(0, -1.2, 0.3);
+    scene.add(bottomPointLight);
 
     const group = new Group();
     groupRef.current = group;
@@ -1679,7 +1765,7 @@ export default function ShirtRenderer({
         if (frame) {
           g.visible = true;
           g.scale.setScalar(frame.scale * (zoomRefLocal.current?.current || 1));
-          g.position.set(0, -(frame.minY + frame.spanY / 2) * frame.scale, 0);
+          g.position.set(0, -(frame.minY + frame.spanY / 2) * frame.scale - 0.045, 0);
           const spin = rotationYRefLocal.current?.current || 0;
           g.rotation.y = (vm === 'back' ? Math.PI : 0) + MathUtils.degToRad(spin);
           // Front layers face +Z (the camera when cos > 0), back layers -Z.
@@ -2035,13 +2121,13 @@ export default function ShirtRenderer({
         const camera = cameraRef.current;
         const meshes = [];
         for (const entry of layerDecalRef.current.values()) {
-          if (entry.pickMesh) meshes.push(entry.pickMesh);
+          if (entry.pickMesh && entry.pickMesh.visible) meshes.push(entry.pickMesh);
         }
         if (!camera || meshes.length === 0) return null;
         raycasterRef.current.setFromCamera(toNdc(clientX, clientY), camera);
         const hits = raycasterRef.current.intersectObjects(meshes, false);
         for (const hit of hits) {
-          if (hit.object.visible && hit.object.userData.layerId != null) {
+          if (hit.object.userData.layerId != null) {
             return { layerId: hit.object.userData.layerId };
           }
         }

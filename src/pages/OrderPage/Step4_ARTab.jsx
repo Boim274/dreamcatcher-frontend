@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useLanguageStore } from '../../store/languageStore';
 import CameraFeed from '../../components/design-studio/CameraFeed';
 import ShirtRenderer from '../../components/design-studio/ShirtRenderer';
 import OcclusionLayer from '../../components/design-studio/OcclusionLayer';
@@ -22,12 +23,12 @@ const TSHIRT_COLORS = [
   { id: 'brown', label: 'Coklat', hex: '#5c3d2e' },
 ];
 
-const GUIDE_STEPS = [
-  { n: 1, text: 'Aktifkan kamera di tengah layar' },
-  { n: 2, text: 'Desainmu terpasang dari tab Desain' },
-  { n: 3, text: 'Pilih warna kaos (kiri) sesuai selera' },
-  { n: 4, text: 'Atur ukuran overlay lewat Kalibrasi (kanan)' },
-  { n: 5, text: 'Ambil screenshot, atau tunjukkan tanda peace ✌️' },
+const getGuideSteps = (language) => [
+  { n: 1, text: language === 'en' ? 'Enable camera in the center screen' : 'Aktifkan kamera di tengah layar' },
+  { n: 2, text: language === 'en' ? 'Your design is loaded from Design tab' : 'Desainmu terpasang dari tab Desain' },
+  { n: 3, text: language === 'en' ? 'Select shirt color (left) to your liking' : 'Pilih warna kaos (kiri) sesuai selera' },
+  { n: 4, text: language === 'en' ? 'Adjust overlay size via Calibration (right)' : 'Atur ukuran overlay lewat Kalibrasi (kanan)' },
+  { n: 5, text: language === 'en' ? 'Take screenshot or show peace sign ✌️' : 'Ambil screenshot, atau tunjukkan tanda peace ✌️' },
 ];
 
 // Step 2 stores position values in backend format (underscores, e.g.
@@ -81,7 +82,7 @@ const PANEL_CLS =
   'bg-black/50 backdrop-blur-sm border border-white/10 rounded-xl ' +
   'text-white flex flex-col overflow-hidden';
 
-function PanelHeader({ title, onCollapse, right }) {
+function PanelHeader({ title, onCollapse, right, language }) {
   return (
     <div className="flex items-center justify-between gap-2 pb-2 border-b border-white/10 shrink-0">
       <div className="flex items-center gap-1.5">
@@ -92,15 +93,16 @@ function PanelHeader({ title, onCollapse, right }) {
         type="button"
         onClick={onCollapse}
         className="flex items-center gap-1 text-gray hover:text-white text-[10px] transition-colors"
-        title="Sembunyikan panel"
+        title={language === 'en' ? 'Hide panel' : 'Sembunyikan panel'}
       >
-        <ChevronUp className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Keluar</span>
+        <ChevronUp className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{language === 'en' ? 'Exit' : 'Keluar'}</span>
       </button>
     </div>
   );
 }
 
 export default function Step4ARTab({ design, shirtColor, setShirtColor, printAreas = [], onBack }) {
+  const { t, td, language } = useLanguageStore();
   const [cameraActive, setCameraActive] = useState(false);
   const [overlayScale, setOverlayScale] = useState(0.3);
   const [screenshotTaken, setScreenshotTaken] = useState(false);
@@ -417,7 +419,7 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
     <div className="space-y-2">
       {(printAreas || []).length === 0 ? (
         <p className="text-gray text-[10px] border border-dashed border-white/20 rounded-lg py-4 text-center">
-          Belum ada area cetak — atur posisi di tab Desain
+          {language === 'en' ? 'No print areas yet — set positions in Design tab' : 'Belum ada area cetak — atur posisi di tab Desain'}
         </p>
       ) : (
         (printAreas || []).map((area, i) => {
@@ -426,7 +428,7 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
           return (
             <div key={i} className="flex items-center justify-between gap-2 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-[11px]">
               <span className="text-white">Area {i + 1}</span>
-              <span className="text-gray text-[10px] text-right">{pos?.label || 'Standar Depan'} • {sizeLabel}</span>
+              <span className="text-gray text-[10px] text-right">{td(pos?.label) || td('Standar Depan')} • {sizeLabel}</span>
             </div>
           );
         })
@@ -455,32 +457,32 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
             <button
               onClick={() => setPanelsOpen((v) => !v)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm border border-white/10 text-gray hover:text-white hover:border-white/30 transition-colors text-[11px]"
-              title={panelsOpen ? 'Sembunyikan semua menu' : 'Tampilkan semua menu'}
+              title={panelsOpen ? (language === 'en' ? 'Hide all menus' : 'Sembunyikan semua menu') : (language === 'en' ? 'Show all menus' : 'Tampilkan semua menu')}
             >
               {panelsOpen ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{panelsOpen ? 'Sembunyikan Menu' : 'Tampilkan Menu'}</span>
+              <span className="hidden sm:inline">{panelsOpen ? (language === 'en' ? 'Hide Menu' : 'Sembunyikan Menu') : (language === 'en' ? 'Show Menu' : 'Tampilkan Menu')}</span>
             </button>
             <button
               onClick={() => setShowGuide((v) => !v)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm border border-white/10 text-gray hover:text-fire hover:border-white/30 transition-colors text-[11px]"
-              title="Tampilkan/sembunyikan panduan"
+              title={language === 'en' ? 'Show/hide guide' : 'Tampilkan/sembunyikan panduan'}
             >
-              <HelpCircle className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Panduan</span>
+              <HelpCircle className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{language === 'en' ? 'Guide' : 'Panduan'}</span>
               {showGuide ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
             <button
               onClick={() => setFullscreen(false)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm border border-white/10 text-gray hover:text-white hover:border-white/30 transition-colors text-[11px]"
-              title="Kembali ke tampilan normal"
+              title={language === 'en' ? 'Back to normal view' : 'Kembali ke tampilan normal'}
             >
-              <Minimize className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Kecilkan</span>
+              <Minimize className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{language === 'en' ? 'Minimize' : 'Kecilkan'}</span>
             </button>
             <button
               onClick={onBack}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-fire text-ink font-bold hover:bg-yellow-400 transition-colors text-[11px]"
-              title="Keluar dari AR Try-On"
+              title={language === 'en' ? 'Exit AR Try-On' : 'Keluar dari AR Try-On'}
             >
-              <X className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Keluar</span>
+              <X className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{language === 'en' ? 'Exit' : 'Keluar'}</span>
             </button>
           </div>
         </div>
@@ -490,13 +492,13 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
           <div className="pointer-events-auto mx-auto w-full max-w-3xl px-3">
             <div className="bg-black/60 backdrop-blur-sm border border-white/10 rounded-xl p-3.5">
               <div className="flex items-center justify-between mb-2.5">
-                <p className="text-fire text-[11px] font-bold tracking-[1px] uppercase">Cara Pakai</p>
-                <button onClick={dismissGuide} className="text-gray hover:text-white transition-colors" title="Jangan tampilkan lagi">
+                <p className="text-fire text-[11px] font-bold tracking-[1px] uppercase">{language === 'en' ? 'How to Use' : 'Cara Pakai'}</p>
+                <button onClick={dismissGuide} className="text-gray hover:text-white transition-colors" title={language === 'en' ? "Don't show again" : "Jangan tampilkan lagi"}>
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
               <ol className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-                {GUIDE_STEPS.map((s) => (
+                {getGuideSteps(language).map((s) => (
                   <li key={s.n} className="flex sm:flex-col items-start gap-2 text-gray text-[11px]">
                     <span className="shrink-0 w-5 h-5 rounded-full bg-fire/15 text-fire text-[10px] font-bold flex items-center justify-center">
                       {s.n}
@@ -514,16 +516,16 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
           <div className="flex-1 relative">
             {leftOpen ? (
               <div className={`pointer-events-auto absolute left-3 top-1 bottom-2 w-[19rem] max-w-[85vw] overflow-y-auto p-3.5 space-y-4 ${PANEL_CLS}`}>
-                <PanelHeader title="Desain & Warna" onCollapse={() => setLeftOpen(false)} />
+                <PanelHeader title={language === 'en' ? 'Design & Color' : 'Desain & Warna'} onCollapse={() => setLeftOpen(false)} language={language} />
                 <div className="space-y-2">
-                  <SectionLabel title="Desain" hint="Desain yang kamu pilih di tab Desain dipasang otomatis ke kaos." />
+                  <SectionLabel title={language === 'en' ? 'Design' : 'Desain'} hint={language === 'en' ? 'The design you selected in Design tab is auto-placed on the shirt.' : 'Desain yang kamu pilih di tab Desain dipasang otomatis ke kaos.'} />
                   {renderDesignPreview()}
                 </div>
                 <div className="space-y-2">
-                  <SectionLabel title="Warna Kaos" hint="Pilih warna dasar kaos untuk pratinjau AR." />
+                  <SectionLabel title={language === 'en' ? 'Shirt Color' : 'Warna Kaos'} hint={language === 'en' ? 'Choose base shirt color for AR preview.' : 'Pilih warna dasar kaos untuk pratinjau AR.'} />
                   {renderColorGrid()}
                   <p className="text-gray text-[10px] text-center">
-                    {TSHIRT_COLORS.find((c) => c.hex === shirtColor)?.label || 'Pilih warna'}
+                    {td(TSHIRT_COLORS.find((c) => c.hex === shirtColor)?.label) || (language === 'en' ? 'Select color' : 'Pilih warna')}
                   </p>
                 </div>
               </div>
@@ -531,7 +533,7 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
               <button
                 onClick={() => setLeftOpen(true)}
                 className="pointer-events-auto absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm border border-white/10 rounded-r-lg px-2.5 py-3 text-gray hover:text-white transition-colors text-[10px]"
-                title="Buka panel desain"
+                title={language === 'en' ? 'Open design panel' : 'Buka panel desain'}
               >
                 <ChevronDown className="w-4 h-4 rotate-90" />
               </button>
@@ -540,14 +542,14 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
             {rightOpen ? (
               <div className={`pointer-events-auto absolute right-3 top-3 bottom-1 w-[19rem] max-w-[85vw] overflow-y-auto p-3.5 space-y-4 ${PANEL_CLS}`}>
                 <div className="space-y-2.5">
-                  <SectionLabel title="Area Cetak" hint="Posisi & ukuran sablon yang kamu atur di tab Desain." />
+                  <SectionLabel title={language === 'en' ? 'Print Area' : 'Area Cetak'} hint={language === 'en' ? 'Print position & size configured in Design tab.' : 'Posisi & ukuran sablon yang kamu atur di tab Desain.'} />
                   {renderAreaReadout()}
                 </div>
 
                 <div className="space-y-2.5">
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <SectionLabel title="Kalibrasi" hint="Sesuaikan ukuran overlay kaos ke tubuhmu di kamera." />
+                      <SectionLabel title={language === 'en' ? 'Calibration' : 'Kalibrasi'} hint={language === 'en' ? 'Adjust shirt overlay scale to your body in camera.' : 'Sesuaikan ukuran overlay kaos ke tubuhmu di kamera.'} />
                       <span className="text-gray text-[10px]">{Math.round(overlayScale * 100)}%</span>
                     </div>
                     <input
@@ -565,7 +567,7 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
                     disabled={!cameraActive}
                     className="w-full flex items-center justify-center gap-2 text-[11px] text-gray border border-white/10 rounded-lg py-2.5 hover:text-fire hover:border-fire/50 transition-all disabled:opacity-40"
                   >
-                    {viewMode === 'front' ? 'Lihat Belakang' : 'Lihat Depan'}
+                    {viewMode === 'front' ? (language === 'en' ? 'View Back' : 'Lihat Belakang') : (language === 'en' ? 'View Front' : 'Lihat Depan')}
                   </button>
                 </div>
 
@@ -578,12 +580,12 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
                     />
                     <div>
                       <label htmlFor="landmark-toggle" className="text-gray text-[11px] cursor-pointer select-none">
-                        Tampilkan titik tubuh
+                        {language === 'en' ? 'Show body landmarks' : 'Tampilkan titik tubuh'}
                       </label>
                       {cameraActive && detected && (
-                        <p className="text-green-400 text-[10px] leading-none mt-1">Mendeteksi tubuh</p>
+                        <p className="text-green-400 text-[10px] leading-none mt-1">{language === 'en' ? 'Body detected' : 'Mendeteksi tubuh'}</p>
                       )}
-                      <p className="text-gray-600 text-[9px] leading-none mt-0.5">Tekan <kbd className="text-gray text-[9px] font-mono bg-black/40 px-1 rounded">L</kbd></p>
+                      <p className="text-gray-600 text-[9px] leading-none mt-0.5">{language === 'en' ? 'Press' : 'Tekan'} <kbd className="text-gray text-[9px] font-mono bg-black/40 px-1 rounded">L</kbd></p>
                     </div>
                   </div>
                   <button
@@ -607,16 +609,16 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
                   onClick={() => setRightOpen(false)}
                   className="flex items-center justify-center gap-1 text-gray hover:text-white text-[10px] transition-colors"
                 >
-                  <ChevronUp className="w-3.5 h-3.5" /> Sembunyikan panel
+                  <ChevronUp className="w-3.5 h-3.5" /> {language === 'en' ? 'Hide panel' : 'Sembunyikan panel'}
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => setRightOpen(true)}
                 className="pointer-events-auto absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm border border-white/10 rounded-l-lg px-2.5 py-3 text-gray hover:text-white transition-colors text-[10px]"
-                title="Buka panel kalibrasi"
+                title={language === 'en' ? 'Open calibration panel' : 'Buka panel kalibrasi'}
               >
-                <ChevronDown className="w-4 h-4 -rotate-90" /> <span className="sr-only">Kalibrasi</span>
+                <ChevronDown className="w-4 h-4 -rotate-90" /> <span className="sr-only">{language === 'en' ? 'Calibration' : 'Kalibrasi'}</span>
               </button>
             )}
           </div>
@@ -632,14 +634,14 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
                   onClick={() => setCameraActive(false)}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-ink border border-border text-gray px-5 py-3 rounded-lg hover:text-white hover:border-white/40 transition-all text-[13px]"
                 >
-                  <RefreshCw className="w-4 h-4" /> Matikan Kamera
+                  <RefreshCw className="w-4 h-4" /> {language === 'en' ? 'Turn Off Camera' : 'Matikan Kamera'}
                 </button>
               ) : (
                 <button
                   onClick={() => setCameraActive(true)}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-fire text-ink font-bold px-5 py-3 rounded-lg hover:bg-yellow-400 transition-colors text-[13px]"
                 >
-                  <Camera className="w-5 h-5" /> Aktifkan Kamera
+                  <Camera className="w-5 h-5" /> {language === 'en' ? 'Turn On Camera' : 'Aktifkan Kamera'}
                 </button>
               )}
               <button
@@ -648,10 +650,10 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
                 className={`flex-1 sm:flex-none flex items-center justify-center gap-2 font-bold px-5 py-3 rounded-lg transition-colors text-[13px] disabled:opacity-50 ${
                   screenshotTaken ? 'bg-green-500 text-white' : 'bg-primary text-white hover:bg-primary-dark'
                 }`}
-                title="Atau tunjukkan tanda peace ✌️ ke kamera"
+                title={language === 'en' ? 'Or show peace sign ✌️ to camera' : 'Atau tunjukkan tanda peace ✌️ ke kamera'}
               >
                 <Download className="w-4 h-4" />
-                {screenshotTaken ? 'Tersimpan!' : 'Ambil Screenshot'}
+                {screenshotTaken ? (language === 'en' ? 'Saved!' : 'Tersimpan!') : (language === 'en' ? 'Take Screenshot' : 'Ambil Screenshot')}
               </button>
             </div>
           </div>
@@ -664,22 +666,22 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
           <h2 className="font-heading text-[22px] text-white tracking-[1px]">AR TRY-ON</h2>
-          <p className="text-gray text-[12px] mt-0.5">Coba desain di badanmu secara langsung lewat kamera.</p>
+          <p className="text-gray text-[12px] mt-0.5">{language === 'en' ? 'Try the design directly on your body via camera.' : 'Coba desain di badanmu secara langsung lewat kamera.'}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setFullscreen(true)}
             className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-fire text-ink font-bold hover:bg-yellow-400 transition-colors text-[11px]"
-            title="Tampilkan kamera dalam mode penuh"
+            title={language === 'en' ? 'View camera in fullscreen mode' : 'Tampilkan kamera dalam mode penuh'}
           >
-            <Maximize className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Full Kamera</span>
+            <Maximize className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{language === 'en' ? 'Full Camera' : 'Full Kamera'}</span>
           </button>
           <button
             onClick={() => setShowGuide((v) => !v)}
             className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border text-gray hover:text-fire hover:border-fire/50 transition-colors text-[11px]"
-            title="Tampilkan/sembunyikan panduan"
+            title={language === 'en' ? 'Show/hide guide' : 'Tampilkan/sembunyikan panduan'}
           >
-            <HelpCircle className="w-3.5 h-3.5" /> Panduan
+            <HelpCircle className="w-3.5 h-3.5" /> {language === 'en' ? 'Guide' : 'Panduan'}
             {showGuide ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
         </div>
@@ -689,13 +691,13 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
       {showGuide && (
         <div className="mb-5 bg-ink border border-fire/30 rounded-xl p-3.5">
           <div className="flex items-center justify-between mb-2.5">
-            <p className="text-fire text-[11px] font-bold tracking-[1px] uppercase">Cara Pakai</p>
-            <button onClick={dismissGuide} className="text-gray hover:text-white transition-colors" title="Jangan tampilkan lagi">
+            <p className="text-fire text-[11px] font-bold tracking-[1px] uppercase">{language === 'en' ? 'How to Use' : 'Cara Pakai'}</p>
+            <button onClick={dismissGuide} className="text-gray hover:text-white transition-colors" title={language === 'en' ? "Don't show again" : "Jangan tampilkan lagi"}>
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
           <ol className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-            {GUIDE_STEPS.map((s) => (
+            {getGuideSteps(language).map((s) => (
               <li key={s.n} className="flex sm:flex-col items-start gap-2 text-gray text-[11px]">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-fire/15 text-fire text-[10px] font-bold flex items-center justify-center">
                   {s.n}
@@ -712,12 +714,12 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
         {/* Left column: what to wear */}
         <div className="lg:col-span-3 order-2 lg:order-1 space-y-4">
           <div className="bg-ink border border-border rounded-xl p-3.5 space-y-2">
-            <SectionLabel title="Desain" hint="Desain yang kamu pilih di tab Desain dipasang otomatis ke kaos." />
+            <SectionLabel title={language === 'en' ? 'Design' : 'Desain'} hint={language === 'en' ? 'The design you selected in Design tab is auto-placed on the shirt.' : 'Desain yang kamu pilih di tab Desain dipasang otomatis ke kaos.'} />
             {renderDesignPreview()}
           </div>
 
           <div className="bg-ink border border-border rounded-xl p-3.5">
-            <SectionLabel title="Warna Kaos" hint="Pilih warna dasar kaos untuk pratinjau AR." />
+            <SectionLabel title={language === 'en' ? 'Shirt Color' : 'Warna Kaos'} hint={language === 'en' ? 'Choose base shirt color for AR preview.' : 'Pilih warna dasar kaos untuk pratinjau AR.'} />
             <div className="grid grid-cols-4 gap-2">
               {TSHIRT_COLORS.map((c) => (
                 <button
@@ -727,7 +729,7 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
                     shirtColor === c.hex ? 'border-fire scale-110' : 'border-border hover:border-gray'
                   }`}
                   style={{ backgroundColor: c.hex }}
-                  title={c.label}
+                  title={td(c.label)}
                 >
                   {shirtColor === c.hex && (
                     <span className="absolute inset-0 flex items-center justify-center">
@@ -738,7 +740,7 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
               ))}
             </div>
             <p className="text-gray text-[10px] mt-2 text-center">
-              {TSHIRT_COLORS.find((c) => c.hex === shirtColor)?.label || 'Pilih warna'}
+              {td(TSHIRT_COLORS.find((c) => c.hex === shirtColor)?.label) || (language === 'en' ? 'Select color' : 'Pilih warna')}
             </p>
           </div>
         </div>
@@ -755,14 +757,14 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
                 onClick={() => setCameraActive(false)}
                 className="flex-1 flex items-center justify-center gap-2 bg-ink border border-border text-gray py-3 rounded-xl hover:text-white hover:border-fire/50 transition-all text-[13px]"
               >
-                <RefreshCw className="w-4 h-4" /> Matikan Kamera
+                <RefreshCw className="w-4 h-4" /> {language === 'en' ? 'Turn Off Camera' : 'Matikan Kamera'}
               </button>
             ) : (
               <button
                 onClick={() => setCameraActive(true)}
                 className="flex-1 flex items-center justify-center gap-2 bg-fire text-ink font-bold py-3 rounded-xl hover:bg-yellow-400 transition-colors text-[13px]"
               >
-                <Camera className="w-5 h-5" /> Aktifkan Kamera
+                <Camera className="w-5 h-5" /> {language === 'en' ? 'Turn On Camera' : 'Aktifkan Kamera'}
               </button>
             )}
             <button
@@ -771,10 +773,10 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
               className={`flex-1 flex items-center justify-center gap-2 font-bold py-3 rounded-xl transition-colors text-[13px] disabled:opacity-50 ${
                 screenshotTaken ? 'bg-green-500 text-white' : 'bg-primary text-white hover:bg-primary-dark'
               }`}
-              title="Atau tunjukkan tanda peace ✌️ ke kamera"
+              title={language === 'en' ? 'Or show peace sign ✌️ to camera' : 'Atau tunjukkan tanda peace ✌️ ke kamera'}
             >
               <Download className="w-4 h-4" />
-              {screenshotTaken ? 'Tersimpan!' : 'Ambil Screenshot'}
+              {screenshotTaken ? (language === 'en' ? 'Saved!' : 'Tersimpan!') : (language === 'en' ? 'Take Screenshot' : 'Ambil Screenshot')}
             </button>
           </div>
         </div>
@@ -782,14 +784,14 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
         {/* Right column: fine-tuning */}
         <div className="lg:col-span-3 order-3 space-y-4">
           <div className="bg-ink border border-border rounded-xl p-3.5">
-            <SectionLabel title="Area Cetak" hint="Posisi & ukuran sablon yang kamu atur di tab Desain." />
+            <SectionLabel title={language === 'en' ? 'Print Area' : 'Area Cetak'} hint={language === 'en' ? 'Print position & size configured in Design tab.' : 'Posisi & ukuran sablon yang kamu atur di tab Desain.'} />
             {renderAreaReadout()}
           </div>
 
           <div className="bg-ink border border-border rounded-xl p-3.5 space-y-3.5">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <SectionLabel title="Kalibrasi" hint="Sesuaikan ukuran overlay kaos ke tubuhmu di kamera." />
+                <SectionLabel title={language === 'en' ? 'Calibration' : 'Kalibrasi'} hint={language === 'en' ? 'Adjust shirt overlay scale to your body in camera.' : 'Sesuaikan ukuran overlay kaos ke tubuhmu di kamera.'} />
                 <span className="text-gray text-[10px] -mt-2">{Math.round(overlayScale * 100)}%</span>
               </div>
               <input
@@ -807,7 +809,7 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
               disabled={!cameraActive}
               className="w-full flex items-center justify-center gap-2 text-[11px] text-gray border border-border rounded-xl py-2.5 hover:text-fire hover:border-fire/50 transition-all disabled:opacity-40"
             >
-              {viewMode === 'front' ? 'Lihat Belakang' : 'Lihat Depan'}
+              {viewMode === 'front' ? (language === 'en' ? 'View Back' : 'Lihat Belakang') : (language === 'en' ? 'View Front' : 'Lihat Depan')}
             </button>
           </div>
 
@@ -820,12 +822,12 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
               />
               <div>
                 <label htmlFor="landmark-toggle" className="text-gray text-[11px] cursor-pointer select-none">
-                  Tampilkan titik tubuh
+                  {language === 'en' ? 'Show body landmarks' : 'Tampilkan titik tubuh'}
                 </label>
                 {cameraActive && detected && (
-                  <p className="text-green-400 text-[10px] leading-none mt-1">Mendeteksi tubuh</p>
+                  <p className="text-green-400 text-[10px] leading-none mt-1">{language === 'en' ? 'Body detected' : 'Mendeteksi tubuh'}</p>
                 )}
-                <p className="text-gray-600 text-[9px] leading-none mt-0.5">Tekan <kbd className="text-gray text-[9px] font-mono bg-dark/50 px-1 rounded">L</kbd></p>
+                <p className="text-gray-600 text-[9px] leading-none mt-0.5">{language === 'en' ? 'Press' : 'Tekan'} <kbd className="text-gray text-[9px] font-mono bg-dark/50 px-1 rounded">L</kbd></p>
               </div>
             </div>
             <button
@@ -849,7 +851,7 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
             onClick={onBack}
             className="w-full py-2.5 rounded-xl border border-border text-gray text-[12px] font-medium hover:text-white hover:border-fire/50 transition-colors"
           >
-            Kembali ke Mockup 3D
+            {language === 'en' ? 'Back to 3D Mockup' : 'Kembali ke Mockup 3D'}
           </button>
         </div>
       </div>

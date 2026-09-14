@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useOrderStore } from '../../store/orderStore';
+import { useLanguageStore } from '../../store/languageStore';
 import { designService } from '../../services/designService';
 import { aiChatService } from '../../services/aiChatService';
 import { conversationService } from '../../services/conversationService';
@@ -15,14 +16,29 @@ import Step4MockupTab from './Step4_MockupTab';
 import Step4ARTab from './Step4_ARTab';
 import { PRINT_POSITIONS } from '../../constants/printPlacements';
 
-const TABS = [
-  { id: 'ai', label: 'AI Generate', icon: Zap, desc: 'Buat desain dengan AI', fullDesc: 'Ceritakan idemu, AI akan membuatkan desainnya' },
-  { id: 'mockup', label: 'Mockup 3D', icon: Image, desc: 'Preview di kaos 3D', fullDesc: 'Lihat hasil desain di kaos secara realistis' },
-  { id: 'ar', label: 'AR Try-On', icon: Camera, desc: 'Coba pakai dengan kamera', fullDesc: 'Coba kaos virtual dengan kamera langsung' },
+const getTabs = (language) => [
+  {
+    id: 'ai',
+    label: 'AI Generate',
+    icon: Zap,
+    desc: language === 'en' ? 'Create design with AI' : 'Buat desain dengan AI',
+    fullDesc: language === 'en' ? 'Share your idea, AI will generate the artwork' : 'Ceritakan idemu, AI akan membuatkan desainnya'
+  },
+  {
+    id: 'mockup',
+    label: 'Mockup 3D',
+    icon: Image,
+    desc: language === 'en' ? '3D Shirt preview' : 'Preview di kaos 3D',
+    fullDesc: language === 'en' ? 'View realistic mockup on t-shirt' : 'Lihat hasil desain di kaos secara realistis'
+  },
+  {
+    id: 'ar',
+    label: 'AR Try-On',
+    icon: Camera,
+    desc: language === 'en' ? 'Try on with camera' : 'Coba pakai dengan kamera',
+    fullDesc: language === 'en' ? 'Virtual t-shirt try-on with live camera' : 'Coba kaos virtual dengan kamera langsung'
+  },
 ];
-
-const GENERATE_DONE_MESSAGE =
-  'Desain sudah jadi! Hasilnya ada di bawah. Klik gambar untuk menerapkan ke area pesanan.';
 
 // Normalize design type — backend 'chat_upload' is not accepted by order validation
 const normalizeType = (t) => (t === 'chat_upload' ? 'uploaded' : t);
@@ -50,23 +66,25 @@ function parseReadyReply(text) {
   return null;
 }
 
-function DesignSummary({ summary, generating, onGenerate, quota }) {
+function DesignSummary({ summary, generating, onGenerate, quota, language, td }) {
   const [expanded, setExpanded] = useState(true);
   const info = summary.design_info || {};
   const exhausted = !!quota && !quota.generate?.unlimited && (quota.generate?.remaining ?? 1) <= 0;
   const rows = [
-    ['Objek', info.object],
-    ['Style', info.style],
-    ['Warna', info.colors],
-    ['Jenis Sablon', info.print_type],
-    ['Ukuran', info.size],
-    ['Posisi', info.position],
+    [language === 'en' ? 'Object' : 'Objek', td(info.object)],
+    [language === 'en' ? 'Style' : 'Style', td(info.style)],
+    [language === 'en' ? 'Colors' : 'Warna', td(info.colors)],
+    [language === 'en' ? 'Sablon Type' : 'Jenis Sablon', td(info.print_type)],
+    [language === 'en' ? 'Size' : 'Ukuran', td(info.size)],
+    [language === 'en' ? 'Position' : 'Posisi', td(info.position)],
   ].filter(([, v]) => v);
 
   return (
     <div className="bg-ink border border-fire/40 rounded-xl p-3 mb-3">
       <button onClick={() => setExpanded((v) => !v)} className="w-full flex items-center justify-between">
-        <p className="text-fire text-[11px] font-bold tracking-[1px] uppercase">Desain Final Siap</p>
+        <p className="text-fire text-[11px] font-bold tracking-[1px] uppercase">
+          {language === 'en' ? 'Final Design Ready' : 'Desain Final Siap'}
+        </p>
         {expanded ? <ChevronUp className="w-3.5 h-3.5 text-fire" /> : <ChevronDown className="w-3.5 h-3.5 text-fire" />}
       </button>
       {expanded && (
@@ -92,11 +110,17 @@ function DesignSummary({ summary, generating, onGenerate, quota }) {
         className="w-full flex items-center justify-center gap-2 bg-fire text-ink font-bold py-2.5 rounded-xl hover:bg-yellow-400 transition-colors text-[13px] disabled:opacity-50 disabled:cursor-not-allowed mt-1"
       >
         {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon name="zap" size={18} />}
-        {generating ? 'Membuat desain...' : exhausted ? 'Kuota Generate Habis' : 'Generate Sekarang'}
+        {generating
+          ? (language === 'en' ? 'Creating design...' : 'Membuat desain...')
+          : exhausted
+            ? (language === 'en' ? 'Generate Quota Exhausted' : 'Kuota Generate Habis')
+            : (language === 'en' ? 'Generate Now' : 'Generate Sekarang')}
       </button>
       {exhausted && (
         <p className="text-gray text-[10px] text-center mt-2">
-          Kuota AI Generate Anda telah habis (maksimal {quota.generate.limit} gambar). Hubungi admin untuk menambah kuota.
+          {language === 'en'
+            ? `Your AI Generate quota is exhausted (max ${quota.generate.limit} images). Contact admin to add quota.`
+            : `Kuota AI Generate Anda telah habis (maksimal ${quota.generate.limit} gambar). Hubungi admin untuk menambah kuota.`}
         </p>
       )}
     </div>
@@ -105,6 +129,7 @@ function DesignSummary({ summary, generating, onGenerate, quota }) {
 
 export default function Step4Design() {
   const { printAreas, setAreaDesign, nextStep, prevStep, selectedService, config } = useOrderStore();
+  const { t, td, language } = useLanguageStore();
   const toast = useToast();
 
   // DTF/DTG support full-color output, so color/gradient warnings are hidden.
@@ -214,7 +239,7 @@ export default function Step4Design() {
         setReadySummary(ready);
       }
     } catch {
-      toast.error('Gagal mengirim pesan. Silakan coba lagi.');
+      toast.error(language === 'en' ? 'Failed to send message. Please try again.' : 'Gagal mengirim pesan. Silakan coba lagi.');
     } finally {
       setChatLoading(false);
     }
@@ -229,7 +254,7 @@ export default function Step4Design() {
       const res = await designService.upload(file, getUserSession(), null, cid, true, config?.sablonType);
       const design = res.design;
       if (!design) {
-        toast.error('Gagal mengupload desain');
+        toast.error(language === 'en' ? 'Failed to upload design' : 'Gagal mengupload desain');
         return;
       }
       const imageUrl = design.image_url;
@@ -245,15 +270,35 @@ export default function Step4Design() {
       setSelectedResult(mapped);
       setMessages((prev) => [...prev, { role: 'user', text: '', imageUrl, designId: design.id, time: Date.now() }]);
       loadHistory(1);
+
+      // Auto-apply to the active unfilled print area so design_id is preserved
+      const unfilledIdx = printAreas.findIndex((a) => !a.design?.imageUrl);
+      const targetAreaIdx = unfilledIdx >= 0 ? unfilledIdx : 0;
+      setAreaDesign(targetAreaIdx, {
+        id: design.id,
+        imageUrl: mapped.imageUrl,
+        isValid: design.is_valid,
+        validationMessage: design.validation_message,
+        type: 'uploaded',
+      });
+      setActiveDesign({
+        id: design.id,
+        imageUrl: mapped.imageUrl,
+        isValid: design.is_valid,
+        validationMessage: design.validation_message,
+        type: 'uploaded',
+      });
       const ask = await aiChatService.sendMessage(
-        'Saya upload desain saya. Mohon analisis singkat dan saran perbaikannya.',
+        language === 'en'
+          ? 'I uploaded my artwork. Please analyze briefly and provide improvement tips.'
+          : 'Saya upload desain saya. Mohon analisis singkat dan saran perbaikannya.',
         getUserSession(),
         cid,
         design.id
       );
       setMessages((prev) => [...prev, { role: 'assistant', text: ask.reply, time: Date.now() }]);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal mengupload desain. Pastikan format PNG/JPG maks 5MB.');
+      toast.error(err.response?.data?.message || (language === 'en' ? 'Failed to upload design. Make sure PNG/JPG format max 5MB.' : 'Gagal mengupload desain. Pastikan format PNG/JPG maks 5MB.'));
     } finally {
       isUploadingRef.current = false;
       setChatLoading(false);
@@ -262,13 +307,13 @@ export default function Step4Design() {
 
   const handleGenerateFromChat = async () => {
     if (genExhausted) {
-      toast.error('Kuota AI Generate Anda telah habis.');
+      toast.error(language === 'en' ? 'Your AI Generate quota is exhausted.' : 'Kuota AI Generate Anda telah habis.');
       return;
     }
     if (!lastFinalPrompt || generating) return;
     const promptKey = `${lastFinalPrompt}::${lastNegativePrompt || ''}`;
     if (generatedPromptsRef.current.has(promptKey)) {
-      toast.warning('Prompt ini sudah di-generate sebelumnya.');
+      toast.warning(language === 'en' ? 'This prompt was already generated earlier.' : 'Prompt ini sudah di-generate sebelumnya.');
       return;
     }
     if (isGeneratingRef.current) return;
@@ -289,13 +334,28 @@ export default function Step4Design() {
       }));
       setChatResults((prev) => [...designs, ...prev]);
       setSelectedResult(designs[0] || null);
+      if (designs[0]) {
+        const unfilledIdx = printAreas.findIndex((a) => !a.design?.imageUrl);
+        const targetAreaIdx = unfilledIdx >= 0 ? unfilledIdx : 0;
+        setAreaDesign(targetAreaIdx, {
+          id: designs[0].id,
+          imageUrl: designs[0].imageUrl,
+          isValid: designs[0].isValid,
+          validationMessage: designs[0].validationMessage,
+          type: 'ai_generated',
+        });
+        setActiveDesign(designs[0]);
+      }
       setReadySummary(null);
-      setMessages((prev) => [...prev, { role: 'assistant', text: GENERATE_DONE_MESSAGE, time: Date.now() }]);
+      const doneMsg = language === 'en'
+        ? 'Design ready! The result is shown below. Click image to apply to order area.'
+        : 'Desain sudah jadi! Hasilnya ada di bawah. Klik gambar untuk menerapkan ke area pesanan.';
+      setMessages((prev) => [...prev, { role: 'assistant', text: doneMsg, time: Date.now() }]);
       refreshQuota();
       loadHistory(1);
-      toast.success('Desain berhasil di-generate!');
+      toast.success(language === 'en' ? 'Design generated successfully!' : 'Desain berhasil di-generate!');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal generate desain');
+      toast.error(err.response?.data?.message || (language === 'en' ? 'Failed to generate design' : 'Gagal generate desain'));
       generatedPromptsRef.current.delete(promptKey);
     } finally {
       isGeneratingRef.current = false;
@@ -305,7 +365,7 @@ export default function Step4Design() {
 
   const handleEditDesign = async () => {
     if (editExhausted) {
-      toast.error('Kuota edit Anda telah habis.');
+      toast.error(language === 'en' ? 'Your edit quota is exhausted.' : 'Kuota edit Anda telah habis.');
       return;
     }
     if (!selectedResult?.id || !editPrompt.trim() || editing) return;
@@ -326,10 +386,10 @@ export default function Step4Design() {
         setEditPrompt('');
         refreshQuota();
         loadHistory(1);
-        toast.success('Edit berhasil!');
+        toast.success(language === 'en' ? 'Edit successful!' : 'Edit berhasil!');
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal edit desain');
+      toast.error(err.response?.data?.message || (language === 'en' ? 'Failed to edit design' : 'Gagal edit desain'));
     } finally {
       setEditing(false);
     }
@@ -357,7 +417,7 @@ export default function Step4Design() {
       validationMessage: result.validationMessage,
       type: result.type,
     });
-    toast.success(`Desain diterapkan ke Area ${areaIndex + 1}! Buka tab Mockup 3D untuk preview.`);
+    toast.success(language === 'en' ? `Design applied to Area ${areaIndex + 1}! Open 3D Mockup tab to preview.` : `Desain diterapkan ke Area ${areaIndex + 1}! Buka tab Mockup 3D untuk preview.`);
   };
 
   const handleSelectHistory = (design) => {
@@ -381,7 +441,7 @@ export default function Step4Design() {
       validationMessage: null,
       type: design.type,
     });
-    toast.success(`Desain diterapkan ke Area ${areaIndex + 1}! Buka tab Mockup 3D untuk preview.`);
+    toast.success(language === 'en' ? `Design applied to Area ${areaIndex + 1}! Open 3D Mockup tab to preview.` : `Desain diterapkan ke Area ${areaIndex + 1}! Buka tab Mockup 3D untuk preview.`);
   };
 
   const handleConfirmHistoryArea = (areaIndex) => {
@@ -402,7 +462,7 @@ export default function Step4Design() {
       type: d.type,
     });
     setPendingHistoryDesign(null);
-    toast.success(`Desain diterapkan ke Area ${areaIndex + 1}! Buka tab Mockup 3D untuk preview.`);
+    toast.success(language === 'en' ? `Design applied to Area ${areaIndex + 1}! Open 3D Mockup tab to preview.` : `Desain diterapkan ke Area ${areaIndex + 1}! Buka tab Mockup 3D untuk preview.`);
   };
 
   const handleAreaRemove = async (areaIndex) => {
@@ -425,8 +485,7 @@ export default function Step4Design() {
     }
 
     try {
-      const session = localStorage.getItem('user_session') || crypto.randomUUID();
-      localStorage.setItem('user_session', session);
+      const session = getUserSession();
 
       const result = await designService.upload(file, session, null, null, false, config?.sablonType);
       setAreaDesign(areaIndex, {
@@ -443,62 +502,76 @@ export default function Step4Design() {
         validationMessage: result.design?.validation_message,
         type: 'uploaded',
       });
-      toast.success(`Desain Area ${areaIndex + 1} berhasil diupload!`);
+      toast.success(language === 'en' ? `Area ${areaIndex + 1} design uploaded successfully!` : `Desain Area ${areaIndex + 1} berhasil diupload!`);
       loadHistory(1);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal upload desain');
+      toast.error(err.response?.data?.message || (language === 'en' ? 'Failed to upload design' : 'Gagal upload desain'));
     }
   };
 
   const handleNext = () => {
-    const allUploaded = printAreas.every((area) => area.design?.imageUrl);
-    if (!allUploaded) {
-      const missing = printAreas.findIndex((area) => !area.design?.imageUrl);
-      toast.warning(`Upload desain untuk Area ${missing + 1} terlebih dahulu`);
+    const allValid = printAreas.every((area) => area.design?.imageUrl && area.design?.id);
+    if (!allValid) {
+      const missing = printAreas.findIndex((area) => !area.design?.imageUrl || !area.design?.id);
+      toast.warning(language === 'en' ? `Please choose or upload a design for Area ${missing + 1} first` : `Pilih atau upload desain untuk Area ${missing + 1} terlebih dahulu`);
       return;
     }
     nextStep();
   };
 
-  const completedAreas = printAreas.filter((a) => a.design?.imageUrl).length;
+  const completedAreas = printAreas.filter((a) => a.design?.imageUrl && a.design?.id).length;
   const totalAreas = printAreas.length;
   const allAreasFilled = completedAreas === totalAreas;
 
   return (
-    <div className="bg-card border border-border p-6 rounded-xl">
-      {/* Step Description Banner */}
-      <div className="flex items-start gap-3 mb-6 bg-ink border border-border rounded-xl p-4">
-        <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0 mt-0.5">
-          <Icon name="pencil" size={16} className="text-primary" />
-        </div>
+    <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+      {/* Ambient background glow */}
+      <div className="absolute -top-24 -right-24 w-60 h-60 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Step Header */}
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b border-white/10">
         <div>
-          <p className="text-white text-sm font-semibold">Langkah 4 dari 6 — Upload Desain</p>
-          <p className="text-gray text-[12px] mt-0.5">Pilih salah satu cara untuk mendapatkan desain kaos Anda. Setelah semua area terisi, klik <strong className="text-primary">Lanjut</strong> ke langkah berikutnya.</p>
+          <span className="text-[10px] font-bold tracking-[2px] uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
+            {language === 'en' ? 'Step 4 of 6' : 'Langkah 4 dari 6'}
+          </span>
+          <h2 className="font-heading text-2xl sm:text-3xl text-white tracking-[0.5px] mt-2">
+            {language === 'en' ? 'DESIGN & MOCKUP' : 'DESAIN & MOCKUP'}
+          </h2>
+        </div>
+        <div className="text-right">
+          <span className="text-xs text-gray-400">{language === 'en' ? 'Design Status:' : 'Status Desain:'}</span>
+          <p className="text-sm font-semibold text-white">
+            {language === 'en'
+              ? `${completedAreas} of ${totalAreas} Areas Filled`
+              : `${completedAreas} dari ${totalAreas} Area Terisi`}
+          </p>
         </div>
       </div>
 
-      {/* Method Cards */}
+      {/* Method Tabs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-        {TABS.map((tab) => {
+        {getTabs(language).map((tab) => {
           const IconComp = tab.icon;
+          const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium transition-all duration-200 text-left ${
-                activeTab === tab.id
-                  ? 'bg-primary text-white shadow-lg shadow-primary/20 ring-2 ring-primary/30'
-                  : 'bg-ink border border-border text-gray hover:bg-card hover:text-white hover:border-primary/30'
+              className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-medium transition-all duration-300 text-left border ${
+                isActive
+                  ? 'btn-gradient-primary border-primary/40 shadow-lg shadow-primary/25 scale-[1.01]'
+                  : 'border-white/10 bg-white/[0.02] text-gray-300 hover:border-white/20 hover:bg-white/[0.05] hover:text-white'
               }`}
             >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                activeTab === tab.id ? 'bg-white/20' : 'bg-card border border-border'
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                isActive ? 'bg-white/20 shadow-inner' : 'bg-white/5 border border-white/10'
               }`}>
-                <IconComp className="w-4.5 h-4.5" />
+                <IconComp className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-[13px] font-semibold">{tab.label}</p>
-                <p className={`text-[11px] leading-tight mt-0.5 ${activeTab === tab.id ? 'text-white/80' : 'text-gray/70'}`}>{tab.fullDesc}</p>
+                <p className="text-sm font-bold text-white">{tab.label}</p>
+                <p className={`text-[11px] leading-tight mt-0.5 ${isActive ? 'text-white/80' : 'text-gray-400'}`}>{tab.fullDesc}</p>
               </div>
             </button>
           );
@@ -527,6 +600,8 @@ export default function Step4Design() {
                 generating={generating}
                 onGenerate={handleGenerateFromChat}
                 quota={quota}
+                language={language}
+                td={td}
               />
             )}
 
@@ -534,15 +609,17 @@ export default function Step4Design() {
             {generating && !readySummary && (
               <div className="flex flex-col items-center py-6 mb-4">
                 <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
-                <p className="text-gray text-[13px]">AI sedang membuat desain...</p>
-                <p className="text-gray text-[11px] mt-1">Ini biasanya membutuhkan 10-30 detik</p>
+                <p className="text-gray text-[13px]">{language === 'en' ? 'AI is creating your design...' : 'AI sedang membuat desain...'}</p>
+                <p className="text-gray text-[11px] mt-1">{language === 'en' ? 'This usually takes 10-30 seconds' : 'Ini biasanya membutuhkan 10-30 detik'}</p>
               </div>
             )}
 
             {/* Chat Results — generated designs appear here */}
             {chatResults.length > 0 && !generating && (
               <div className="mb-4">
-                <p className="text-fire text-[11px] font-bold tracking-[1px] uppercase mb-2">Hasil Desain</p>
+                <p className="text-fire text-[11px] font-bold tracking-[1px] uppercase mb-2">
+                  {language === 'en' ? 'Generated Designs' : 'Hasil Desain'}
+                </p>
                 <div className="grid grid-cols-3 gap-2">
                   {chatResults.map((r, i) => (
                     <button
@@ -567,7 +644,9 @@ export default function Step4Design() {
                       )}
                       {selectedResult?.id === r.id && (
                         <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                          <div className="bg-primary text-ink text-[10px] font-bold px-2 py-0.5 rounded-full">Dipilih</div>
+                          <div className="bg-primary text-ink text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            {language === 'en' ? 'Selected' : 'Dipilih'}
+                          </div>
                         </div>
                       )}
                     </button>
@@ -577,14 +656,16 @@ export default function Step4Design() {
                 {/* Edit with Prompt */}
                 {selectedResult && (selectedResult.type === 'ai_generated' || selectedResult.type === 'uploaded') && (
                   <div className="mt-3 bg-ink border border-border rounded-xl p-3">
-                    <p className="text-fire text-[10px] font-bold tracking-[1px] uppercase mb-2">Edit dengan Prompt</p>
+                    <p className="text-fire text-[10px] font-bold tracking-[1px] uppercase mb-2">
+                      {language === 'en' ? 'Edit with Prompt' : 'Edit dengan Prompt'}
+                    </p>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={editPrompt}
                         onChange={(e) => setEditPrompt(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') handleEditDesign(); }}
-                        placeholder="Contoh: ubah latar jadi biru, tambahkan teks..."
+                        placeholder={language === 'en' ? 'Example: change background to blue, add text...' : 'Contoh: ubah latar jadi biru, tambahkan teks...'}
                         disabled={editing || editExhausted}
                         className="flex-1 bg-card border border-border rounded-lg px-3 py-2 text-[12px] text-white placeholder:text-gray focus:outline-none focus:border-primary transition-colors disabled:opacity-50"
                       />
@@ -594,18 +675,22 @@ export default function Step4Design() {
                         className="flex items-center gap-1.5 bg-fire text-ink font-bold px-4 py-2 rounded-lg text-[12px] hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                       >
                         {editing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Icon name="zap" size={14} />}
-                        {editing ? 'Edit...' : 'Edit'}
+                        {editing ? (language === 'en' ? 'Editing...' : 'Edit...') : (language === 'en' ? 'Edit' : 'Edit')}
                       </button>
                     </div>
                     {editExhausted && (
-                      <p className="text-gray text-[10px] mt-1.5">Kuota edit habis. Hubungi admin.</p>
+                      <p className="text-gray text-[10px] mt-1.5">
+                        {language === 'en' ? 'Edit quota exhausted. Contact admin.' : 'Kuota edit habis. Hubungi admin.'}
+                      </p>
                     )}
                   </div>
                 )}
               </div>
             )}
 
-            <label className="text-fire text-[12px] font-medium tracking-[1px] uppercase mb-2 block">Ide Cepat</label>
+            <label className="text-fire text-[12px] font-medium tracking-[1px] uppercase mb-2 block">
+              {language === 'en' ? 'Quick Ideas' : 'Ide Cepat'}
+            </label>
             <div className="flex flex-wrap gap-2 mb-4">
               {QUICK_IDEAS.map((idea) => (
                 <button
@@ -620,7 +705,9 @@ export default function Step4Design() {
             </div>
 
             <p className="text-gray text-[11px] leading-relaxed">
-              Jelaskan idemu di chat. Setelah AI memahami konsepnya, klik <strong className="text-primary">Generate Sekarang</strong> untuk membuat desain. Klik gambar hasil untuk menerapkan ke area.
+              {language === 'en'
+                ? <>Explain your idea in chat. After AI understands the concept, click <strong className="text-primary">Generate Now</strong> to create the design. Click the result image to apply to an area.</>
+                : <>Jelaskan idemu di chat. Setelah AI memahami konsepnya, klik <strong className="text-primary">Generate Sekarang</strong> untuk membuat desain. Klik gambar hasil untuk menerapkan ke area.</>}
             </p>
 
             {/* History Designs */}
@@ -628,8 +715,14 @@ export default function Step4Design() {
               <div className="mt-5">
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="w-3.5 h-3.5 text-gray" />
-                  <label className="text-gray text-[11px] font-medium tracking-[1px] uppercase">Pilih dari History</label>
-                  {historyTotal > 0 && <span className="text-gray/50 text-[10px]">({historyTotal} desain)</span>}
+                  <label className="text-gray text-[11px] font-medium tracking-[1px] uppercase">
+                    {language === 'en' ? 'Select from History' : 'Pilih dari History'}
+                  </label>
+                  {historyTotal > 0 && (
+                    <span className="text-gray/50 text-[10px]">
+                      ({historyTotal} {language === 'en' ? 'designs' : 'desain'})
+                    </span>
+                  )}
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
                   {historyDesigns.map((d) => (
@@ -641,7 +734,9 @@ export default function Step4Design() {
                     >
                       <img src={d.imageUrl} alt="History" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <span className="text-white text-[9px] font-bold bg-primary/80 px-1.5 py-0.5 rounded">Pakai</span>
+                        <span className="text-white text-[9px] font-bold bg-primary/80 px-1.5 py-0.5 rounded">
+                          {language === 'en' ? 'Use' : 'Pakai'}
+                        </span>
                       </div>
                     </button>
                   ))}
@@ -658,11 +753,13 @@ export default function Step4Design() {
                       disabled={historyLoading}
                       className="text-[11px] px-3 py-1.5 rounded-full border border-border text-gray hover:text-white hover:border-primary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Muat Lebih Banyak
+                      {language === 'en' ? 'Load More' : 'Muat Lebih Banyak'}
                     </button>
                   </div>
                 )}
-                <p className="text-gray/60 text-[10px] mt-1">Klik untuk menerapkan ke area pesanan</p>
+                <p className="text-gray/60 text-[10px] mt-1">
+                  {language === 'en' ? 'Click to apply to order area' : 'Klik untuk menerapkan ke area pesanan'}
+                </p>
               </div>
             )}
           </div>
@@ -672,9 +769,11 @@ export default function Step4Design() {
             {/* Area Progress */}
             <div className="bg-ink border border-border rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-gray text-[11px] font-medium tracking-[1px] uppercase">Area Desain</span>
+                <span className="text-gray text-[11px] font-medium tracking-[1px] uppercase">
+                  {language === 'en' ? 'Design Areas' : 'Area Desain'}
+                </span>
                 <span className={`text-[12px] font-semibold ${allAreasFilled ? 'text-green-400' : 'text-primary'}`}>
-                  {completedAreas} dari {totalAreas} terisi
+                  {language === 'en' ? `${completedAreas} of ${totalAreas} filled` : `${completedAreas} dari ${totalAreas} terisi`}
                 </span>
               </div>
               <div className="w-full h-2 bg-border rounded-full overflow-hidden">
@@ -684,17 +783,21 @@ export default function Step4Design() {
                 />
               </div>
               {allAreasFilled && (
-                <p className="text-green-400 text-[11px] mt-2 font-medium">Semua area terisi! Klik <strong>Lanjut</strong> untuk melanjutkan.</p>
+                <p className="text-green-400 text-[11px] mt-2 font-medium">
+                  {language === 'en' ? <>All areas filled! Click <strong>Next</strong> to proceed.</> : <>Semua area terisi! Klik <strong>Lanjut</strong> untuk melanjutkan.</>}
+                </p>
               )}
             </div>
 
             {quota && (
               <div className="flex gap-2 text-[10px]">
                 <span className={`px-2 py-0.5 rounded-full border ${quota.generate.unlimited || quota.generate.remaining > 0 ? 'border-primary/40 text-primary' : 'border-gray text-gray'}`}>
-                  Kuota Generate: {quota.generate.unlimited ? 'Tak terbatas' : `${quota.generate.remaining}/${quota.generate.limit} tersisa`}
+                  {language === 'en' ? 'Generate Quota: ' : 'Kuota Generate: '}
+                  {quota.generate.unlimited ? (language === 'en' ? 'Unlimited' : 'Tak terbatas') : (language === 'en' ? `${quota.generate.remaining}/${quota.generate.limit} left` : `${quota.generate.remaining}/${quota.generate.limit} tersisa`)}
                 </span>
                 <span className={`px-2 py-0.5 rounded-full border ${quota.edit.unlimited || quota.edit.remaining > 0 ? 'border-primary/40 text-primary' : 'border-gray text-gray'}`}>
-                  Kuota Edit: {quota.edit.unlimited ? 'Tak terbatas' : `${quota.edit.remaining}/${quota.edit.limit} tersisa`}
+                  {language === 'en' ? 'Edit Quota: ' : 'Kuota Edit: '}
+                  {quota.edit.unlimited ? (language === 'en' ? 'Unlimited' : 'Tak terbatas') : (language === 'en' ? `${quota.edit.remaining}/${quota.edit.limit} left` : `${quota.edit.remaining}/${quota.edit.limit} tersisa`)}
                 </span>
               </div>
             )}
@@ -702,10 +805,10 @@ export default function Step4Design() {
               <div key={index} className="bg-ink border border-border rounded-xl p-4">
                 <div className="mb-3">
                   <p className="text-fire text-[11px] tracking-[1px] uppercase font-medium">
-                    Area {index + 1}
+                    {language === 'en' ? `Area ${index + 1}` : `Area ${index + 1}`}
                   </p>
                   <p className="text-white text-sm font-medium">
-                    {getPositionLabel(area.position)} ({getSizeLabel(area.printSize)})
+                    {td(getPositionLabel(area.position))} ({td(getSizeLabel(area.printSize))})
                   </p>
                 </div>
 
@@ -718,7 +821,7 @@ export default function Step4Design() {
                 {/* Validation Message */}
                 {!isFullColorSablon && area.design?.imageUrl && area.design.validationMessage && (
                   <div className={`mt-3 p-3 rounded-xl text-sm ${area.design.isValid ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
-                    {area.design.validationMessage}
+                    {td(area.design.validationMessage)}
                   </div>
                 )}
 
@@ -726,7 +829,7 @@ export default function Step4Design() {
                 {area.design?.imageUrl && (
                   <div className="mt-3 flex items-center gap-2 text-[11px] text-primary">
                     <div className="w-2 h-2 rounded-full bg-primary" />
-                    Desain aktif — buka tab <strong>Mockup 3D</strong> untuk preview
+                    {language === 'en' ? <>Active design — open <strong>3D Mockup</strong> tab to preview</> : <>Desain aktif — buka tab <strong>Mockup 3D</strong> untuk preview</>}
                   </div>
                 )}
               </div>
@@ -755,49 +858,62 @@ export default function Step4Design() {
 
       {/* History/Result Area Picker Modal */}
       {pendingHistoryDesign && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-ink border border-border rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h3 className="text-white font-semibold text-[15px] mb-1">Pilih Area Cetak</h3>
-            <p className="text-gray text-[12px] mb-4">Mau menerapkan desain ini ke area mana?</p>
-            <div className="aspect-square w-32 mx-auto rounded-lg overflow-hidden border border-border mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+          <div className="bg-[#170e1c] border border-white/15 rounded-3xl p-6 max-w-sm w-full shadow-2xl animate-fade-in relative overflow-hidden">
+            <div className="absolute -top-16 -right-16 w-32 h-32 bg-primary/20 rounded-full blur-2xl pointer-events-none" />
+            <h3 className="text-white font-bold text-base mb-1 tracking-wide">
+              {language === 'en' ? 'Select Print Area' : 'Pilih Area Cetak'}
+            </h3>
+            <p className="text-gray-400 text-xs mb-4">
+              {language === 'en' ? 'Apply this design to which area?' : 'Terapkan desain ini ke area mana?'}
+            </p>
+            <div className="aspect-square w-32 mx-auto rounded-2xl overflow-hidden border border-white/10 bg-black/40 mb-4 p-2">
               <img src={pendingHistoryDesign.imageUrl} alt="Preview" className="w-full h-full object-contain" />
             </div>
             <div className="space-y-2">
               {printAreas.map((area, i) => (
                 <button
                   key={i}
+                  type="button"
                   onClick={() => handleConfirmHistoryArea(i)}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/10 transition-all text-left"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/10 bg-white/[0.03] hover:border-primary/50 hover:bg-primary/10 transition-all text-left group"
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary text-[12px] font-bold">
+                  <div className="w-8 h-8 rounded-xl bg-primary/20 group-hover:bg-primary flex items-center justify-center text-primary group-hover:text-white text-xs font-bold transition-colors">
                     {i + 1}
                   </div>
                   <div>
-                    <p className="text-white text-[13px] font-medium">Area {i + 1}</p>
-                    <p className="text-gray text-[11px]">{getPositionLabelById(area.position)}</p>
+                    <p className="text-white text-sm font-semibold">{language === 'en' ? `Area ${i + 1}` : `Area ${i + 1}`}</p>
+                    <p className="text-gray-400 text-xs">{td(getPositionLabelById(area.position))}</p>
                   </div>
                 </button>
               ))}
             </div>
             <button
+              type="button"
               onClick={() => setPendingHistoryDesign(null)}
-              className="w-full mt-3 py-2 text-gray text-[12px] hover:text-white transition-colors"
+              className="w-full mt-4 py-2.5 text-gray-400 text-xs font-medium hover:text-white transition-colors"
             >
-              Batal
+              {language === 'en' ? 'Cancel' : 'Batal'}
             </button>
           </div>
         </div>
       )}
 
       {/* Navigation */}
-      <div className="flex gap-4 mt-6">
-        <button onClick={prevStep}
-          className="flex items-center gap-2 border-2 border-primary text-primary font-semibold py-3 px-6 rounded-xl hover:bg-primary hover:text-white transition-colors text-[13px] uppercase tracking-[1px]">
-          <Icon name="arrow-left" size={20} /> Kembali
+      <div className="flex gap-4 mt-8 pt-6 border-t border-white/10">
+        <button
+          type="button"
+          onClick={prevStep}
+          className="btn-glass flex items-center gap-2 py-3 px-6 rounded-2xl text-xs uppercase tracking-wider font-semibold text-gray-300 hover:text-white"
+        >
+          <Icon name="arrow-left" size={18} /> {language === 'en' ? 'Back' : 'Kembali'}
         </button>
-        <button onClick={handleNext}
-          className="flex items-center gap-2 flex-1 justify-center bg-primary text-white font-semibold py-3 px-6 rounded-xl hover:bg-primary-dark transition-colors text-[13px] uppercase tracking-[1px]">
-          Lanjut <Icon name="arrow-right" size={20} />
+        <button
+          type="button"
+          onClick={handleNext}
+          className="btn-gradient-primary flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold shadow-lg shadow-primary/25"
+        >
+          {language === 'en' ? 'Continue to Price Review' : 'Lanjut ke Review Harga'} <Icon name="arrow-right" size={18} />
         </button>
       </div>
     </div>

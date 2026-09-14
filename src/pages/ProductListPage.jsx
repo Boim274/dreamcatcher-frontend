@@ -5,12 +5,16 @@ import api from '../services/api';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import ScrollToTop from '../components/common/ScrollToTop';
+import { useLanguageStore } from '../store/languageStore';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import ScrollReveal from '../components/ui/ScrollReveal';
 import { formatRupiah } from '../utils/formatRupiah';
 import { getImageUrl } from '../utils/getImageUrl';
 
 export default function ProductListPage() {
+  const { t, td, language } = useLanguageStore();
+  const isEn = language === 'en';
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,84 +67,102 @@ export default function ProductListPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream">
+    <div className="min-h-screen flex flex-col bg-[#120c16] text-white relative overflow-hidden selection:bg-primary selection:text-white">
+      {/* Background Ambient Glows */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-primary/15 via-purple-600/10 to-transparent blur-3xl rounded-full" />
+      <div className="pointer-events-none absolute top-1/3 -left-48 w-96 h-96 bg-primary/10 blur-3xl rounded-full" />
+      <div className="pointer-events-none absolute bottom-1/4 -right-48 w-96 h-96 bg-purple-600/10 blur-3xl rounded-full" />
+
       <Navbar />
-      <main className="flex-1 py-12">
+      <main className="flex-1 py-12 relative z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <div className="graffiti-deco">PRODUK</div>
             <ScrollReveal>
-              <div className="section-tag">&mdash; katalog produk</div>
-              <h1 className="section-title">PRODUK</h1>
-              <div className="divider mx-auto"></div>
-              <p className="section-sub mx-auto">Produk eksklusif Dreamcatcher — kaos, merch, dan aksesoris</p>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary uppercase tracking-wider mb-3">
+                {t('products.badge', 'Katalog Resmi')}
+              </div>
+              <h1 className="font-heading text-3xl sm:text-4xl text-white tracking-wide mb-3">{t('products.title', 'KATALOG PRODUK')}</h1>
+              <div className="w-16 h-1 bg-gradient-to-r from-primary to-purple-500 rounded-full mx-auto mb-3" />
+              <p className="text-white/60 text-xs sm:text-sm max-w-md mx-auto">{t('products.subtitle', 'Produk eksklusif Dreamcatcher — kaos polos premium, apparel, dan merchandise sablon')}</p>
             </ScrollReveal>
           </div>
 
           {/* Search & Filters */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-8">
-            <div className="input-icon-wrapper sm:max-w-xs">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray" />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-8">
+            <div className="relative sm:max-w-xs flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none shrink-0" />
               <input
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Cari produk..."
-                className="input-dark"
+                placeholder={t('products.searchPlaceholder', 'Cari produk...')}
+                className="input-premium w-full pl-11 pr-4 py-3 text-xs sm:text-sm"
               />
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => handleFilter('category_id', '')}
-                className={`px-4 py-2 rounded-lg text-[12px] font-semibold uppercase tracking-[1px] transition-colors ${
-                  !activeCategory ? 'bg-primary text-ink' : 'bg-card border border-border text-gray hover:text-white'
+                className={`px-4 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all border ${
+                  !activeCategory
+                    ? 'border-primary bg-primary text-white shadow-lg shadow-primary/25'
+                    : 'border-white/10 bg-white/[0.03] text-white/60 hover:text-white hover:border-white/20'
                 }`}
               >
-                Semua
+                {t('products.allCategories', 'Semua')}
               </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => handleFilter('category_id', cat.id)}
-                  className={`px-4 py-2 rounded-lg text-[12px] font-semibold uppercase tracking-[1px] transition-colors ${
-                    activeCategory === String(cat.id) ? 'bg-primary text-ink' : 'bg-card border border-border text-gray hover:text-white'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
+              {categories.map((cat) => {
+                const isActive = activeCategory === String(cat.id);
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleFilter('category_id', cat.id)}
+                    className={`px-4 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all border ${
+                      isActive
+                        ? 'border-primary bg-primary text-white shadow-lg shadow-primary/25'
+                        : 'border-white/10 bg-white/[0.03] text-white/60 hover:text-white hover:border-white/20'
+                    }`}
+                  >
+                    {td(cat.name)}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {loading ? (
-            <div className="py-20"><LoadingSpinner size="lg" /></div>
+            <div className="py-20 flex justify-center"><LoadingSpinner size="lg" /></div>
           ) : products.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-gray text-[16px]">Belum ada produk tersedia</p>
+            <div className="text-center py-20 glass-card rounded-3xl border border-white/10">
+              <p className="text-white/60 text-sm">{t('products.emptyTitle', 'Belum ada produk yang cocok dengan pencarian Anda')}</p>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {products.map((product, index) => (
                   <ScrollReveal key={product.id} direction="up" delay={index * 60}>
-                    <Link to={`/produk/${product.id}`} className="block bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all group no-underline">
-                      <div className="aspect-square bg-ink overflow-hidden">
+                    <Link
+                      to={`/produk/${product.id}`}
+                      className="glass-card-hover rounded-3xl overflow-hidden border border-white/10 bg-white/[0.02] hover:border-primary/40 transition-all duration-300 group no-underline flex flex-col h-full"
+                    >
+                      <div className="aspect-square bg-black/40 overflow-hidden relative">
                         <img
                           src={getImageUrl(product.images?.[0]?.image_url || '')}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                      </div>
-                      <div className="p-4">
-                        <p className="text-gray text-[10px] uppercase tracking-[1px] mb-1">{product.category?.name || 'Produk'}</p>
-                        <h3 className="font-heading text-[18px] text-white tracking-[0.5px] mb-2 truncate">{product.name}</h3>
-                        <p className="text-primary font-bold text-[16px]">{formatRupiah(product.base_price)}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${
-                            product.stock > 0 ? 'bg-green-500/20 text-green-400' : 'bg-fire/20 text-fire'
+                        <div className="absolute top-3 right-3">
+                          <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold backdrop-blur-md ${
+                            product.stock > 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                           }`}>
-                            {product.stock > 0 ? `Stok: ${product.stock}` : 'Habis'}
+                            {product.stock > 0 ? (isEn ? `Stock ${product.stock}` : `Stok ${product.stock}`) : (isEn ? 'Out of Stock' : 'Habis')}
                           </span>
+                        </div>
+                      </div>
+                      <div className="p-5 flex flex-col flex-1">
+                        <p className="text-white/40 text-[10px] uppercase tracking-widest font-semibold mb-1">{td(product.category?.name || (isEn ? 'Product' : 'Produk'))}</p>
+                        <h3 className="font-heading text-lg text-white tracking-wide mb-2 truncate group-hover:text-primary transition-colors">{td(product.name)}</h3>
+                        <div className="mt-auto pt-2 flex items-center justify-between border-t border-white/5">
+                          <p className="text-gradient-primary font-bold text-base">{formatRupiah(product.base_price)}</p>
                         </div>
                       </div>
                     </Link>
@@ -149,23 +171,23 @@ export default function ProductListPage() {
               </div>
 
               {pagination && pagination.total > 1 && (
-                <div className="flex justify-center items-center gap-4 mt-10">
+                <div className="flex justify-center items-center gap-4 mt-12">
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
-                    className="px-4 py-2 border border-border rounded-lg text-gray hover:text-white disabled:opacity-30 transition-colors text-[12px] uppercase tracking-[1px]"
+                    className="btn-glass px-5 py-2.5 rounded-2xl text-xs uppercase tracking-wider font-semibold disabled:opacity-30 transition-colors"
                   >
-                    Sebelumnya
+                    {t('products.prevPage', 'Sebelumnya')}
                   </button>
-                  <span className="text-gray text-[13px]">
+                  <span className="text-white/60 text-xs font-medium">
                     {pagination.current} / {pagination.total}
                   </span>
                   <button
                     onClick={() => setPage((p) => p + 1)}
                     disabled={!pagination.hasMore}
-                    className="px-4 py-2 border border-border rounded-lg text-gray hover:text-white disabled:opacity-30 transition-colors text-[12px] uppercase tracking-[1px]"
+                    className="btn-glass px-5 py-2.5 rounded-2xl text-xs uppercase tracking-wider font-semibold disabled:opacity-30 transition-colors"
                   >
-                    Selanjutnya
+                    {t('products.nextPage', 'Selanjutnya')}
                   </button>
                 </div>
               )}

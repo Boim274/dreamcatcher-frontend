@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { Eye, EyeOff, Lock, AlertCircle, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Lock, AlertCircle, ArrowLeft, ShieldCheck, Mail, Sparkles, CheckCircle2 } from 'lucide-react';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 
 export default function AdminLoginPage() {
@@ -40,18 +40,18 @@ export default function AdminLoginPage() {
       const currentUser = useAuthStore.getState().user;
       if (currentUser?.role !== 'admin') {
         logout();
-        setError('Hanya akun admin yang dapat mengakses halaman ini');
+        setError('Akses ditolak: Akun Anda tidak memiliki hak akses administrator.');
         return;
       }
       navigate('/admin');
     } catch (err) {
       const msg = err.response?.data?.message || '';
       if (msg.includes('credentials') || msg.includes('password')) {
-        setError('Email atau password salah');
+        setError('Kredensial salah. Periksa kembali email dan kata sandi Anda.');
       } else if (msg.includes('not found') || msg.includes('does not exist')) {
-        setError('Akun tidak ditemukan');
+        setError('Akun administrator tidak ditemukan.');
       } else {
-        setError(msg || 'Terjadi kesalahan, coba lagi');
+        setError(msg || 'Terjadi kesalahan saat masuk. Silakan coba lagi.');
       }
     } finally {
       setLoading(false);
@@ -59,151 +59,220 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-ink flex items-center justify-center px-4 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 pointer-events-none select-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-heading text-[200px] md:text-[300px] text-white/[0.04] leading-none tracking-[10px]">
-          ADMIN
-        </div>
+    <div className="min-h-screen bg-[#0a050e] text-white flex items-center justify-center px-4 py-12 relative overflow-hidden selection:bg-primary selection:text-white">
+      {/* Background Ambient Glow Spheres */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[650px] h-[650px] bg-gradient-to-b from-primary/20 via-purple-600/10 to-transparent blur-[120px] rounded-full" />
+      <div className="pointer-events-none absolute -bottom-40 right-10 w-[500px] h-[500px] bg-[#ff60a8]/10 blur-[130px] rounded-full" />
+      <div className="pointer-events-none absolute top-1/3 -left-32 w-80 h-80 bg-purple-600/15 blur-[100px] rounded-full" />
+
+      {/* Cyberpunk Grid Background Overlay */}
+      <div 
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 1px)`,
+          backgroundSize: '24px 24px'
+        }}
+      />
+
+      {/* Big Watermark */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-heading text-[180px] sm:text-[260px] md:text-[340px] text-white/[0.015] font-black select-none pointer-events-none tracking-[12px] leading-none">
+        ADMIN
       </div>
 
-      <div className={`w-full max-w-md relative z-10 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-        {/* Branding */}
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <img src="/logo.png" alt="Dreamcatcher" className="h-12" />
-            <span className="font-heading text-[32px] text-primary tracking-[2px]">
-              Dream<span className="text-fire">catcher</span>
+      {/* Main Container */}
+      <div className={`w-full max-w-md relative z-10 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+        
+        {/* Brand Header */}
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-flex items-center gap-3 mb-4 group no-underline">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary to-[#ff60a8] p-[2px] shadow-xl shadow-primary/30 group-hover:scale-105 transition-transform duration-300">
+              <div className="w-full h-full rounded-[14px] bg-[#120817] flex items-center justify-center">
+                <img src="/logo.png" alt="Dreamcatcher" className="h-7 w-7 object-contain" />
+              </div>
+            </div>
+            <div className="text-left">
+              <span className="font-heading text-2xl font-bold tracking-wider text-white block leading-tight">
+                DREAM<span className="text-gradient">CATCHER</span>
+              </span>
+              <span className="text-[10px] font-mono tracking-[2px] uppercase text-zinc-400 block">
+                Studio Management
+              </span>
+            </div>
+          </Link>
+
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-md mb-3 shadow-inner">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[11px] font-semibold text-zinc-300 tracking-wider uppercase font-mono">
+              Portal Admin Terenkripsi
             </span>
           </div>
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="w-8 h-[2px] bg-primary/40 rounded-full" />
-            <ShieldCheck size={18} className="text-primary" />
-            <div className="w-8 h-[2px] bg-primary/40 rounded-full" />
-          </div>
-          <h1 className="font-heading text-[32px] text-white tracking-[2px]">ADMIN PANEL</h1>
-          <p className="text-gray-light text-[13px] mt-2">Masuk ke panel administrasi</p>
+
+          <h1 className="font-heading text-3xl font-bold text-white tracking-wide">
+            Masuk <span className="text-gradient">Administrator</span>
+          </h1>
+          <p className="text-zinc-400 text-xs mt-1.5">
+            Gunakan akun khusus admin untuk mengelola pesanan & studio.
+          </p>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-card border border-border rounded-2xl p-8 relative">
-          {/* Security badge */}
-          <div className="absolute -top-5 left-1/2 -translate-x-1/2">
-            <div className="flex items-center gap-2 bg-ink border border-primary/30 rounded-full px-5 py-2 shadow-lg shadow-primary/10">
-              <ShieldCheck size={16} className="text-primary" />
-              <span className="text-[11px] text-gray-light font-semibold tracking-[1.5px] uppercase">Secure Login</span>
+        {/* Login Glassmorphic Card */}
+        <div className="relative rounded-3xl bg-[#140b19]/80 border border-white/15 p-7 sm:p-8 backdrop-blur-2xl shadow-[0_25px_70px_rgba(0,0,0,0.85)] ring-1 ring-white/10 overflow-hidden">
+          {/* Top Sheen Gradient Accent */}
+          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-80" />
+
+          {/* Floating Security Badge */}
+          <div className="flex items-center justify-between pb-5 mb-5 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
+                <ShieldCheck size={18} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white leading-tight">Otentikasi Aman</p>
+                <p className="text-[10px] text-zinc-400 font-mono">256-bit SSL Protection</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-zinc-400">
+                v2.4 Live
+              </span>
             </div>
           </div>
 
-          {/* Error */}
+          {/* Error Alert */}
           {error && (
-            <div className="flex items-center gap-2 mb-5 p-3 bg-danger/10 border border-danger/20 rounded-xl text-danger text-[13px] animate-fade-in">
-              <AlertCircle size={16} className="flex-shrink-0" />
-              <span>{error}</span>
+            <div className="flex items-start gap-2.5 mb-5 p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-300 text-xs animate-in fade-in slide-in-from-top-1 duration-200">
+              <AlertCircle size={16} className="shrink-0 mt-0.5 text-rose-400" />
+              <span className="leading-relaxed font-medium">{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-            {/* Email */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email Field */}
             <div>
-              <label className="text-chrome text-[11px] font-medium tracking-[1px] uppercase mb-2 block">Email</label>
-              <div className="input-icon-wrapper">
+              <label className="text-zinc-300 text-[11px] font-bold tracking-wider uppercase mb-1.5 block">
+                Email Administrator
+              </label>
+              <div className="relative">
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">
+                  <Mail size={16} />
+                </div>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@dreamcatcher.id"
-                  className="input-dark"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#0e0712] border border-white/15 text-white placeholder:text-zinc-600 text-xs font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                   required
                   autoComplete="email"
                 />
-                <div className="absolute left-3.5 top-1/2 -translate-y-1/2">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-medium">
-                    <rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                  </svg>
-                </div>
               </div>
             </div>
 
-            {/* Password */}
+            {/* Password Field */}
             <div>
-              <label className="text-chrome text-[11px] font-medium tracking-[1px] uppercase mb-2 block">Password</label>
-              <div className="input-icon-wrapper">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-zinc-300 text-[11px] font-bold tracking-wider uppercase block">
+                  Kata Sandi
+                </label>
+              </div>
+              <div className="relative">
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">
+                  <Lock size={16} />
+                </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Masukkan password"
-                  className="input-dark pr-12"
+                  placeholder="••••••••••••"
+                  className="w-full pl-10 pr-11 py-3 rounded-xl bg-[#0e0712] border border-white/15 text-white placeholder:text-zinc-600 text-xs font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                   required
                   autoComplete="current-password"
                 />
-                <div className="absolute left-3.5 top-1/2 -translate-y-1/2">
-                  <Lock size={18} className="text-gray-medium" />
-                </div>
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-medium hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
                   tabIndex={-1}
+                  aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            {/* Remember me + Forgot */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer group">
+            {/* Remember Me */}
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2.5 cursor-pointer group select-none">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-border bg-ink text-primary focus:ring-primary/30 focus:ring-2 cursor-pointer"
+                  className="w-4 h-4 rounded border-white/20 bg-[#0e0712] text-primary focus:ring-primary/30 focus:ring-offset-0 cursor-pointer accent-primary"
                 />
-                <span className="text-gray-light text-[12px] group-hover:text-white transition-colors">Ingat saya</span>
+                <span className="text-zinc-400 text-xs group-hover:text-zinc-200 transition-colors font-medium">
+                  Ingat email saya
+                </span>
               </label>
-              <span className="text-gray-light text-[12px] cursor-not-allowed hover:text-primary transition-colors" title="Hubungi admin untuk reset password">
-                Lupa password?
+              <span 
+                className="text-zinc-500 hover:text-primary text-xs transition-colors cursor-pointer"
+                title="Hubungi Administrator Utama untuk pemulihan kata sandi"
+              >
+                Bantuan login?
               </span>
             </div>
 
-            {/* Submit */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary text-white font-bold py-3.5 px-6 rounded-xl hover:bg-primary-dark transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 text-[13px] tracking-[2px] uppercase shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 mt-3"
+              className="w-full mt-3 py-3.5 px-6 rounded-xl bg-gradient-to-r from-primary via-[#ff60a8] to-purple-600 hover:brightness-110 active:scale-[0.99] text-white font-bold text-xs tracking-wider uppercase shadow-xl shadow-primary/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer border-none"
             >
               {loading ? (
                 <>
                   <LoadingSpinner size="sm" />
-                  <span>Memproses...</span>
+                  <span>Memverifikasi Akses...</span>
                 </>
               ) : (
-                'Login'
+                <>
+                  <Sparkles size={16} className="text-white drop-shadow" />
+                  <span>Masuk ke Dashboard</span>
+                </>
               )}
             </button>
           </form>
 
           {/* Loading Overlay */}
           {loading && (
-            <div className="absolute inset-0 bg-card/80 backdrop-blur-sm rounded-2xl flex items-center justify-center z-20">
+            <div className="absolute inset-0 bg-[#120817]/90 backdrop-blur-md rounded-3xl flex items-center justify-center z-20 animate-in fade-in duration-200">
               <div className="flex flex-col items-center gap-3">
-                <LoadingSpinner size="md" />
-                <p className="text-gray-light text-[12px] tracking-wider">Memverifikasi...</p>
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary to-[#ff60a8] p-[2px] animate-pulse">
+                  <div className="w-full h-full rounded-[14px] bg-[#120817] flex items-center justify-center">
+                    <LoadingSpinner size="md" />
+                  </div>
+                </div>
+                <p className="text-white text-xs font-semibold tracking-wider">Memverifikasi Sesi Admin...</p>
               </div>
             </div>
           )}
         </div>
 
         {/* Back link */}
-        <Link
-          to="/"
-          className="flex items-center justify-center gap-2 text-gray-light hover:text-primary mt-8 no-underline text-[13px] transition-colors group py-2"
-        >
-          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-          <span className="group-hover:tracking-wide transition-all">Kembali ke Beranda</span>
-        </Link>
+        <div className="text-center mt-6">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-zinc-400 hover:text-white text-xs font-medium transition-all group py-2 px-4 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 no-underline"
+          >
+            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+            <span>Kembali ke Halaman Pelanggan</span>
+          </Link>
+        </div>
+
+        {/* System Footer Note */}
+        <div className="mt-8 text-center">
+          <p className="text-[11px] text-zinc-600 font-mono">
+            Dreamcatcher Studio Engine • Akses Terbatas untuk Administrator
+          </p>
+        </div>
       </div>
     </div>
   );
