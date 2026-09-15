@@ -5,6 +5,7 @@ import { Search, Eye, ChevronLeft, ChevronRight, History, X, RotateCcw } from 'l
 import { formatRupiah } from '../../utils/formatRupiah';
 import { getImageUrl } from '../../utils/getImageUrl';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
+import OptimizedImage from '../../components/ui/OptimizedImage';
 
 const HISTORY_PAYMENT_STATUSES = ['dp', 'paid', 'verified', 'rejected'];
 
@@ -239,10 +240,14 @@ export default function PaymentHistoryPage() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="block w-12 h-12 rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-colors"
+                              title="Buka bukti penuh"
                             >
-                              <img
-                                src={getImageUrl(payment.payment_proof)}
-                                alt="Bukti"
+                              <OptimizedImage
+                                src={payment.payment_proof}
+                                thumbnailSrc={payment.thumbnail_url}
+                                variant="thumbnail"
+                                alt="Bukti transfer"
+                                containerClassName="w-full h-full"
                                 className="w-full h-full object-cover"
                               />
                             </a>

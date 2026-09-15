@@ -11,6 +11,7 @@ import Icon from '../components/ui/Icon';
 import { formatRupiah, getMinPrice } from '../utils/formatRupiah';
 import { WA_URL } from '../constants/whatsapp';
 import { useLanguageStore } from '../store/languageStore';
+import { useThemeStore } from '../store/themeStore';
 
 const colorMap = {
   Putih: '#FFFFFF', Hitam: '#000000', 'Abu Muda': '#D3D3D3', 'Abu Tua': '#555555',
@@ -118,13 +119,17 @@ export default function PricelistPage() {
   };
 
   const renderPricingChips = (service) => {
+    const sName = (service.name || '').toLowerCase();
+    const rawUnit = sName.includes('banner') ? 'm²' : sName.includes('stiker') ? 'lbr' : 'pcs';
+    const unit = language === 'en' ? (rawUnit === 'm²' ? 'sqm' : rawUnit === 'lbr' ? 'sheet' : 'pcs') : rawUnit;
+
     if (service.pricing_type === 'flat') {
       return (
         <div className="mt-4 pt-4 border-t border-white/10">
           <p className="text-primary text-xs tracking-wider uppercase mb-2.5 font-bold">{language === 'en' ? 'Service Price' : 'Harga Layanan'}</p>
           <div className="flex items-center justify-between bg-black/40 rounded-2xl px-4 py-3 border border-white/5">
-            <span className="text-white/60 text-xs">{language === 'en' ? 'Flat price per pcs' : 'Harga tetap per pcs'}</span>
-            <span className="text-gradient-primary font-bold text-base">{formatRupiah(service.base_price)}</span>
+            <span className="text-white/60 text-xs">{language === 'en' ? `Flat price per ${unit}` : `Harga tetap per ${unit}`}</span>
+            <span className="text-gradient-primary font-bold text-base">{formatRupiah(service.base_price || service.price_per_unit)}</span>
           </div>
         </div>
       );
@@ -188,8 +193,13 @@ export default function PricelistPage() {
     );
   };
 
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#120c16] text-white relative overflow-hidden selection:bg-primary selection:text-white">
+    <div className={`min-h-screen flex flex-col relative overflow-hidden selection:bg-primary selection:text-white transition-colors ${
+      isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#120c16] text-white'
+    }`}>
       {/* Background Ambient Glows */}
       <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-primary/15 via-purple-600/10 to-transparent blur-3xl rounded-full" />
       <div className="pointer-events-none absolute top-1/3 -left-48 w-96 h-96 bg-primary/10 blur-3xl rounded-full" />
@@ -244,6 +254,8 @@ export default function PricelistPage() {
                       className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all border ${
                         activeTab === tab.id
                           ? 'border-primary bg-primary text-white shadow-lg shadow-primary/25'
+                          : isLight
+                          ? 'border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:border-slate-300'
                           : 'border-white/10 bg-white/[0.03] text-white/60 hover:text-white'
                       }`}
                     >
@@ -265,7 +277,15 @@ export default function PricelistPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredServices.map((service, index) => {
+                const sName = (service.name || '').toLowerCase();
+                const rawUnit = sName.includes('banner') ? 'm²' : sName.includes('stiker') ? 'lbr' : 'pcs';
+                const unit = language === 'en' ? (rawUnit === 'm²' ? 'sqm' : rawUnit === 'lbr' ? 'sheet' : 'pcs') : rawUnit;
+                const minOrder = service.minimum_order || 1;
                 const minPrice = getMinPrice(service);
+                const startingPrice = service.pricing_type === 'tiered'
+                  ? formatRupiah(minPrice)
+                  : formatRupiah(service.base_price || service.price_per_unit);
+
                 return (
                   <ScrollReveal key={service.id} direction="up" delay={index * 80}>
                     <div className="glass-card-hover rounded-3xl p-6 sm:p-7 relative transition-all duration-300 group h-full flex flex-col justify-between border border-white/10 bg-white/[0.02]">
@@ -283,13 +303,13 @@ export default function PricelistPage() {
                               <div className="text-right shrink-0">
                                 {service.pricing_type === 'tiered' && minPrice ? (
                                   <>
-                                    <p className="font-bold text-base sm:text-lg text-gradient-primary leading-tight">{language === 'en' ? 'From ' : 'Mulai '}{formatRupiah(minPrice)}</p>
-                                    <p className="text-white/40 text-[10px]">{language === 'en' ? '/pcs (wholesale)' : '/pcs (grosir)'}</p>
+                                    <p className="font-bold text-base sm:text-lg text-gradient-primary leading-tight">{language === 'en' ? 'From ' : 'Mulai '}{startingPrice}</p>
+                                    <p className="text-white/40 text-[10px]">/ {unit} ({language === 'en' ? 'wholesale' : 'grosir'})</p>
                                   </>
                                 ) : (
                                   <>
-                                    <p className="font-bold text-base sm:text-lg text-gradient-primary leading-tight">{formatRupiah(service.base_price)}</p>
-                                    <p className="text-white/40 text-[10px]">/pcs</p>
+                                    <p className="font-bold text-base sm:text-lg text-gradient-primary leading-tight">{startingPrice}</p>
+                                    <p className="text-white/40 text-[10px]">/ {unit}</p>
                                   </>
                                 )}
                               </div>
@@ -300,7 +320,7 @@ export default function PricelistPage() {
                             )}
 
                             <div className="flex items-center gap-2 mt-3">
-                              <span className="text-white/50 text-xs">{language === 'en' ? 'Min. ' : 'Min. '}<strong className="text-white font-semibold">{service.minimum_order} pcs</strong></span>
+                              <span className="text-white/50 text-xs">{language === 'en' ? 'Min. ' : 'Min. '}<strong className="text-white font-semibold">{minOrder} {unit}</strong></span>
                               <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider ${
                                 service.pricing_type === 'tiered' ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-white/10 text-white/70 border border-white/15'
                               }`}>

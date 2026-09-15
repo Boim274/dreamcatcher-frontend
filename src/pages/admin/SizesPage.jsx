@@ -149,13 +149,13 @@ export default function SizesPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="font-heading text-2xl sm:text-3xl text-white tracking-[1px]">Ukuran & Dimensi</h1>
+              <h1 className="font-heading text-2xl sm:text-3xl text-white tracking-[1px]">Ukuran Apparel & Dimensi Cetak</h1>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                 {pagination.total} Total
               </span>
             </div>
             <p className="text-gray text-xs sm:text-sm mt-1">
-              Kelola master size chart kaos (S, M, L, XL), hoodie, serta ukuran dimensi area sablon (A4, A3, dst).
+              Kelola master size chart apparel (S, M, L, XL, XXL) serta dimensi standar area sablon & cetak (A4, A3, dst).
             </p>
           </div>
           <button

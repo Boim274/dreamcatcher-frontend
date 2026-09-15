@@ -1,11 +1,14 @@
 import { useOrderStore } from '../../store/orderStore';
 import { useLanguageStore } from '../../store/languageStore';
+import { useThemeStore } from '../../store/themeStore';
 import Icon from '../../components/ui/Icon';
 import { formatRupiah } from '../../utils/formatRupiah';
 import { getImageUrl } from '../../utils/getImageUrl';
 
 export default function Step5PricePreview() {
   const { t, td, language } = useLanguageStore();
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
   const { selectedService, config, printAreas, getTotalQuantity, getPriceBreakdown, getSubtotal, getShippingCost, getTotalPrice, getDpAmount, getAreaSurcharge, nextStep, prevStep } = useOrderStore();
 
   if (!selectedService) return null;
@@ -31,23 +34,29 @@ export default function Step5PricePreview() {
     .join(' / ');
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+    <div className={`rounded-3xl border p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden transition-colors ${
+      isLight ? 'bg-white border-slate-200 shadow-slate-900/5 text-slate-800' : 'border-white/10 bg-white/[0.03] text-white'
+    }`}>
       {/* Ambient background glow */}
       <div className="absolute -top-24 -right-24 w-60 h-60 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Step Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b border-white/10">
+      <div className={`flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b ${
+        isLight ? 'border-slate-100' : 'border-white/10'
+      }`}>
         <div>
           <span className="text-[10px] font-bold tracking-[2px] uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
             {language === 'en' ? 'Step 5 of 6' : 'Langkah 5 dari 6'}
           </span>
-          <h2 className="font-heading text-2xl sm:text-3xl text-white tracking-[0.5px] mt-2">
+          <h2 className={`font-heading text-2xl sm:text-3xl tracking-[1.5px] mt-2 ${
+            isLight ? 'text-slate-900' : 'text-white'
+          }`}>
             {language === 'en' ? 'REVIEW & PRICE ESTIMATE' : 'REVIEW & ESTIMASI HARGA'}
           </h2>
         </div>
         <div className="text-right">
-          <span className="text-xs text-gray-400">{language === 'en' ? 'Total Production:' : 'Total Produksi:'}</span>
-          <p className="text-sm font-semibold text-white">{totalQty} pcs</p>
+          <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>{language === 'en' ? 'Total Production:' : 'Total Produksi:'}</span>
+          <p className={`text-sm font-semibold ${isLight ? 'text-slate-800' : 'text-white'}`}>{totalQty} pcs</p>
         </div>
       </div>
 

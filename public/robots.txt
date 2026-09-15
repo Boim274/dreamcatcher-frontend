@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /pesanan-saya
+Disallow: /histori-pesanan
+Disallow: /profile
+Disallow: /profil
+Disallow: /keranjang
+Disallow: /pesan/pembayaran/*
+
+Sitemap: https://dreamcatcher.id/sitemap.xml

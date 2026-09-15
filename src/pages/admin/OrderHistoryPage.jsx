@@ -6,6 +6,7 @@ import { Search, Eye, ChevronLeft, ChevronRight, History, X, RotateCcw, Package 
 import { formatRupiah } from '../../utils/formatRupiah';
 import { getImageUrl } from '../../utils/getImageUrl';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
+import OptimizedImage from '../../components/ui/OptimizedImage';
 
 const paymentStatusBadge = {
   pending: 'waiting_payment',
@@ -241,19 +242,19 @@ export default function OrderHistoryPage() {
                       <td className="px-4 py-3 text-sm text-gray-light">
                         {(() => {
                           const firstItem = order.items?.[0];
-                          const thumb = firstItem?.design?.image_url
-                            ? getImageUrl(firstItem.design.image_url)
-                            : firstItem?.product?.images?.[0]?.image_url
-                            ? getImageUrl(firstItem.product.images[0].image_url)
-                            : null;
+                          const thumb = firstItem?.design?.thumbnail_url || firstItem?.design?.image_url
+                            || firstItem?.product?.images?.[0]?.thumbnail_url || firstItem?.product?.images?.[0]?.image_url
+                            || null;
                           const names = order.items?.map((i) => i.product?.name || i.service?.name || i.product_name).filter(Boolean).join(', ') || '-';
                           return (
                             <div className="flex items-center gap-2.5 max-w-[240px]">
                               {thumb ? (
-                                <img
+                                <OptimizedImage
                                   src={thumb}
-                                  alt=""
-                                  className="w-8 h-8 rounded-lg object-contain bg-ink border border-border flex-shrink-0"
+                                  variant="thumbnail"
+                                  alt="Item thumbnail"
+                                  containerClassName="w-8 h-8 rounded-lg bg-ink border border-border flex-shrink-0"
+                                  className="w-full h-full object-contain"
                                 />
                               ) : (
                                 <div className="w-8 h-8 rounded-lg bg-ink border border-border flex items-center justify-center text-gray flex-shrink-0">

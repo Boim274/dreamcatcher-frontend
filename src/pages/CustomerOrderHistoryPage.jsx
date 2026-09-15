@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { orderService } from '../services/orderService';
 import { useLanguageStore } from '../store/languageStore';
+import { useThemeStore } from '../store/themeStore';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import ScrollToTop from '../components/common/ScrollToTop';
@@ -13,6 +14,7 @@ import { formatRupiah } from '../utils/formatRupiah';
 import { getImageUrl } from '../utils/getImageUrl';
 import { waLink } from '../constants/whatsapp';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
+import OptimizedImage from '../components/ui/OptimizedImage';
 import {
   History, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Package,
   Search, Filter, ShoppingBag, PartyPopper, XCircle, MessageCircle, Star, Plus,
@@ -54,10 +56,10 @@ function HistoryCard({ order, onRefresh }) {
   })();
 
   const thumbUrl = (() => {
-    const d = items.find((i) => i.design?.image_url);
-    if (d) return getImageUrl(d.design.image_url);
+    const d = items.find((i) => i.design?.thumbnail_url || i.design?.image_url);
+    if (d) return d.design.thumbnail_url || d.design.image_url;
     const p = items.find((i) => i.product?.images?.length > 0);
-    if (p) return getImageUrl(p.product.images[0].image_url);
+    if (p) return p.product.images[0].thumbnail_url || p.product.images[0].image_url;
     return null;
   })();
 
@@ -125,14 +127,16 @@ function HistoryCard({ order, onRefresh }) {
             {/* Thumbnail */}
             <div className="relative flex-shrink-0">
               {thumbUrl ? (
-                <div className="relative group/thumb">
-                  <img
+                <div className="relative group/thumb w-16 h-16 sm:w-18 sm:h-18 rounded-xl overflow-hidden bg-black/40 border border-white/10 p-1 group-hover/thumb:border-primary/60 transition-all duration-300">
+                  <OptimizedImage
                     src={thumbUrl}
+                    variant="thumbnail"
                     alt={heroText}
-                    className="w-16 h-16 sm:w-18 sm:h-18 object-contain bg-black/40 rounded-xl border border-white/10 p-1 group-hover/thumb:border-primary/60 transition-all duration-300"
+                    containerClassName="w-full h-full rounded-lg"
+                    className="w-full h-full object-contain"
                   />
                   {itemCount > 1 && (
-                    <span className="absolute -bottom-1 -right-1 bg-primary text-ink text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-md">
+                    <span className="absolute -bottom-1 -right-1 bg-primary text-ink text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-md z-10">
                       +{itemCount - 1}
                     </span>
                   )}
@@ -299,15 +303,17 @@ function HistoryCard({ order, onRefresh }) {
                           <button
                             type="button"
                             onClick={() => setLightboxImage(itemImg)}
-                            className="relative group/itemimg flex-shrink-0 cursor-zoom-in"
+                            className="relative group/itemimg flex-shrink-0 cursor-zoom-in w-13 h-13 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-black/50 border border-white/10 p-1 group-hover/itemimg:border-primary transition-all"
                             title={language === 'en' ? 'Click to enlarge' : 'Klik untuk memperbesar gambar'}
                           >
-                            <img
-                              src={itemImg}
+                            <OptimizedImage
+                              src={item.design?.thumbnail_url || item.product?.images?.[0]?.thumbnail_url || itemImg}
+                              variant="thumbnail"
                               alt={itemName}
-                              className="w-13 h-13 sm:w-14 sm:h-14 object-contain bg-black/50 border border-white/10 rounded-lg p-1 group-hover/itemimg:border-primary transition-all"
+                              containerClassName="w-full h-full"
+                              className="w-full h-full object-contain"
                             />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/itemimg:opacity-100 rounded-lg flex items-center justify-center text-white transition-opacity">
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/itemimg:opacity-100 rounded-lg flex items-center justify-center text-white transition-opacity z-10">
                               <Icon name="zoom-in" size={13} />
                             </div>
                           </button>
@@ -536,9 +542,14 @@ export default function CustomerOrderHistoryPage() {
     });
   }, [orders, searchQuery]);
 
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+
   return (
     <ErrorBoundary>
-      <div className="min-h-screen flex flex-col bg-[#120c16] text-white relative overflow-hidden selection:bg-primary selection:text-white">
+      <div className={`min-h-screen flex flex-col relative overflow-hidden selection:bg-primary selection:text-white transition-colors ${
+        isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#120c16] text-white'
+      }`}>
         {/* Ambient Glows */}
         <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-primary/15 via-purple-600/10 to-transparent blur-3xl rounded-full" />
         <div className="pointer-events-none absolute top-1/3 -left-48 w-96 h-96 bg-primary/10 blur-3xl rounded-full" />
@@ -552,11 +563,11 @@ export default function CustomerOrderHistoryPage() {
                 <History size={13} />
                 <span>{language === 'en' ? 'Completed & Cancelled History' : 'Riwayat Selesai & Dibatalkan'}</span>
               </div>
-              <h1 className="font-heading text-3xl sm:text-4xl text-white tracking-wide mb-3">
+              <h1 className={`font-heading text-3xl sm:text-4xl tracking-wide mb-3 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {language === 'en' ? 'ORDER HISTORY' : 'HISTORI PESANAN'}
               </h1>
               <div className="w-16 h-1 bg-gradient-to-r from-primary to-purple-500 rounded-full mx-auto mb-3" />
-              <p className="text-white/60 text-xs sm:text-sm max-w-md mx-auto">
+              <p className={`text-xs sm:text-sm max-w-md mx-auto ${isLight ? 'text-slate-600' : 'text-white/60'}`}>
                 {language === 'en'
                   ? 'Track the history of all your completed or cancelled orders'
                   : 'Pantau riwayat seluruh pesanan Anda yang telah selesai dikerjakan atau dibatalkan'}

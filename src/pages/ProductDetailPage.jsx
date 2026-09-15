@@ -12,15 +12,19 @@ import { useLanguageStore } from '../store/languageStore';
 import { useCartStore } from '../store/cartStore';
 import { useAuthModalStore } from '../store/authModalStore';
 import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
 import { formatRupiah } from '../utils/formatRupiah';
 import { ChevronLeft, Minus, Plus, ShoppingCart } from 'lucide-react';
+import OptimizedImage from '../components/ui/OptimizedImage';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
   const { t, td, language } = useLanguageStore();
+  const { theme } = useThemeStore();
   const isEn = language === 'en';
+  const isLight = theme === 'light';
 
   const { addItem } = useCartStore();
   const { isAuthenticated } = useAuthStore();
@@ -105,9 +109,15 @@ export default function ProductDetailPage() {
             <ScrollReveal>
               <div>
                 <div className="glass-card border border-white/10 rounded-3xl overflow-hidden mb-4 aspect-square flex items-center justify-center bg-black/40 p-4">
-                  <img
-                    src={images[activeImage]?.image_url || 'https://placehold.co/600x600/333/888?text=No+Image'}
+                  <OptimizedImage
+                    src={images[activeImage]?.image_url}
+                    mediumSrc={images[activeImage]?.medium_url}
+                    variant="medium"
                     alt={product.name}
+                    loading="eager"
+                    fetchPriority="high"
+                    aspectRatio="aspect-square"
+                    containerClassName="w-full h-full flex items-center justify-center"
                     className="w-full h-full object-contain max-h-full"
                   />
                 </div>
@@ -122,7 +132,14 @@ export default function ProductDetailPage() {
                           activeImage === i ? 'border-primary shadow-lg shadow-primary/25 scale-105' : 'border-white/10 hover:border-white/30'
                         }`}
                       >
-                        <img src={img.image_url} alt="" className="w-full h-full object-contain rounded-xl" />
+                        <OptimizedImage
+                          src={img.image_url}
+                          thumbnailSrc={img.thumbnail_url}
+                          variant="thumbnail"
+                          alt={`Thumbnail ${i + 1}`}
+                          containerClassName="w-full h-full rounded-xl"
+                          className="w-full h-full object-contain rounded-xl"
+                        />
                       </button>
                     ))}
                   </div>
@@ -136,9 +153,10 @@ export default function ProductDetailPage() {
                 {/* Price + Stock */}
                 <div className="flex items-center gap-4 mb-6">
                   <p className="text-3xl sm:text-4xl font-bold text-gradient-primary">{formatRupiah(product.base_price)}</p>
-                  <span className={`px-3 py-1 text-xs font-bold rounded-full ${
-                    product.stock > 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full ${
+                    product.stock > 0 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
                   }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${product.stock > 0 ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]' : 'bg-rose-400'}`} />
                     {product.stock > 0 ? (isEn ? `In Stock (${product.stock})` : `Stok Tersedia (${product.stock})`) : (isEn ? 'Out of Stock' : 'Stok Habis')}
                   </span>
                 </div>
@@ -164,6 +182,8 @@ export default function ProductDetailPage() {
                           className={`min-w-[50px] px-4 py-2.5 rounded-2xl border text-xs sm:text-sm font-semibold transition-all ${
                             selectedSize === size.name
                               ? 'border-primary bg-primary text-white shadow-lg shadow-primary/25'
+                              : isLight
+                              ? 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300'
                               : 'border-white/10 bg-white/[0.03] text-white/80 hover:border-white/30'
                           } ${size.stock <= 0 ? 'opacity-30 cursor-not-allowed line-through' : ''}`}
                           disabled={size.stock <= 0}
@@ -187,7 +207,11 @@ export default function ProductDetailPage() {
                           onClick={() => setSelectedColor(color.name)}
                           className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-xs sm:text-sm font-medium transition-all ${
                             selectedColor === color.name
-                              ? 'border-primary bg-primary/15 text-white shadow-lg shadow-primary/20'
+                              ? isLight
+                                ? 'border-primary bg-primary/10 text-primary font-bold shadow-lg shadow-primary/15'
+                                : 'border-primary bg-primary/15 text-white shadow-lg shadow-primary/20'
+                              : isLight
+                              ? 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300'
                               : 'border-white/10 bg-white/[0.03] text-white/80 hover:border-white/30'
                           }`}
                         >
@@ -205,11 +229,15 @@ export default function ProductDetailPage() {
                 <div className="glass-card border border-white/10 rounded-3xl p-5 mb-6">
                   <p className="text-primary text-xs uppercase tracking-wider mb-3 font-bold">{t('productDetail.quantity', 'Jumlah')}</p>
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center bg-white/[0.03] border border-white/10 rounded-2xl p-1">
+                    <div className={`flex items-center border rounded-2xl p-1 ${
+                      isLight ? 'bg-slate-100 border-slate-200' : 'bg-white/[0.03] border-white/10'
+                    }`}>
                       <button
                         type="button"
                         onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                        className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors text-white"
+                        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${
+                          isLight ? 'hover:bg-slate-200 text-slate-700' : 'hover:bg-white/10 text-white'
+                        }`}
                       >
                         <Minus size={15} />
                       </button>
@@ -224,13 +252,15 @@ export default function ProductDetailPage() {
                       <button
                         type="button"
                         onClick={() => setQuantity((q) => Math.min(selectedSizeStock, q + 1))}
-                        className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors text-white"
+                        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${
+                          isLight ? 'hover:bg-slate-200 text-slate-700' : 'hover:bg-white/10 text-white'
+                        }`}
                       >
                         <Plus size={15} />
                       </button>
                     </div>
-                    <span className="text-white/50 text-xs">
-                      {isEn ? 'Stock for this option:' : 'Stok untuk pilihan ini:'} <strong className="text-white">{selectedSizeStock} pcs</strong>
+                    <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-white/50'}`}>
+                      {isEn ? 'Stock for this option:' : 'Stok untuk pilihan ini:'} <strong className={isLight ? 'text-slate-800' : 'text-white'}>{selectedSizeStock} pcs</strong>
                     </span>
                   </div>
                 </div>

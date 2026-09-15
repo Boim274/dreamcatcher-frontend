@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useThemeStore } from '../../store/themeStore';
 
 // Daftar kode negara lengkap & terstruktur
 export const COUNTRY_LIST = [
@@ -56,6 +57,9 @@ export default function PhoneCountryInput({
   required = false,
   className = '',
 }) {
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedCountry, setSelectedCountry] = useState(COUNTRY_LIST[0]); // Default Indonesia (+62)
@@ -99,40 +103,48 @@ export default function PhoneCountryInput({
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
         setIsOpen(false);
+        setSearch('');
       }
     };
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      // Auto focus search saat dropdown dibuka
-      setTimeout(() => searchInputRef.current?.focus(), 50);
-    }
+    document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Focus input pencarian saat popover terbuka
+  useEffect(() => {
+    if (isOpen && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+    }
   }, [isOpen]);
 
-  // Filter daftar negara berdasarkan search
+  // Filter daftar negara berdasarkan input pencarian nama atau kode telepon
   const filteredCountries = useMemo(() => {
     if (!search.trim()) return COUNTRY_LIST;
     const q = search.toLowerCase().trim();
     return COUNTRY_LIST.filter(
-      c => c.name.toLowerCase().includes(q) ||
-           c.dial_code.includes(q) ||
-           c.code.toLowerCase().includes(q)
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.dial_code.toLowerCase().includes(q) ||
+        c.code.toLowerCase().includes(q)
     );
   }, [search]);
 
-  // Handle perubahan input angka telepon
+  // Handle perubahan input angka nomor HP
   const handleNumberChange = (e) => {
-    let inputDigits = e.target.value.replace(/\D/g, '');
-    
-    // Otomatis hapus awalan angka 0 jika pengguna mengetik 0812...
-    if (inputDigits.startsWith('0')) {
-      inputDigits = inputDigits.replace(/^0+/, '');
+    let inputVal = e.target.value;
+    // Ambil hanya digit angka
+    inputVal = inputVal.replace(/\D/g, '');
+
+    // Jika user mengetik angka 0 di depan, otomatis buang (misal 0812 -> 812)
+    if (inputVal.startsWith('0')) {
+      inputVal = inputVal.replace(/^0+/, '');
     }
 
-    setPhoneNumber(inputDigits);
+    setPhoneNumber(inputVal);
 
-    // Kirim nomor lengkap ke parent form (+6281234567890)
-    const fullNumber = inputDigits ? `${selectedCountry.dial_code}${inputDigits}` : '';
+    const fullNumber = inputVal ? `${selectedCountry.dial_code}${inputVal}` : '';
     if (onChange) {
       onChange(fullNumber);
     }
@@ -152,13 +164,21 @@ export default function PhoneCountryInput({
 
   return (
     <div className={`relative ${className}`} ref={containerRef}>
-      <div className="flex items-stretch rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.06] focus-within:border-primary/60 focus-within:bg-white/[0.08] focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-200 overflow-hidden shadow-inner">
+      <div className={`flex items-stretch rounded-xl border transition-all duration-200 overflow-hidden shadow-inner ${
+        isLight
+          ? 'border-slate-200 bg-slate-50 hover:bg-slate-100/70 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20'
+          : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.06] focus-within:border-primary/60 focus-within:bg-white/[0.08] focus-within:ring-2 focus-within:ring-primary/20'
+      }`}>
         {/* Dropdown Trigger Button */}
         <button
           type="button"
           disabled={disabled}
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-3 py-2.5 bg-white/5 hover:bg-white/10 text-white border-r border-white/10 transition-colors focus:outline-none select-none shrink-0"
+          className={`flex items-center gap-2 px-3 py-2.5 border-r transition-colors focus:outline-none select-none shrink-0 ${
+            isLight
+              ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-800'
+              : 'bg-white/5 hover:bg-white/10 text-white border-white/10'
+          }`}
           title={`${selectedCountry.name} (${selectedCountry.dial_code})`}
           aria-expanded={isOpen}
         >
@@ -167,7 +187,9 @@ export default function PhoneCountryInput({
             {selectedCountry.dial_code}
           </span>
           <svg
-            className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            className={`w-3.5 h-3.5 transition-transform duration-200 ${
+              isLight ? 'text-slate-400' : 'text-zinc-400'
+            } ${isOpen ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -186,15 +208,21 @@ export default function PhoneCountryInput({
           value={phoneNumber}
           onChange={handleNumberChange}
           placeholder={placeholder}
-          className="w-full bg-transparent px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none font-mono tracking-wide"
+          className={`w-full bg-transparent px-3.5 py-2.5 text-sm focus:outline-none font-mono tracking-wide ${
+            isLight ? 'text-slate-900 placeholder-slate-400' : 'text-white placeholder-zinc-500'
+          }`}
         />
       </div>
 
       {/* Popover / Dropdown Menu Pilihan Negara */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 w-72 max-w-[90vw] bg-[#1a1320] border border-white/15 rounded-2xl shadow-2xl z-50 overflow-hidden backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+        <div className={`absolute left-0 top-full mt-1.5 w-72 max-w-[90vw] border rounded-2xl shadow-2xl z-50 overflow-hidden backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 ${
+          isLight
+            ? 'bg-white border-slate-200 shadow-slate-900/10'
+            : 'bg-[#1a1320] border-white/15'
+        }`}>
           {/* Search Box */}
-          <div className="p-2.5 border-b border-white/10 bg-white/5">
+          <div className={`p-2.5 border-b ${isLight ? 'border-slate-200 bg-slate-50' : 'border-white/10 bg-white/5'}`}>
             <div className="relative">
               <input
                 ref={searchInputRef}
@@ -202,13 +230,19 @@ export default function PhoneCountryInput({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Cari negara atau kode (+62, +1)..."
-                className="w-full bg-black/40 text-xs text-white placeholder-zinc-400 px-3 py-2 rounded-lg border border-white/10 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30"
+                className={`w-full text-xs px-3 py-2 rounded-lg border focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 ${
+                  isLight
+                    ? 'bg-white text-slate-900 placeholder-slate-400 border-slate-200'
+                    : 'bg-black/40 text-white placeholder-zinc-400 border-white/10'
+                }`}
               />
               {search && (
                 <button
                   type="button"
                   onClick={() => setSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs"
+                  className={`absolute right-2.5 top-1/2 -translate-y-1/2 text-xs ${
+                    isLight ? 'text-slate-400 hover:text-slate-700' : 'text-zinc-400 hover:text-white'
+                  }`}
                 >
                   ✕
                 </button>
@@ -217,7 +251,9 @@ export default function PhoneCountryInput({
           </div>
 
           {/* List Negara */}
-          <div className="max-h-56 overflow-y-auto divide-y divide-white/5 scrollbar-thin scrollbar-thumb-white/10">
+          <div className={`max-h-56 overflow-y-auto divide-y scrollbar-thin ${
+            isLight ? 'divide-slate-100 scrollbar-thumb-slate-200' : 'divide-white/5 scrollbar-thumb-white/10'
+          }`}>
             {filteredCountries.length > 0 ? (
               filteredCountries.map((c) => {
                 const isSelected = c.code === selectedCountry.code && c.dial_code === selectedCountry.dial_code;
@@ -228,7 +264,9 @@ export default function PhoneCountryInput({
                     onClick={() => handleSelectCountry(c)}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left transition-colors ${
                       isSelected
-                        ? 'bg-primary/20 text-white font-semibold'
+                        ? 'bg-primary/15 text-primary font-semibold'
+                        : isLight
+                        ? 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                         : 'text-zinc-300 hover:bg-white/10 hover:text-white'
                     }`}
                   >
@@ -243,7 +281,7 @@ export default function PhoneCountryInput({
                 );
               })
             ) : (
-              <div className="py-4 text-center text-xs text-zinc-400">
+              <div className={`py-4 text-center text-xs ${isLight ? 'text-slate-400' : 'text-zinc-400'}`}>
                 Negara tidak ditemukan
               </div>
             )}

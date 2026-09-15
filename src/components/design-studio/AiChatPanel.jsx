@@ -296,7 +296,7 @@ export default function AiChatPanel({
             </div>
             <p className="ai-chat-empty-title text-white font-medium text-sm mb-1">Mulai Diskusi Desain dengan AI</p>
             <p className="ai-chat-empty-desc text-gray/70 text-xs max-w-sm">
-              Jelaskan ide desain kaosmu di sini. AI Designer akan menyempurnakan komposisi, warna, gaya, dan menyiapkan prompt visual terbaik.
+              Jelaskan ide desain apparel atau sablon kustommu di sini. AI Designer akan membantu menyusun konsep visual, komposisi warna, dan gaya grafis sebelum diaplikasikan ke mockup.
             </p>
           </div>
         ) : (

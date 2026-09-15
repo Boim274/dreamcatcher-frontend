@@ -146,6 +146,7 @@ export default function DesignStudioPage() {
                 selectedColor={selectedColor}
                 setSelectedColor={setSelectedColor}
                 onDesignChange={handleDesignChange}
+                onSwitchTab={setActiveTab}
               />
             </div>
 

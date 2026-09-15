@@ -22,6 +22,7 @@ import {
 import { formatRupiah } from '../../utils/formatRupiah';
 import { getImageUrl } from '../../utils/getImageUrl';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
+import OptimizedImage from '../../components/ui/OptimizedImage';
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -310,9 +311,9 @@ export default function DashboardPage() {
                       const items = order.items || [];
                       const firstItem = items[0];
                       const itemName = firstItem?.product?.name || firstItem?.product_name || firstItem?.service?.name || 'Item Pesanan';
-                      const itemImg = firstItem?.product?.images?.[0]?.image_url
-                        ? getImageUrl(firstItem.product.images[0].image_url)
-                        : null;
+                      const itemImg = firstItem?.design?.thumbnail_url || firstItem?.design?.image_url
+                        || firstItem?.product?.images?.[0]?.thumbnail_url || firstItem?.product?.images?.[0]?.image_url
+                        || null;
 
                       return (
                         <Link
@@ -322,10 +323,12 @@ export default function DashboardPage() {
                         >
                           <div className="flex items-center gap-3.5 min-w-0">
                             {itemImg ? (
-                              <img
+                              <OptimizedImage
                                 src={itemImg}
+                                variant="thumbnail"
                                 alt={itemName}
-                                className="w-11 h-11 rounded-lg object-contain bg-card border border-border flex-shrink-0"
+                                containerClassName="w-11 h-11 rounded-lg bg-card border border-border flex-shrink-0"
+                                className="w-full h-full object-contain"
                               />
                             ) : (
                               <div className="w-11 h-11 rounded-lg bg-card border border-border flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">

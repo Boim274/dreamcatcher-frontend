@@ -8,6 +8,7 @@ import Icon from '../components/ui/Icon';
 import { WA_URL } from '../constants/whatsapp';
 import { Ruler, Sparkles, CheckCircle2, ChevronRight, HelpCircle, ArrowRight } from 'lucide-react';
 import { useLanguageStore } from '../store/languageStore';
+import { useThemeStore } from '../store/themeStore';
 
 const getSizeCategories = (language = 'id') => [
   {
@@ -133,10 +134,15 @@ export default function SizeChartPage() {
     setCalculatedSize(sizes[idx]);
   };
 
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+
   const currentCategoryData = sizeCategories.find((c) => c.id === activeCategory) || sizeCategories[0];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#120c16] text-white relative overflow-hidden selection:bg-primary selection:text-white">
+    <div className={`min-h-screen flex flex-col relative overflow-hidden selection:bg-primary selection:text-white transition-colors ${
+      isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#120c16] text-white'
+    }`}>
       {/* Background Ambient Glows - Explicit Absolute */}
       <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-primary/15 via-purple-600/10 to-transparent blur-3xl rounded-full" />
       <div className="pointer-events-none absolute top-1/3 -left-48 w-96 h-96 bg-primary/10 blur-3xl rounded-full" />

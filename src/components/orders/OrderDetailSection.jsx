@@ -3,6 +3,7 @@ import { Truck, MapPin, ZoomIn, ExternalLink, Sparkles, Upload, Palette, XCircle
 import { formatRupiah } from '../../utils/formatRupiah';
 import { getImageUrl } from '../../utils/getImageUrl';
 import CopyId from './CopyId';
+import OptimizedImage from '../ui/OptimizedImage';
 
 export default function OrderDetailSection({ order }) {
   const [lightboxImage, setLightboxImage] = useState(null);
@@ -65,11 +66,9 @@ export default function OrderDetailSection({ order }) {
         </div>
         <div className="space-y-3">
           {items.map((item, idx) => {
-            const itemImg = item.design?.image_url
-              ? getImageUrl(item.design.image_url)
-              : item.product?.images?.[0]?.image_url
-              ? getImageUrl(item.product.images[0].image_url)
-              : null;
+            const rawImg = item.design?.image_url || item.product?.images?.[0]?.image_url;
+            const itemImg = rawImg ? getImageUrl(rawImg) : null;
+            const thumbImg = item.design?.thumbnail_url || item.product?.images?.[0]?.thumbnail_url || itemImg;
             const isSablon = Boolean(item.service_id || item.sablon_type || item.design_type || item.design_id);
             const isAi = item.design_type === 'ai_generated' || item.design?.design_type === 'ai_generated';
             const details = renderItemDetails(item);
@@ -82,17 +81,20 @@ export default function OrderDetailSection({ order }) {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-start gap-3.5 min-w-0 flex-1">
                     {itemImg ? (
-                      <div className="relative group/img flex-shrink-0 cursor-zoom-in">
-                        <img
+                      <div className="relative group/img flex-shrink-0 cursor-zoom-in w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-black/50 border border-white/10 p-1 group-hover/img:border-primary transition-all">
+                        <OptimizedImage
                           src={itemImg}
+                          thumbnailSrc={thumbImg}
+                          variant="thumbnail"
                           alt={itemName}
-                          className="w-14 h-14 sm:w-16 sm:h-16 object-contain bg-black/50 rounded-xl border border-white/10 p-1 group-hover/img:border-primary transition-all"
+                          containerClassName="w-full h-full"
+                          className="w-full h-full object-contain"
                           onClick={() => setLightboxImage(itemImg)}
                         />
                         <button
                           type="button"
                           onClick={() => setLightboxImage(itemImg)}
-                          className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 rounded-xl flex items-center justify-center text-white transition-opacity"
+                          className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 rounded-xl flex items-center justify-center text-white transition-opacity z-10"
                           title="Perbesar Desain"
                         >
                           <ZoomIn className="w-4 h-4" />

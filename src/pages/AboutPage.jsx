@@ -6,11 +6,13 @@ import ScrollReveal from '../components/ui/ScrollReveal';
 import Icon from '../components/ui/Icon';
 import { WA_URL } from '../constants/whatsapp';
 import { useLanguageStore } from '../store/languageStore';
+import { useThemeStore } from '../store/themeStore';
 import { X, ShieldCheck, Zap, Sparkles, Award, MapPin, Phone, Mail, Clock, ExternalLink, CheckCircle2 } from 'lucide-react';
+import OptimizedImage from '../components/ui/OptimizedImage';
 
 const getStats = (lang) => [
   { value: '5+', label: lang === 'en' ? 'Years Experience' : 'Tahun Pengalaman', icon: 'award' },
-  { value: '10,000+', label: lang === 'en' ? 'T-Shirts Produced' : 'Pcs Kaos Diproduksi', icon: 'package' },
+  { value: '10,000+', label: lang === 'en' ? 'Apparel & Prints Produced' : 'Pcs Apparel & Sablon Diproduksi', icon: 'package' },
   { value: '99.4%', label: lang === 'en' ? 'Customer Satisfaction' : 'Kepuasan Pelanggan', icon: 'heart' },
   { value: '24/7', label: lang === 'en' ? 'Online Consultation' : 'Konsultasi Online', icon: 'headphones' },
 ];
@@ -18,24 +20,24 @@ const getStats = (lang) => [
 const getPillars = (lang) => [
   {
     icon: Zap,
-    title: lang === 'en' ? 'Leading AI Technology' : 'Teknologi AI Terdepan',
+    title: lang === 'en' ? 'Digital Design & Mockup' : 'Teknologi Desain & AI Mockup',
     desc: lang === 'en'
-      ? 'Visualize screen printing concepts in seconds using our AI Design Studio, 3D interactive preview, and Augmented Reality (AR).'
-      : 'Visualisasikan ide sablon dalam hitungan detik menggunakan AI Design Studio, 3D interactive preview, dan Augmented Reality (AR).'
+      ? 'Brainstorm apparel concepts with AI Design Studio and inspect realistic 3D and AR mockups before proceeding to production.'
+      : 'Eksplorasi konsep apparel dan sablon menggunakan AI Design Studio, 3D interactive mockup, dan Augmented Reality (AR) sebelum masuk tahap produksi.'
   },
   {
     icon: Award,
-    title: lang === 'en' ? 'Premium Fabric & Ink' : 'Bahan & Tinta Berkualitas',
+    title: lang === 'en' ? 'Quality Fabrics & Tested Inks' : 'Bahan Pilihan & Tinta Teruji',
     desc: lang === 'en'
-      ? 'Exclusively using certified 100% reactive Combed cotton and premium Plastisol & DTF inks that are wash-resistant and crack-free.'
-      : 'Hanya menggunakan 100% Combed reaktif bersertifikat serta tinta Plastisol & DTF premium tahan cuci dan tidak mudah retak.'
+      ? 'Using certified 100% reactive Cotton Combed fabrics and crack-resistant DTF & Plastisol inks that withstand repeated washing.'
+      : 'Menggunakan bahan 100% katun Combed 24s/30s pilihan serta tinta sablon DTF dan Plastisol teruji yang awet dan tahan cuci berkali-kali.'
   },
   {
     icon: ShieldCheck,
-    title: lang === 'en' ? 'Defect-Free Guarantee' : 'Garansi Bebas Cacat',
+    title: lang === 'en' ? 'Production Quality Guarantee' : 'Garansi Cacat Produksi',
     desc: lang === 'en'
-      ? 'Every garment undergoes a 3-stage Quality Control. If there is any printing flaw from our side, we replace it 100% free.'
-      : 'Setiap produk melewati 3 tahap Quality Control. Jika ada kesalahan sablon dari pihak kami, kami ganti baru 100%.'
+      ? 'Every production batch undergoes strict quality control. Any defective manufacturing or print errors from our side are covered with a replacement.'
+      : 'Setiap pesanan melewati tahap Quality Control terstandarisasi. Jika terdapat cacat produksi atau kesalahan cetak dari pihak kami, kami siap memberikan garansi ganti baru.'
   },
   {
     icon: Sparkles,
@@ -82,14 +84,18 @@ const getWorkshopImages = (lang) => [
 export default function AboutPage() {
   const [lightbox, setLightbox] = useState(null);
   const { language } = useLanguageStore();
+  const { theme } = useThemeStore();
   const isEn = language === 'en';
+  const isLight = theme === 'light';
 
   const stats = getStats(language);
   const pillars = getPillars(language);
   const workshopImages = getWorkshopImages(language);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#120c16] text-white relative overflow-hidden selection:bg-primary selection:text-white">
+    <div className={`min-h-screen flex flex-col relative overflow-hidden selection:bg-primary selection:text-white transition-colors ${
+      isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#120c16] text-white'
+    }`}>
       {/* Background Ambient Glows - Explicit Absolute */}
       <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-primary/15 via-purple-600/10 to-transparent blur-3xl rounded-full" />
       <div className="pointer-events-none absolute top-1/3 -left-48 w-96 h-96 bg-primary/10 blur-3xl rounded-full" />
@@ -117,8 +123,8 @@ export default function AboutPage() {
               <div className="divider mx-auto my-4" />
               <p className="text-gray-400 text-xs sm:text-sm max-w-lg mx-auto leading-relaxed">
                 {isEn
-                  ? 'Bridging conventional screen printing mastery with artificial intelligence innovation for premium apparel prints'
-                  : 'Menghubungkan keahlian seni sablon konvensional dengan inovasi kecerdasan buatan untuk hasil cetak busana kelas atas'}
+                  ? 'Connecting garment manufacturing craftsmanship with digital design innovation for dependable custom apparel'
+                  : 'Memadukan keahlian produksi konveksi dan sablon dengan inovasi desain digital untuk apparel kustom berkualitas'}
               </p>
             </ScrollReveal>
           </div>
@@ -134,21 +140,21 @@ export default function AboutPage() {
                   {isEn ? 'Our Story & Commitment' : 'Cerita & Komitmen Kami'}
                 </div>
                 <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-white tracking-wide mb-5">
-                  DREAMCATCHER <span className="text-gradient">SABLON AI</span>
+                  DREAMCATCHER <span className="text-gradient">KONVEKSI &amp; APPAREL AI</span>
                 </h2>
                 <p className="text-gray-300 text-sm leading-relaxed mb-5">
                   {isEn
-                    ? 'Founded in Cikarang & Cibarusah, Bekasi Regency, we were born from a passion to deliver distro-quality custom apparel with modern convenience. We realized that the biggest challenge custom apparel clients face is visualizing ideas and previewing final results.'
-                    : 'Berdiri di Cikarang & Cibarusah, Kabupaten Bekasi, kami lahir dari hasrat menghadirkan pakaian custom berkualitas distro dengan kemudahan akses modern. Kami menyadari bahwa tantangan terbesar konsumen sablon adalah sulitnya menuangkan ide desain dan membayangkan hasil jadinya.'}
+                    ? 'Founded in Cikarang & Cibarusah, Bekasi Regency, we were born from a passion to deliver integrated custom apparel and garment manufacturing with modern convenience. We realized that the biggest challenge custom apparel clients face is visualizing design concepts and ensuring production specifications meet expectations.'
+                    : 'Berdiri di Cikarang & Cibarusah, Kabupaten Bekasi, kami lahir dari hasrat menghadirkan platform konveksi dan apparel custom yang terintegrasi secara modern. Kami menyadari bahwa tantangan terbesar pemesanan pakaian kustom adalah memvisualisasikan konsep desain dan memastikan spesifikasi produksi sesuai ekspektasi.'}
                 </p>
                 <p className="text-gray-400 text-xs sm:text-sm leading-relaxed">
                   {isEn ? (
                     <>
-                      That is why we pioneered the first screen printing platform integrating an <strong>AI Prompt Generator</strong>, interactive <strong>3D Mockup Editor</strong>, and <strong>AR Virtual Try-On</strong>. You don&apos;t need design skills — just share your ideas, and we will turn them into apparel you are proud to wear.
+                      That is why we built a platform integrating an <strong>AI Designer</strong>, interactive <strong>3D Mockup Editor</strong>, and dependable garment and printing production. You can explore creative concepts, preview realistic visualizations on apparel, and order seamlessly in one transparent workflow.
                     </>
                   ) : (
                     <>
-                      Oleh karena itu, kami memelopori platform sablon pertama yang mengintegrasikan <strong>AI Prompt Generator</strong>, <strong>3D Mockup Editor</strong> interaktif, dan <strong>AR Virtual Try-On</strong>. Anda tak perlu jago desain — cukup ceritakan ide Anda, dan kami wujudkan menjadi karya fisik yang membanggakan.
+                      Oleh karena itu, kami menghadirkan platform yang mengintegrasikan <strong>AI Designer</strong>, <strong>3D Mockup Editor</strong> interaktif, dan pilihan teknik produksi sablon serta konveksi yang terpercaya. Anda dapat mengeksplorasi ide, melihat visualisasinya pada apparel, lalu memesan dengan proses yang praktis dan transparan.
                     </>
                   )}
                 </p>
@@ -235,10 +241,12 @@ export default function AboutPage() {
                     onClick={() => setLightbox(img)}
                   >
                     <div className="aspect-[4/3] overflow-hidden">
-                      <img
+                      <OptimizedImage
                         src={img.url}
+                        variant="medium"
                         alt={img.label}
-                        loading="lazy"
+                        aspectRatio="aspect-[4/3]"
+                        containerClassName="w-full h-full"
                         className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                       />
                     </div>

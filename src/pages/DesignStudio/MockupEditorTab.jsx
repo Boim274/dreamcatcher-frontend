@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useOrderStore } from '../../store/orderStore';
 import Icon from '../../components/ui/Icon';
 import { useToast } from '../../components/ui/Toast';
 import DesignUpload from '../../components/design-studio/DesignUpload';
@@ -10,12 +12,18 @@ import { getUserSession } from '../../utils/userSession';
 import { Loader2, Sparkles, FolderOpen, X, RefreshCw } from 'lucide-react';
 import { PRINT_SIZES, PRINT_POSITIONS, BODY_CM_W, BODY_CM_H } from '../../constants/printPlacements';
 
+const MAX_DESIGNS = 2;
+
 const getMockupStorageKey = (uid) =>
   uid != null ? `mockup-workspace-u${uid}` : 'mockup-workspace-guest';
 
 function readPersistedMockup(uid) {
   try {
-    return JSON.parse(localStorage.getItem(getMockupStorageKey(uid))) || null;
+    const data = JSON.parse(localStorage.getItem(getMockupStorageKey(uid))) || null;
+    if (data?.layers && Array.isArray(data.layers)) {
+      data.layers = data.layers.slice(0, MAX_DESIGNS);
+    }
+    return data;
   } catch {
     return null;
   }
@@ -57,11 +65,6 @@ const LAYER_DEFAULTS = {
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
-// Snap angles near multiples of 90° so designs line up straight by default.
-function snapAngle(v) {
-  const n = Math.round(v / 90) * 90;
-  return Math.abs(v - n) <= 5 ? n : v;
-}
 
 function resolveDesignUrl(url) {
   if (!url) return null;
@@ -98,14 +101,15 @@ function analyzeImageColors(imageUrl) {
   });
 }
 
-export default function MockupEditorTab({ userId, design, selectedColor, setSelectedColor, onDesignChange }) {
+export default function MockupEditorTab({ userId, design, selectedColor, setSelectedColor, onDesignChange, onSwitchTab }) {
+  const navigate = useNavigate();
   const toast = useToast();
   const savedWorkspace = readPersistedMockup(userId);
 
   // Seed the editor with per-user saved workspace or design shared from AI Generate
   const [layers, setLayers] = useState(() => {
     if (savedWorkspace?.layers && Array.isArray(savedWorkspace.layers) && savedWorkspace.layers.length > 0) {
-      return savedWorkspace.layers;
+      return savedWorkspace.layers.slice(0, MAX_DESIGNS);
     }
     if (design?.imageUrl) {
       const image = resolveDesignUrl(design.imageUrl);
@@ -206,7 +210,7 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
 
   // Default size for a fresh design: fit ~55% of the body width so it never
   // appears giant or tiny on first drop. Falls back to 0.5 while the model loads.
-  const smartDefaultScale = (aspect) => {
+  const smartDefaultScale = () => {
     const ff = rendererApiRef.current?.getFrameFactors?.();
     if (!ff) return 0.5;
     const scale = (0.55 * BODY_CM_W * ff.factorX) / ff.spanX;
@@ -214,6 +218,10 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
   };
 
   const addLayer = (rawUrl, opts = {}) => {
+    if (layers.length >= MAX_DESIGNS) {
+      toast.warning('Maksimal 2 gambar desain (sesuai 2 posisi area cetak pemesanan). Hapus salah satu desain untuk menambahkan yang baru.');
+      return;
+    }
     const image = resolveDesignUrl(rawUrl);
     if (!image) return;
     const exists = layers.some((l) => l.image === image);
@@ -233,9 +241,11 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
         aspect,
         source: opts.source || 'upload',
       };
-      setLayers((prev) => [...prev, layer]);
+      setLayers((prev) => {
+        if (prev.length >= MAX_DESIGNS) return prev;
+        return [...prev, layer];
+      });
       setSelectedLayerId(layer.id);
-      setShowAiPanel(false);
       setShowTextPanel(false);
     };
     probe.onload = () => doAdd(probe.naturalWidth && probe.naturalHeight ? probe.naturalWidth / probe.naturalHeight : 1);
@@ -256,6 +266,11 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
     const exists = layers.some((l) => l.image === image);
     if (exists) return;
 
+    if (layers.length >= MAX_DESIGNS) {
+      toast.warning('Maksimal 2 gambar desain sudah terpasang. Hapus salah satu layer untuk memasang desain AI baru.');
+      return;
+    }
+
     addLayer(image, {
       name: design.prompt ? design.prompt.slice(0, 40) : 'Desain AI',
       source: design.source || 'ai',
@@ -263,6 +278,10 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
   }, [design?.id, design?.imageUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openLibraryModal = async () => {
+    if (layers.length >= MAX_DESIGNS) {
+      toast.warning('Maksimal 2 gambar desain (sesuai 2 posisi area cetak pemesanan). Hapus salah satu layer terlebih dahulu.');
+      return;
+    }
     setShowLibraryModal(true);
     setLibraryLoading(true);
     try {
@@ -278,6 +297,11 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
   };
 
   const handleSelectLibraryDesign = (d) => {
+    if (layers.length >= MAX_DESIGNS) {
+      toast.warning('Maksimal 2 gambar desain (sesuai 2 posisi area cetak pemesanan). Hapus salah satu layer terlebih dahulu.');
+      setShowLibraryModal(false);
+      return;
+    }
     const url = getImageUrl(d.image_url);
     addLayer(url, {
       name: d.prompt ? d.prompt.slice(0, 40) : 'Desain AI',
@@ -312,6 +336,10 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
   };
 
   const duplicateLayer = (id) => {
+    if (layers.length >= MAX_DESIGNS) {
+      toast.warning('Maksimal 2 gambar desain (sesuai 2 posisi area cetak pemesanan).');
+      return;
+    }
     const src = layers.find((l) => l.id === id);
     if (!src) return;
     const copy = {
@@ -320,6 +348,7 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
       name: `${src.name} (salin)`,
     };
     setLayers((prev) => {
+      if (prev.length >= MAX_DESIGNS) return prev;
       const idx = prev.findIndex((l) => l.id === id);
       const next = [...prev];
       next.splice(idx + 1, 0, copy);
@@ -427,7 +456,6 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
       position_y,
       positionId: pos.id,
     });
-    toast.success(`Posisi ${pos.label} diterapkan!`);
   };
 
   // Center the design on the front body print zone.
@@ -448,13 +476,6 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
     toast.success('Desain ditengahkan ke dada');
   };
 
-  const rotateBy = (deg) => {
-    if (!selectedLayer) return;
-    let next = (snapAngle(selectedLayer.rotation + deg) + 360) % 360;
-    if (next > 180) next -= 360;
-    updateLayer(selectedLayer.id, { rotation: next });
-  };
-
   // Nudge the selected design by a small step, clearing any quick-position preset
   // so its highlight disappears once the user moves it freely.
   const nudgePosition = (dx, dy) => {
@@ -466,50 +487,56 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
     });
   };
 
-  const setRotationExact = (deg) => {
-    if (!selectedLayer) return;
-    updateLayer(selectedLayer.id, { rotation: clamp(deg, -180, 180) });
-  };
-
   // Live on-shirt size in cm + overflow warning for the selected layer.
   const [readout, setReadout] = useState(null);
   useEffect(() => {
-    if (!selectedLayer) {
-      setReadout(null);
-      return;
-    }
-    const ff = rendererApiRef.current?.getFrameFactors?.();
-    if (!ff) {
-      setReadout(null);
-      return;
-    }
-    const aspect = selectedLayer.aspect || 1;
-    const widthCan = selectedLayer.scale * (selectedLayer.stretchX || 1) * ff.spanX;
-    const heightCan = (widthCan / aspect) * (selectedLayer.stretchY || 1);
-    const widthCm = widthCan / ff.factorX;
-    const heightCm = heightCan / ff.factorY;
-    let sizeId = null;
-    for (const s of PRINT_SIZES) {
-      if (Math.abs(widthCm - s.widthCm) < 1.5) {
-        sizeId = s.id;
-        break;
+    const id = requestAnimationFrame(() => {
+      if (!selectedLayer) {
+        setReadout(null);
+        return;
       }
-    }
-    setReadout({
-      widthCm,
-      heightCm,
-      sizeId,
-      overflow: widthCm > BODY_CM_W * 0.98 || heightCm > BODY_CM_H * 0.98,
+      const ff = rendererApiRef.current?.getFrameFactors?.();
+      if (!ff) {
+        setReadout(null);
+        return;
+      }
+      const aspect = selectedLayer.aspect || 1;
+      const widthCan = selectedLayer.scale * (selectedLayer.stretchX || 1) * ff.spanX;
+      const heightCan = (widthCan / aspect) * (selectedLayer.stretchY || 1);
+      const widthCm = widthCan / ff.factorX;
+      const heightCm = heightCan / ff.factorY;
+      let sizeId = null;
+      for (const s of PRINT_SIZES) {
+        if (Math.abs(widthCm - s.widthCm) < 1.5) {
+          sizeId = s.id;
+          break;
+        }
+      }
+      setReadout({
+        widthCm,
+        heightCm,
+        sizeId,
+        overflow: widthCm > BODY_CM_W * 0.98 || heightCm > BODY_CM_H * 0.98,
+      });
     });
-  }, [selectedLayer]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => cancelAnimationFrame(id);
+  }, [selectedLayer]);
 
   const handleUploadDesign = (file, url) => {
     if (!file || !url) return;
+    if (layers.length >= MAX_DESIGNS) {
+      toast.warning('Maksimal 2 gambar desain (sesuai 2 posisi area cetak pemesanan). Hapus salah satu layer terlebih dahulu.');
+      return;
+    }
     addLayer(url, { name: file.name || 'Desain upload' });
   };
 
   // Render the text config onto a transparent canvas and add it as a layer.
   const handleAddText = () => {
+    if (layers.length >= MAX_DESIGNS) {
+      toast.warning('Maksimal 2 gambar desain (sesuai 2 posisi area cetak pemesanan). Hapus salah satu layer terlebih dahulu.');
+      return;
+    }
     const text = textConfig.text.trim();
     if (!text) {
       toast.error('Tulis teks terlebih dahulu');
@@ -686,7 +713,65 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
       toast.error('Tambahkan minimal satu desain terlebih dahulu');
       return;
     }
-    toast.success('Lanjut ke pemesanan (placeholder)');
+    try {
+      const orderStore = useOrderStore.getState();
+      const colorObj = TSHIRT_COLORS.find((c) => c.hex === selectedColor);
+
+      const pos0 = layers[0]?.positionId
+        ? layers[0].positionId.replace(/-/g, '_')
+        : (layers[0]?.side === 'back' ? 'standar_belakang' : 'standar_depan');
+
+      const newAreas = [
+        {
+          position: pos0,
+          printSize: '28x20',
+          customWidth: '',
+          customHeight: '',
+          design: {
+            id: layers[0].id,
+            imageUrl: layers[0].image,
+            type: 'uploaded',
+            isValid: true,
+            prompt: layers[0].name || null,
+          },
+        },
+      ];
+
+      if (layers.length > 1) {
+        let pos1 = layers[1]?.positionId
+          ? layers[1].positionId.replace(/-/g, '_')
+          : (layers[1]?.side === 'back' ? 'standar_belakang' : 'standar_depan');
+        if (pos1 === pos0) {
+          pos1 = pos0.includes('belakang') ? 'standar_depan' : 'standar_belakang';
+        }
+        newAreas.push({
+          position: pos1,
+          printSize: '28x20',
+          customWidth: '',
+          customHeight: '',
+          design: {
+            id: layers[1].id,
+            imageUrl: layers[1].image,
+            type: 'uploaded',
+            isValid: true,
+            prompt: layers[1].name || null,
+          },
+        });
+      }
+
+      useOrderStore.setState({
+        printAreas: newAreas,
+        config: {
+          ...orderStore.config,
+          sablonType: printType === 'plastisol' ? 'Plastisol' : 'DTF',
+          color: colorObj?.label || 'Putih',
+        },
+      });
+      navigate('/order');
+      toast.success('Desain & posisi area berhasil diterapkan ke formulir pemesanan!');
+    } catch {
+      navigate('/order');
+    }
   };
 
   const handleExport = async () => {
@@ -818,10 +903,31 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
               <div className="flex-1 overflow-y-auto p-3.5 space-y-4 scrollbar-thin">
                 {/* Upload design */}
                 <div>
-                  <label className="text-white text-xs font-semibold uppercase tracking-wider mb-2 block flex items-center gap-1.5">
-                    <Icon name="upload" size={13} className="text-primary" /> Upload File Desain
-                  </label>
-                  <DesignUpload onUploadDesign={handleUploadDesign} currentDesign={null} />
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-white text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                      <Icon name="upload" size={13} className="text-primary" /> Upload File Desain
+                    </label>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                      layers.length >= MAX_DESIGNS
+                        ? 'text-amber-400 bg-amber-400/10 border-amber-400/30'
+                        : 'text-white/40 bg-white/5 border-white/10'
+                    }`}>
+                      {layers.length}/{MAX_DESIGNS} Desain
+                    </span>
+                  </div>
+                  {layers.length >= MAX_DESIGNS ? (
+                    <div className="bg-amber-500/10 border border-amber-500/25 rounded-xl p-3.5 text-center">
+                      <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-2">
+                        <Icon name="alert-triangle" size={16} />
+                      </div>
+                      <p className="text-amber-300 font-semibold text-xs mb-1">Maksimal 2 Desain Terpasang</p>
+                      <p className="text-amber-200/70 text-[11px] leading-relaxed">
+                        Sesuai ketentuan pemesanan (maksimal 2 posisi area cetak). Hapus salah satu layer di bawah jika ingin mengganti desain baru.
+                      </p>
+                    </div>
+                  ) : (
+                    <DesignUpload onUploadDesign={handleUploadDesign} currentDesign={null} />
+                  )}
                 </div>
 
                 {/* Koleksi Desain AI */}
@@ -829,25 +935,47 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
                   <button
                     type="button"
                     onClick={openLibraryModal}
-                    className="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white/80 hover:text-white hover:border-primary/50 transition-all"
+                    className={`w-full flex items-center justify-between border rounded-xl px-3.5 py-2.5 transition-all ${
+                      layers.length >= MAX_DESIGNS
+                        ? 'bg-white/[0.02] border-white/5 text-white/40 cursor-not-allowed'
+                        : 'bg-white/5 border-white/10 text-white/80 hover:text-white hover:border-primary/50'
+                    }`}
                   >
                     <span className="flex items-center gap-2 text-xs font-medium">
-                      <FolderOpen className="w-4 h-4 text-purple-400" /> Buka Koleksi Desain AI
+                      <FolderOpen className={`w-4 h-4 ${layers.length >= MAX_DESIGNS ? 'text-white/30' : 'text-purple-400'}`} /> Buka Koleksi Desain AI
                     </span>
-                    <Icon name="chevron-right" size={15} />
+                    {layers.length >= MAX_DESIGNS ? (
+                      <span className="text-[10px] text-amber-400/70 font-semibold">(Penuh: 2/2)</span>
+                    ) : (
+                      <Icon name="chevron-right" size={15} />
+                    )}
                   </button>
                 </div>
 
                 {/* Add Text */}
                 <div>
                   <button
-                    onClick={() => setShowTextPanel((v) => !v)}
-                    className="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white/80 hover:text-white hover:border-primary/50 transition-all"
+                    onClick={() => {
+                      if (layers.length >= MAX_DESIGNS && !showTextPanel) {
+                        toast.warning('Maksimal 2 gambar desain (sesuai 2 posisi area cetak pemesanan). Hapus salah satu layer terlebih dahulu.');
+                        return;
+                      }
+                      setShowTextPanel((v) => !v);
+                    }}
+                    className={`w-full flex items-center justify-between border rounded-xl px-3.5 py-2.5 transition-all ${
+                      layers.length >= MAX_DESIGNS
+                        ? 'bg-white/[0.02] border-white/5 text-white/40 cursor-not-allowed'
+                        : 'bg-white/5 border-white/10 text-white/80 hover:text-white hover:border-primary/50'
+                    }`}
                   >
                     <span className="flex items-center gap-2 text-xs font-medium">
-                      <Icon name="edit" size={15} className="text-pink-400" /> Tambah Layer Teks
+                      <Icon name="edit" size={15} className={layers.length >= MAX_DESIGNS ? 'text-white/30' : 'text-pink-400'} /> Tambah Layer Teks
                     </span>
-                    <Icon name={showTextPanel ? 'chevron-up' : 'chevron-down'} size={15} />
+                    {layers.length >= MAX_DESIGNS ? (
+                      <span className="text-[10px] text-amber-400/70 font-semibold">(Penuh: 2/2)</span>
+                    ) : (
+                      <Icon name={showTextPanel ? 'chevron-up' : 'chevron-down'} size={15} />
+                    )}
                   </button>
                   {showTextPanel && (
                     <div className="mt-2 bg-black/40 border border-white/5 rounded-xl p-3 space-y-3">
@@ -877,7 +1005,8 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
                       </div>
                       <button
                         onClick={handleAddText}
-                        className="btn-gradient-primary w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider"
+                        disabled={layers.length >= MAX_DESIGNS}
+                        className="btn-gradient-primary w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Icon name="plus" size={14} /> Pasang Teks di Kaos
                       </button>
@@ -888,7 +1017,10 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
           {/* Layer list */}
           <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3.5">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-white/60 text-xs font-semibold uppercase tracking-wider">Layer Desain ({layers.length})</label>
+              <label className="text-white/60 text-xs font-semibold uppercase tracking-wider">
+                Layer Desain ({layers.length}/{MAX_DESIGNS})
+              </label>
+              <span className="text-[10px] text-white/40 font-mono">Maks. 2 Posisi Area</span>
             </div>
             {layers.length === 0 ? (
               <p className="text-white/40 text-xs text-center py-3">Belum ada layer. Tambahkan desain di atas.</p>
@@ -1006,9 +1138,10 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
             </div>
           )}
 
-          {layers.length > 0 && (
-            <div className="absolute top-2.5 sm:top-3 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5" style={{ zIndex: 20 }}>
-              {/* Mode Switcher: Geser Desain (Tangan) vs Putar Kaos 3D */}
+          {/* Top Center Viewport Toolbar (Centered, never covered by left or right menus) */}
+          <div className="absolute top-2.5 sm:top-3 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5" style={{ zIndex: 25 }}>
+            {/* Mode Switcher: Geser Desain (Tangan) vs Putar Kaos 3D */}
+            {layers.length > 0 && (
               <div className="flex items-center gap-1 bg-black/80 backdrop-blur-md p-1 rounded-2xl border border-white/15 shadow-2xl">
                 <button
                   type="button"
@@ -1037,54 +1170,58 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
                   <span>Putar Kaos 3D</span>
                 </button>
               </div>
+            )}
 
-              {/* View presets + auto rotate toolbar */}
-              <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md p-1 rounded-2xl border border-white/10 shadow-lg overflow-x-auto max-w-[95vw]">
-                {VIEW_PRESETS.map((p) => (
-                  <button
-                    key={p.label}
-                    onClick={() => { spinYRef.current = p.angle; }}
-                    className="px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all whitespace-nowrap"
-                  >
-                    {p.label}
-                  </button>
-                ))}
-                <div className="w-px h-3.5 bg-white/20 mx-0.5" />
+            {/* View presets + auto rotate + Zoom Controls (+ -) */}
+            <div className="flex items-center gap-1 bg-black/75 backdrop-blur-md p-1 rounded-2xl border border-white/10 shadow-xl overflow-x-auto max-w-[95vw]">
+              {VIEW_PRESETS.map((p) => (
                 <button
-                  onClick={() => setAutoRotate((v) => !v)}
-                  className={`px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap ${
-                    autoRotate ? 'bg-primary/20 text-primary border border-primary/30 shadow-md' : 'text-white/70 hover:text-white hover:bg-white/10'
-                  }`}
+                  key={p.label}
+                  onClick={() => { spinYRef.current = p.angle; }}
+                  className="px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all whitespace-nowrap"
                 >
-                  Auto Putar
+                  {p.label}
                 </button>
-              </div>
+              ))}
+              <div className="w-px h-3.5 bg-white/20 mx-0.5" />
+              <button
+                type="button"
+                onClick={() => setAutoRotate((v) => !v)}
+                className={`px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap ${
+                  autoRotate ? 'bg-primary/20 text-primary border border-primary/30 shadow-md' : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Auto Putar
+              </button>
+              <div className="w-px h-3.5 bg-white/20 mx-0.5" />
+              {/* Zoom Out (-) */}
+              <button
+                type="button"
+                onClick={() => setZoomClamped(zoomRef.current * 0.87)}
+                className="w-6 h-6 flex items-center justify-center rounded-lg text-white/80 hover:text-white hover:bg-white/15 text-xs font-bold transition-all"
+                title="Perkecil Zoom (-)"
+              >
+                &minus;
+              </button>
+              {/* Zoom readout & reset */}
+              <button
+                type="button"
+                onClick={() => setZoomClamped(1)}
+                className="px-1.5 h-6 flex items-center justify-center rounded-lg text-[10px] font-mono text-primary font-bold hover:bg-white/15 transition-all"
+                title="Reset Zoom ke 100%"
+              >
+                {Math.round(zoom * 100)}%
+              </button>
+              {/* Zoom In (+) */}
+              <button
+                type="button"
+                onClick={() => setZoomClamped(zoomRef.current * 1.15)}
+                className="w-6 h-6 flex items-center justify-center rounded-lg text-white/80 hover:text-white hover:bg-white/15 text-xs font-bold transition-all"
+                title="Perbesar Zoom (+)"
+              >
+                +
+              </button>
             </div>
-          )}
-
-          {/* Zoom controls */}
-          <div className="absolute top-3 right-3 sm:right-4 flex flex-col items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-2xl border border-white/10 shadow-lg" style={{ zIndex: 20 }}>
-            <button
-              onClick={() => setZoomClamped(zoomRef.current * 1.15)}
-              className="w-8 h-8 flex items-center justify-center rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all text-sm font-bold"
-              title="Perbesar"
-            >
-              +
-            </button>
-            <button
-              onClick={() => setZoomClamped(zoomRef.current * 0.87)}
-              className="w-8 h-8 flex items-center justify-center rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all text-sm font-bold"
-              title="Perkecil"
-            >
-              &minus;
-            </button>
-            <button
-              onClick={() => setZoomClamped(1)}
-              className="w-8 h-7 flex items-center justify-center rounded-xl text-[10px] font-mono text-primary font-bold hover:bg-white/10 transition-all"
-              title="Reset zoom"
-            >
-              {Math.round(zoom * 100)}%
-            </button>
           </div>
         </div>
 
@@ -1398,29 +1535,45 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
           )}
         </div>
 
-        {/* Floating bottom action bar */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-40 flex w-[min(580px,calc(100%-1.5rem))] flex-col sm:flex-row gap-2 bg-[#120a1a]/70 backdrop-blur-2xl p-2 rounded-2xl border border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.6)]">
+        {/* Floating bottom action bar (compact & sleek) */}
+        <div className="absolute bottom-2.5 sm:bottom-3 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 bg-[#120a1a]/85 backdrop-blur-2xl p-1 sm:p-1.5 rounded-xl border border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.6)] max-w-[95vw]">
           <button
+            type="button"
             onClick={handleSaveDesign}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-white/5 border border-white/10 text-white/80 hover:text-white hover:border-primary font-semibold py-2.5 rounded-xl transition-all text-xs"
+            className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg bg-white/5 border border-white/10 text-white/80 hover:text-white hover:border-primary/50 text-[11px] font-medium transition-all flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-95"
+            title="Simpan draft konfigurasi desain"
           >
-            <Icon name="save" size={15} /> Simpan Draft
+            <Icon name="save" size={13} className="text-primary/90" />
+            <span>Simpan</span>
           </button>
+
           <button
+            type="button"
             onClick={handleContinueOrder}
-            className="flex-1 btn-gradient-primary flex items-center justify-center gap-1.5 font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-primary/25"
+            className="h-7 sm:h-8 px-3 sm:px-3.5 rounded-lg btn-gradient-primary text-white text-[11px] font-bold tracking-wide uppercase shadow-md shadow-primary/25 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-95"
+            title="Lanjut ke proses pemesanan sablon"
           >
-            <Icon name="send" size={15} /> Lanjut Pesan ({printTypeLabel})
+            <Icon name="send" size={12} />
+            <span>Lanjut Pesan ({printTypeLabel})</span>
           </button>
+
           <button
+            type="button"
             onClick={handleExport}
             disabled={exporting}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-white/5 border border-white/10 text-white font-semibold py-2.5 rounded-xl hover:border-primary hover:text-primary transition-all disabled:opacity-50 text-xs"
+            className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg bg-white/5 border border-white/10 text-white/80 hover:text-white hover:border-primary/50 text-[11px] font-medium transition-all flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-95 disabled:opacity-50"
+            title="Download preview mockup format PNG"
           >
             {exporting ? (
-              <><Loader2 className="w-4 h-4 animate-spin text-primary" /> Mengekspor...</>
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                <span>Export...</span>
+              </>
             ) : (
-              <><Icon name="download" size={15} /> Export PNG</>
+              <>
+                <Icon name="download" size={13} className="text-purple-400" />
+                <span>Export PNG</span>
+              </>
             )}
           </button>
         </div>
@@ -1482,7 +1635,7 @@ export default function MockupEditorTab({ userId, design, selectedColor, setSele
                     <button
                       onClick={() => {
                         setShowLibraryModal(false);
-                        setShowAiPanel(true);
+                        onSwitchTab?.('ai');
                       }}
                       className="btn-gradient-primary px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-primary/20"
                     >

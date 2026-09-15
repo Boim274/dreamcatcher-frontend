@@ -4,7 +4,6 @@ import { adminService } from '../../services/adminService';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { useToast } from '../../components/ui/Toast';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -33,6 +32,7 @@ import {
 } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 import { getImageUrl } from '../../utils/getImageUrl';
+import OptimizedImage from '../../components/ui/OptimizedImage';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
 
 const statusConfig = {
@@ -105,6 +105,18 @@ function DetailSkeleton() {
       </div>
       <div className="bg-[#180f1e]/90 border border-white/10 rounded-3xl p-6 h-40" />
     </div>
+  );
+}
+
+function BackLink() {
+  return (
+    <Link
+      to="/admin/pesanan"
+      className="inline-flex items-center gap-2 text-zinc-400 hover:text-primary transition-colors mb-6 text-xs font-bold uppercase tracking-wider no-underline"
+    >
+      <ArrowLeft size={16} />
+      <span>Kembali ke Kelola Pesanan</span>
+    </Link>
   );
 }
 
@@ -204,16 +216,6 @@ export default function OrderDetailPage() {
       // fallback
     }
   };
-
-  const BackLink = () => (
-    <Link
-      to="/admin/pesanan"
-      className="inline-flex items-center gap-2 text-zinc-400 hover:text-primary transition-colors mb-6 text-xs font-bold uppercase tracking-wider no-underline"
-    >
-      <ArrowLeft size={16} />
-      <span>Kembali ke Kelola Pesanan</span>
-    </Link>
-  );
 
   if (loading) {
     return (
@@ -533,11 +535,9 @@ export default function OrderDetailPage() {
               </thead>
               <tbody className="divide-y divide-white/5 text-sm">
                 {order.items?.map((item) => {
-                  const itemImg = item.design?.image_url
-                    ? getImageUrl(item.design.image_url)
-                    : item.product?.images?.[0]?.image_url
-                    ? getImageUrl(item.product.images[0].image_url)
-                    : null;
+                  const rawOriginal = item.design?.image_url || item.product?.images?.[0]?.image_url;
+                  const fullImg = rawOriginal ? getImageUrl(rawOriginal) : null;
+                  const thumbImg = item.design?.thumbnail_url || item.product?.images?.[0]?.thumbnail_url || fullImg;
                   const isSablon = Boolean(item.service_id || item.sablon_type || item.design_type || item.design_id);
                   const isAiDesign = item.design_type === 'ai_generated' || item.design?.design_type === 'ai_generated';
 
@@ -559,19 +559,22 @@ export default function OrderDetailPage() {
 
                       <td className="px-4 py-4 align-top">
                         <div className="flex items-start gap-3">
-                          {itemImg ? (
-                            <div className="relative group/img shrink-0">
-                              <img
-                                src={itemImg}
+                          {fullImg ? (
+                            <div className="relative group/img shrink-0 w-16 h-16 rounded-2xl overflow-hidden bg-black/40 border border-white/10 hover:border-primary transition-all shadow-md">
+                              <OptimizedImage
+                                src={fullImg}
+                                thumbnailSrc={thumbImg}
+                                variant="thumbnail"
                                 alt={item.product_name || 'Desain'}
-                                className="w-16 h-16 rounded-2xl object-contain bg-black/40 border border-white/10 cursor-pointer group-hover/img:border-primary transition-all shadow-md"
-                                onClick={() => setLightboxImage(itemImg)}
+                                containerClassName="w-full h-full cursor-pointer"
+                                className="w-full h-full object-contain"
+                                onClick={() => setLightboxImage(fullImg)}
                                 title="Klik untuk memperbesar"
                               />
                               <button
                                 type="button"
-                                onClick={() => setLightboxImage(itemImg)}
-                                className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 rounded-2xl flex items-center justify-center text-white transition-opacity cursor-pointer"
+                                onClick={() => setLightboxImage(fullImg)}
+                                className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 rounded-2xl flex items-center justify-center text-white transition-opacity cursor-pointer z-10"
                                 title="Perbesar gambar"
                               >
                                 <ZoomIn size={16} />
@@ -591,18 +594,18 @@ export default function OrderDetailPage() {
                                 &ldquo;{item.design.prompt}&rdquo;
                               </p>
                             )}
-                            {itemImg && (
+                            {fullImg && (
                               <div className="flex items-center gap-2 mt-2">
                                 <button
                                   type="button"
-                                  onClick={() => setLightboxImage(itemImg)}
+                                  onClick={() => setLightboxImage(fullImg)}
                                   className="text-[11px] text-primary hover:underline flex items-center gap-1 font-semibold cursor-pointer"
                                 >
                                   <ZoomIn size={12} /> Zoom
                                 </button>
                                 <span className="text-zinc-600">·</span>
                                 <a
-                                  href={itemImg}
+                                  href={fullImg}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 font-semibold no-underline"
@@ -716,12 +719,15 @@ export default function OrderDetailPage() {
                       <button
                         type="button"
                         onClick={() => setLightboxImage(getImageUrl(payment.payment_proof))}
-                        className="block rounded-xl overflow-hidden border border-white/10 hover:border-primary transition-all cursor-pointer"
+                        className="block w-full max-h-40 rounded-xl overflow-hidden border border-white/10 hover:border-primary transition-all cursor-pointer"
                       >
-                        <img
-                          src={getImageUrl(payment.payment_proof)}
+                        <OptimizedImage
+                          src={payment.payment_proof}
+                          thumbnailSrc={payment.thumbnail_url}
+                          variant="medium"
                           alt="Bukti pembayaran"
-                          className="max-h-40 w-full object-cover hover:scale-105 transition-transform duration-300"
+                          containerClassName="w-full h-40"
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       </button>
                     </div>

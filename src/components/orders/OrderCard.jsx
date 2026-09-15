@@ -3,6 +3,7 @@ import { ShoppingBag, ChevronDown, ChevronUp, Image as ImageIcon, Truck, PartyPo
 import { formatRupiah } from '../../utils/formatRupiah';
 import { getImageUrl } from '../../utils/getImageUrl';
 import { statusSteps, statusOrder } from '../../utils/orderStatus';
+import OptimizedImage from '../ui/OptimizedImage';
 import { StatusBadge } from '../common/StatusBadge';
 import Icon from '../ui/Icon';
 import ProgressBar from './ProgressBar';
@@ -40,10 +41,10 @@ const OrderCard = memo(function OrderCard({ order, onRefresh }) {
   })();
 
   const thumbUrl = (() => {
-    const d = items.find(i => i.design?.image_url);
-    if (d) return getImageUrl(d.design.image_url);
+    const d = items.find(i => i.design?.thumbnail_url || i.design?.image_url);
+    if (d) return d.design.thumbnail_url || d.design.image_url;
     const p = items.find(i => i.product?.images?.length > 0);
-    if (p) return getImageUrl(p.product.images[0].image_url);
+    if (p) return p.product.images[0].thumbnail_url || p.product.images[0].image_url;
     return null;
   })();
 
@@ -100,14 +101,16 @@ const OrderCard = memo(function OrderCard({ order, onRefresh }) {
             {/* Thumbnail */}
             <div className="relative flex-shrink-0">
               {thumbUrl ? (
-                <div className="relative group/thumb">
-                  <img
+                <div className="relative group/thumb w-16 h-16 sm:w-18 sm:h-18 rounded-xl overflow-hidden bg-black/40 border border-white/10 p-1 group-hover/thumb:border-primary/60 transition-all duration-300">
+                  <OptimizedImage
                     src={thumbUrl}
+                    variant="thumbnail"
                     alt={heroText}
-                    className="w-16 h-16 sm:w-18 sm:h-18 object-contain bg-black/40 rounded-xl border border-white/10 p-1 group-hover/thumb:border-primary/60 transition-all duration-300"
+                    containerClassName="w-full h-full rounded-lg"
+                    className="w-full h-full object-contain"
                   />
                   {itemCount > 1 && (
-                    <span className="absolute -bottom-1 -right-1 bg-primary text-ink text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-md">
+                    <span className="absolute -bottom-1 -right-1 bg-primary text-ink text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-md z-10">
                       +{itemCount - 1}
                     </span>
                   )}

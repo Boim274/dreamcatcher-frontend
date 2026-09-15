@@ -6,10 +6,12 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import ScrollToTop from '../components/common/ScrollToTop';
 import { useLanguageStore } from '../store/languageStore';
+import { useThemeStore } from '../store/themeStore';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import ScrollReveal from '../components/ui/ScrollReveal';
 import { formatRupiah } from '../utils/formatRupiah';
 import { getImageUrl } from '../utils/getImageUrl';
+import OptimizedImage from '../components/ui/OptimizedImage';
 
 export default function ProductListPage() {
   const { t, td, language } = useLanguageStore();
@@ -66,8 +68,13 @@ export default function ProductListPage() {
     setPage(1);
   };
 
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#120c16] text-white relative overflow-hidden selection:bg-primary selection:text-white">
+    <div className={`min-h-screen flex flex-col relative overflow-hidden selection:bg-primary selection:text-white transition-colors ${
+      isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#120c16] text-white'
+    }`}>
       {/* Background Ambient Glows */}
       <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-primary/15 via-purple-600/10 to-transparent blur-3xl rounded-full" />
       <div className="pointer-events-none absolute top-1/3 -left-48 w-96 h-96 bg-primary/10 blur-3xl rounded-full" />
@@ -145,15 +152,24 @@ export default function ProductListPage() {
                       className="glass-card-hover rounded-3xl overflow-hidden border border-white/10 bg-white/[0.02] hover:border-primary/40 transition-all duration-300 group no-underline flex flex-col h-full"
                     >
                       <div className="aspect-square bg-black/40 overflow-hidden relative">
-                        <img
-                          src={getImageUrl(product.images?.[0]?.image_url || '')}
+                        <OptimizedImage
+                          src={product.images?.[0]?.image_url}
+                          thumbnailSrc={product.images?.[0]?.thumbnail_url}
+                          mediumSrc={product.images?.[0]?.medium_url}
+                          variant="medium"
                           alt={product.name}
+                          aspectRatio="aspect-square"
+                          containerClassName="w-full h-full"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         />
-                        <div className="absolute top-3 right-3">
-                          <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold backdrop-blur-md ${
-                            product.stock > 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                        <div className="absolute top-3 right-3 z-10">
+                          <span className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-bold shadow-md backdrop-blur-md ${
+                            product.stock > 0
+                              ? 'bg-black/80 text-emerald-400 border border-emerald-500/40 shadow-black/40'
+                              : 'bg-black/80 text-rose-400 border border-rose-500/40 shadow-black/40'
                           }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${product.stock > 0 ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]' : 'bg-rose-400'}`} />
                             {product.stock > 0 ? (isEn ? `Stock ${product.stock}` : `Stok ${product.stock}`) : (isEn ? 'Out of Stock' : 'Habis')}
                           </span>
                         </div>

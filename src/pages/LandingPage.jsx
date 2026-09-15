@@ -16,16 +16,19 @@ import {
   MessageCircle,
   Search,
   X,
-  FileText,
-  BadgePercent,
   Check,
-  Headphones
+  Headphones,
+  MapPin,
+  Shirt,
+  Clock,
+  Award
 } from 'lucide-react';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import ScrollToTop from '../components/common/ScrollToTop';
 import Spinner from '../components/ui/Spinner';
 import Icon from '../components/ui/Icon';
+import OptimizedImage from '../components/ui/OptimizedImage';
 import ServiceIcon from '../components/ui/ServiceIcons';
 import ScrollReveal from '../components/ui/ScrollReveal';
 import PortfolioCarousel from '../components/common/PortfolioCarousel';
@@ -37,148 +40,301 @@ import { formatRupiah, getMinPrice } from '../utils/formatRupiah';
 import { WA_URL } from '../constants/whatsapp';
 
 const marqueeItemsId = [
-  'SABLON KAOS PREMIUM', 'DTF HIGH DEFINITION', 'PLASTISOL DISTRO', 'BORDIR KOMPUTER', 'AI DESIGN GENERATOR', '3D MOCKUP PREVIEW', 'GARANSI KUALITAS 100%'
+  'KONVEKSI & CUSTOM APPAREL', 'SABLON DTF HIGH DEFINITION', 'PLASTISOL PEKAT & AWET', 'BORDIR KOMPUTER', 'AI DESIGN ASSISTANT', '3D MOCKUP PREVIEW', 'STANDAR KUALITAS TERUJI'
 ];
 
 const marqueeItemsEn = [
-  'PREMIUM APPAREL PRINTING', 'DTF HIGH DEFINITION', 'DISTRO PLASTISOL', 'COMPUTER EMBROIDERY', 'AI DESIGN GENERATOR', '3D MOCKUP PREVIEW', '100% QUALITY GUARANTEE'
+  'CUSTOM APPAREL & GARMENT', 'HIGH DEFINITION DTF', 'DURABLE PLASTISOL', 'COMPUTER EMBROIDERY', 'AI DESIGN ASSISTANT', '3D MOCKUP PREVIEW', 'TESTED QUALITY STANDARDS'
 ];
 
 const FAQ_DATA = [
   {
     id: 1,
-    categoryKey: 'Pemesanan',
-    icon: Package,
+    categoryKey: 'Layanan Cikarang',
+    icon: MapPin,
     question: {
-      id: 'Berapa minimal pemesanan (MOQ) dan berapa lama proses pengerjaannya?',
-      en: 'What is the minimum order quantity (MOQ) and production turnaround time?'
+      id: 'Apakah Dreamcatcher melayani jasa sablon di Cikarang?',
+      en: 'Does Dreamcatcher provide screen printing services in Cikarang?'
     },
     answer: {
-      id: 'Kami melayani pemesanan mulai dari 1 pcs (satuan) untuk sablon custom DTF! Untuk pesanan grosir (kaos kelas, komunitas, event kantor), Anda bisa memesan sesuai kebutuhan dengan harga bertingkat yang jauh lebih hemat. Waktu pengerjaan standar berkisar 2-5 hari kerja setelah pembayaran & approval desain.',
-      en: 'We accept orders starting from 1 pcs (single item) for custom DTF printing! For bulk orders (school classes, communities, corporate events), tiered pricing offers substantial savings. Standard turnaround is 2-5 business days after payment and design approval.'
+      id: 'Ya, Dreamcatcher melayani jasa sablon kaos dan konveksi untuk area Cikarang dan sekitarnya (Cikarang Selatan, Cikarang Utara, Cikarang Barat, Cikarang Timur, Cikarang Pusat, Lippo Cikarang, hingga kawasan industri Jababeka, EJIP, dan MM2100). Anda dapat berkonsultasi via WhatsApp atau memesan secara online langsung melalui website kami.',
+      en: 'Yes, Dreamcatcher provides custom t-shirt printing and garment services throughout Cikarang and surrounding areas (South, North, West, East, Central Cikarang, Lippo Cikarang, to Jababeka, EJIP, and MM2100 industrial zones). You can consult with us via WhatsApp or order directly online through our website.'
     },
     highlights: {
-      id: ['Bisa Satuan (1 Pcs)', 'Pengerjaan 2-5 Hari Kerja', 'Kapasitas Ribuan Pcs/Minggu'],
-      en: ['Single Piece (1 Pcs) Accepted', '2-5 Business Days Production', 'Thousands of Pcs/Week Capacity']
+      id: ['Area Seluruh Cikarang', 'Kawasan Industri & Distrik', 'Pemesanan Online & Konsultasi'],
+      en: ['All Cikarang Areas', 'Industrial Zones & Districts', 'Online Ordering & Chat']
     },
   },
   {
     id: 2,
-    categoryKey: 'Teknik Sablon',
-    icon: Layers,
+    categoryKey: 'Harga & Biaya',
+    icon: CreditCard,
     question: {
-      id: 'Apa perbedaan sablon DTF, Plastisol, Polyflex, dan Bordir Komputer?',
-      en: 'What is the difference between DTF, Plastisol, Polyflex, and Computer Embroidery?'
+      id: 'Berapa harga sablon kaos di Cikarang?',
+      en: 'How much does custom t-shirt printing cost in Cikarang?'
     },
     answer: {
-      id: 'DTF (Direct to Film) sangat cocok untuk desain full color / foto gradasi tanpa batasan warna. Plastisol adalah standar distro dengan tinta karet awet tahan cuci. Polyflex ideal untuk sablon nomor/nama jersey bola. Sedangkan Bordir Komputer menghasilkan jahitan timbul yang elegan & formal.',
-      en: 'DTF (Direct to Film) is ideal for full-color designs and photographic gradients without color limits. Plastisol is the streetwear industry standard with durable, wash-resistant rubberized ink. Polyflex is great for jersey names/numbers. Computer Embroidery creates elegant and professional raised stitchwork.'
+      id: 'Harga sablon kaos di Dreamcatcher sangat terjangkau dan transparan, mulai dari Rp 35.000 untuk jasa cetak sablon, atau mulai Rp 60.000 - Rp 75.000 untuk paket komplit kaos katun Combed 30s/24s plus sablon distro berkualitas. Untuk pesanan kuantitas banyak (lusinan hingga ratusan pcs), kami memberikan harga grosir bertingkat (tiered discount) yang jauh lebih hemat.',
+      en: 'T-shirt printing prices at Dreamcatcher are very competitive and transparent, starting from IDR 35,000 for print-only, or IDR 60,000 - 75,000 for complete packages including premium Cotton Combed 30s/24s t-shirt and distro-grade prints. Bulk orders enjoy tiered wholesale discounts.'
     },
     highlights: {
-      id: ['DTF: Full Color & Foto', 'Plastisol: Standar Distro Awet', 'Bordir: Elegan & Rapi'],
-      en: ['DTF: Full Color & Photos', 'Plastisol: Durable Distro Standard', 'Embroidery: Elegant & Neat']
+      id: ['Mulai Rp 35.000', 'Paket Komplit Kaos + Sablon', 'Harga Grosir Bertingkat'],
+      en: ['Starts at IDR 35k', 'Complete T-Shirt + Print Packages', 'Tiered Bulk Discounts']
     },
   },
   {
     id: 3,
-    categoryKey: 'Desain & AI',
-    icon: Sparkles,
+    categoryKey: 'Pemesanan',
+    icon: Package,
     question: {
-      id: 'Bagaimana jika saya belum punya desain atau hanya punya ide tulisan?',
-      en: 'What if I do not have a design or only have a concept idea?'
+      id: 'Apakah bisa pesan sablon kaos satuan di Cikarang?',
+      en: 'Can I order a single piece (1 pcs) custom printed t-shirt in Cikarang?'
     },
     answer: {
-      id: 'Gunakan fitur AI Design Studio kami secara gratis! Cukup ketik deskripsi konsep ide Anda (misal: "Cyberpunk dragon with neon katana"), AI akan membuatkan gambar resolusi tinggi siap cetak, menampilkan simulasi 3D Mockup, dan bisa dicoba langsung via kamera AR Try-On.',
-      en: 'Use our AI Design Studio for free! Simply type your concept prompt (e.g., "Cyberpunk dragon with neon katana"), and AI will generate print-ready high-res artwork, 3D Mockup preview, and allow you to try it on using AR Try-On.'
+      id: 'Tentu bisa! Kami melayani pemesanan sablon kaos satuan (tanpa minimum order) menggunakan teknologi modern DTF (Direct to Film) High Definition. Anda bebas mencetak foto, desain warna-warni, tulisan custom, atau logo komunitas meskipun hanya memesan 1 pcs.',
+      en: 'Absolutely! We accept single-piece custom orders (no minimum quantity) using modern DTF (Direct to Film) High Definition technology. You can freely print full-color graphics, photos, or custom typography on a single shirt.'
     },
     highlights: {
-      id: ['AI Text-to-Image Gratis', 'Simulasi 3D Real-Time', 'Bantuan Tim Desainer'],
-      en: ['Free AI Text-to-Image', 'Real-Time 3D Simulation', 'Designer Support']
+      id: ['Bisa Satuan (1 Pcs)', 'Tanpa Minimum Order', 'Sablon DTF Full Color'],
+      en: ['Single Piece (1 Pcs)', 'No Minimum Order', 'Full Color DTF Print']
     },
   },
   {
     id: 4,
-    categoryKey: 'Desain & AI',
-    icon: FileText,
+    categoryKey: 'Teknik Sablon',
+    icon: Layers,
     question: {
-      id: 'Format file apa saja yang diterima jika saya sudah punya desain sendiri?',
-      en: 'What file formats are accepted if I already have my own design?'
+      id: 'Apakah tersedia sablon DTF di Cikarang?',
+      en: 'Is DTF (Direct to Film) printing available in Cikarang?'
     },
     answer: {
-      id: 'Kami menerima file PNG transparan (resolusi minimal 300 DPI), Adobe Illustrator (.AI), CorelDraw (.CDR), Photoshop (.PSD), atau PDF Vektor. Tim kontrol mutu kami akan mengecek ketajaman artwork sebelum masuk mesin sablon untuk menjamin hasil tidak blur.',
-      en: 'We accept transparent PNG (minimum 300 DPI), Adobe Illustrator (.AI), CorelDraw (.CDR), Photoshop (.PSD), or Vector PDF. Our pre-flight QC team checks artwork sharpness before printing to ensure crisp results.'
+      id: 'Ya, sablon DTF merupakan salah satu spesialisasi utama kami di Cikarang. Kami menggunakan mesin cetak DTF beresolusi tinggi dengan tinta pigmen original dan bubuk lem hotmelt elastis, menghasilkan cetakan gambar yang tajam, lentur tidak kaku, warna hidup, dan awet dicuci.',
+      en: 'Yes, DTF printing is one of our primary specialties in Cikarang. We utilize high-resolution DTF printers with genuine pigment inks and premium elastic hotmelt adhesive powder for sharp, vivid, flexible, and wash-resistant prints.'
     },
     highlights: {
-      id: ['PNG Transparan 300 DPI', 'AI, CDR, PSD, PDF Vektor', 'Free Pre-Flight Check'],
-      en: ['Transparent PNG 300 DPI', 'AI, CDR, PSD, Vector PDF', 'Free Pre-Flight Check']
+      id: ['Mesin DTF High-Res', 'Warna Tajam & Presisi', 'Lentur & Tahan Cuci'],
+      en: ['High-Res DTF Printers', 'Vivid Sharp Colors', 'Flexible & Washable']
     },
   },
   {
     id: 5,
-    categoryKey: 'Pembayaran',
-    icon: CreditCard,
+    categoryKey: 'Teknik Sablon',
+    icon: Layers,
     question: {
-      id: 'Bagaimana sistem pembayaran? Apakah bisa membayar DP terlebih dahulu?',
-      en: 'What payment methods are supported? Can I pay a deposit first?'
+      id: 'Apakah tersedia sablon Plastisol di Cikarang?',
+      en: 'Is Plastisol screen printing available in Cikarang?'
     },
     answer: {
-      id: 'Bisa! Kami menyediakan opsi Down Payment (DP) 50% untuk mulai produksi, dan pelunasan 50% saat pesanan selesai sebelum dikirim. Kami menerima Transfer Bank (BCA, Mandiri, BNI, BRI) dan QRIS otomatis (GoPay, OVO, ShopeePay, DANA).',
-      en: 'Yes! We provide a 50% Down Payment (DP) option to initiate production, with the remaining 50% settled once order is completed before shipping. We accept Bank Transfers (BCA, Mandiri, BNI, BRI) and instant QRIS (GoPay, OVO, ShopeePay, DANA).'
+      id: 'Ya, kami menyediakan sablon Plastisol manual standar distro original. Sablon Plastisol terkenal dengan daya rekatnya yang sangat kuat pada kain katun, menghasilkan warna tebal bertekstur karet lembut, tidak mudah retak, dan merupakan standar favorit brand clothing distro.',
+      en: 'Yes, we provide authentic distro-standard manual Plastisol screen printing. Plastisol is renowned for its durability on cotton fabric, producing vibrant, soft rubberized textures that resist cracking.'
     },
     highlights: {
-      id: ['Opsi DP 50%', 'QRIS & Transfer Bank', 'Verifikasi Otomatis'],
-      en: ['50% Down Payment Option', 'QRIS & Bank Transfer', 'Automatic Verification']
+      id: ['Standar Distro Original', 'Tinta Karet Tahan Retak', 'Warna Pekat & Solid'],
+      en: ['Distro Brand Standard', 'Crack-Resistant Rubber Ink', 'Deep Solid Colors']
     },
   },
   {
     id: 6,
-    categoryKey: 'Pengiriman',
-    icon: Truck,
+    categoryKey: 'Konveksi',
+    icon: Shirt,
     question: {
-      id: 'Apakah melayani pengiriman ke seluruh Indonesia dan bisa cek resi?',
-      en: 'Do you ship across Indonesia and provide tracking numbers?'
+      id: 'Apakah Dreamcatcher menerima pesanan konveksi kaos?',
+      en: 'Does Dreamcatcher accept custom garment and apparel sewing orders?'
     },
     answer: {
-      id: 'Ya, kami mengirim ke seluruh kota & pelosok Indonesia via JNE, J&T, SiCepat, serta Kargo (Indah Cargo, Baraka, Dakota) untuk pesanan kuantitas besar agar ongkir hemat. Setiap pesanan dilengkapi nomor resi yang dapat dilacak langsung di menu Lacak Pesanan.',
-      en: 'Yes, we deliver to all cities and regions across Indonesia via JNE, J&T, SiCepat, and low-cost Cargo (Indah Cargo, Baraka, Dakota) for bulk orders. Every order includes a tracking number you can monitor live in our Order Tracking menu.'
+      id: 'Ya, kami adalah workshop konveksi dan sablon terintegrasi. Kami melayani jahit dan produksi massal untuk kaos oblong (round neck), kaos V-neck, polo shirt (wangki), hoodie sweater, seragam kemeja kerja, hingga jersey olahraga dengan pola presisi dan jahitan rapi kuat.',
+      en: 'Yes, we operate an integrated garment sewing and screen printing workshop. We produce custom crew-neck tees, polo shirts, hoodies, work shirts, and sportswear jerseys with precise tailoring and durable stitching.'
     },
     highlights: {
-      id: ['Kirim Se-Indonesia', 'Ekspedisi & Kargo Murah', 'Live Tracking Resi'],
-      en: ['Nationwide Delivery', 'Affordable Cargo Shipping', 'Live Tracking Number']
+      id: ['Kaos, Polo, Hoodie, Jersey', 'Jahit Rapi Standar Ekspor', 'Kapasitas Ribuan Pcs'],
+      en: ['Tees, Polos, Hoodies, Jerseys', 'Export-Grade Sewing', 'Bulk Capacity']
     },
   },
   {
     id: 7,
-    categoryKey: 'Garansi & QC',
-    icon: ShieldCheck,
+    categoryKey: 'Desain & Konsultasi',
+    icon: Sparkles,
     question: {
-      id: 'Apakah ada garansi jika hasil sablon cacat atau tidak sesuai?',
-      en: 'Is there a warranty if the print result is defective or mismatched?'
+      id: 'Apakah bisa membuat kaos custom sesuai desain sendiri?',
+      en: 'Can I print custom t-shirts with my own design?'
     },
     answer: {
-      id: 'Tentu! Kami memberikan Garansi Kualitas 100%. Jika ada cacat produksi dari pihak kami (sablon rontok, kain robek, salah ukuran cetak), kami siap mencetak ulang atau mengganti 100% tanpa pungutan biaya tambahan.',
-      en: 'Absolutely! We provide a 100% Quality Guarantee. If there is a manufacturing defect on our end (peeling print, torn fabric, incorrect print size), we will reprint or replace 100% at no extra charge.'
+      id: 'Sangat bisa! Anda dapat mengunggah file artwork milik Anda (PNG transparan 300 DPI, Vector PDF, AI, CDR, atau PSD). Jika Anda belum memiliki file siap cetak, Anda bisa membuat desain otomatis dengan AI Design Studio kami atau berkonsultasi dengan tim kami untuk bantuan perapihan mockup.',
+      en: 'Definitely! You can upload your own artwork files (transparent 300 DPI PNG, vector PDF, AI, CDR, or PSD). If you do not have print-ready artwork yet, use our AI Design Studio or get support from our design team.'
     },
     highlights: {
-      id: ['Garansi Kualitas 100%', 'Ganti Baru Jika Cacat', 'QC Standar Ekspor'],
-      en: ['100% Quality Guarantee', 'Free Replacement If Defective', 'Export Quality Standard']
+      id: ['Bebas Desain Sendiri', 'Terima Format Vektor & PNG', 'Bantuan AI Studio Gratis'],
+      en: ['Custom Artwork Supported', 'Vector & PNG Accepted', 'Free AI Studio Tools']
     },
   },
   {
     id: 8,
-    categoryKey: 'Diskon & Promo',
-    icon: BadgePercent,
+    categoryKey: 'Konveksi',
+    icon: Package,
     question: {
-      id: 'Apakah ada diskon untuk pesanan jumlah banyak atau reseller / dropship?',
-      en: 'Are there discounts for bulk orders, resellers, or dropshippers?'
+      id: 'Apakah bisa pesan kaos untuk komunitas, event, atau perusahaan?',
+      en: 'Can I order shirts for communities, events, or corporate uniforms?'
     },
     answer: {
-      id: 'Pasti ada! Semakin banyak jumlah kaos yang Anda pesan, semakin murah harga per pcs-nya (Tiered Discount). Kami juga membuka peluang kemitraan reseller/brand clothing dengan pengiriman label polos (white-label dropship).',
-      en: 'Certainly! The more apparel you order, the lower the price per piece (Tiered Discount). We also welcome reseller and clothing brand partnerships with unbranded white-label shipping.'
+      id: 'Tentu saja! Kami sering memproduksi kaos untuk komunitas motor/hobi, seragam kepanitiaan event kampus/sekolah, gathering keluarga, hingga seragam operasional perusahaan manufaktur dan perkantoran di kawasan industri Cikarang dengan kapasitas ratusan hingga ribuan potong.',
+      en: 'Certainly! We regularly produce apparel for community clubs, event organizing committees, family gatherings, and corporate uniforms for manufacturing plants and offices across Cikarang industrial estates.'
     },
     highlights: {
-      id: ['Diskon Grosir Bertingkat', 'Program Reseller & B2B', 'White-Label Shipping'],
-      en: ['Tiered Wholesale Discount', 'Reseller & B2B Program', 'White-Label Shipping']
+      id: ['Komunitas & Gathering', 'Seragam Event & Kantor', 'Pesanan Ratusan/Ribuan Pcs'],
+      en: ['Community & Gatherings', 'Event & Corporate Staff', 'Hundreds/Thousands Capacity']
+    },
+  },
+  {
+    id: 9,
+    categoryKey: 'Pemesanan',
+    icon: Zap,
+    question: {
+      id: 'Apakah bisa melakukan pemesanan sablon secara online?',
+      en: 'Can I place screen printing orders completely online?'
+    },
+    answer: {
+      id: 'Bisa! Seluruh proses pemesanan dapat dilakukan 100% online melalui website Dreamcatcher: pilih produk & bahan kaos, tentukan posisi sablon, upload desain atau buat dengan AI, cek simulasi 3D mockup, dan bayar dengan DP 50% atau lunas via Transfer Bank / QRIS otomatis.',
+      en: 'Yes! The entire process can be conducted 100% online through the Dreamcatcher platform: choose apparel & fabrics, select print positions, upload artwork or generate via AI, preview 3D mockup, and pay via Bank Transfer or QRIS.'
+    },
+    highlights: {
+      id: ['Pemesanan 100% Online', 'Simulasi 3D Mockup', 'Opsi DP 50% & QRIS'],
+      en: ['100% Online Ordering', 'Interactive 3D Mockup', '50% Deposit & QRIS']
+    },
+  },
+  {
+    id: 10,
+    categoryKey: 'Pemesanan',
+    icon: Package,
+    question: {
+      id: 'Berapa minimal pemesanan sablon kaos?',
+      en: 'What is the minimum order quantity (MOQ) for screen printing?'
+    },
+    answer: {
+      id: 'Untuk sablon DTF (Direct to Film), tidak ada batasan minimal order (bisa pesan mulai 1 pcs). Untuk sablon Plastisol manual atau bordir komputer yang memerlukan pembuatan film afdruk/matras khusus, minimal order mulai dari 6 sampai 12 pcs (1 lusin).',
+      en: 'For DTF printing, there is no minimum order (you can order from 1 single piece). For manual Plastisol screen printing or computer embroidery requiring custom screens or molds, the minimum order is 6 to 12 pieces (1 dozen).'
+    },
+    highlights: {
+      id: ['DTF: Mulai 1 Pcs', 'Plastisol: Mulai 6-12 Pcs', 'Bordir: Mulai 6 Pcs'],
+      en: ['DTF: From 1 Pcs', 'Plastisol: From 6-12 Pcs', 'Embroidery: From 6 Pcs']
+    },
+  },
+  {
+    id: 11,
+    categoryKey: 'Desain & Konsultasi',
+    icon: MessageCircle,
+    question: {
+      id: 'Apakah bisa konsultasi desain sebelum memesan?',
+      en: 'Can I consult about design and materials before ordering?'
+    },
+    answer: {
+      id: 'Bisa dan gratis! Anda dapat berkonsultasi langsung melalui WhatsApp Customer Service kami mengenai kecocokan desain, ketajaman resolusi gambar, pemilihan jenis sablon yang pas, rekomendasi ketebalan kain (Combed 24s vs 30s), hingga penghitungan estimasi biaya sesuai budget.',
+      en: 'Yes, completely free! You can consult directly via our WhatsApp Customer Service regarding artwork resolution, suitable printing methods, fabric weight recommendations (Combed 24s vs 30s), and budget calculations.'
+    },
+    highlights: {
+      id: ['Konsultasi Desain Gratis', 'Rekomendasi Bahan Kaos', 'Bantuan CS Responsif'],
+      en: ['Free Design Consultation', 'Fabric Recommendations', 'Responsive CS Help']
+    },
+  },
+  {
+    id: 12,
+    categoryKey: 'Harga & Pengiriman',
+    icon: Truck,
+    question: {
+      id: 'Apakah melayani pengiriman ke wilayah sekitar Cikarang?',
+      en: 'Do you deliver to areas surrounding Cikarang?'
+    },
+    answer: {
+      id: 'Ya! Kami melayani pengiriman ke seluruh kawasan Cikarang (Pusat, Selatan, Utara, Barat, Timur), Lippo Cikarang, Cibarusah, Tambun, Cibitung, Karawang, Bekasi, serta seluruh kota di Indonesia melalui ekspedisi kurir kilat/sameday, reguler (JNE, J&T, SiCepat), hingga kargo hemat (Indah Cargo, Dakota) untuk pesanan kuantitas besar.',
+      en: 'Yes! We deliver across all Cikarang areas (Central, South, North, West, East), Lippo Cikarang, Cibarusah, Tambun, Cibitung, Karawang, Greater Jakarta, and nationwide via instant couriers, standard parcel (JNE, J&T, SiCepat), and bulk cargo shipping.'
+    },
+    highlights: {
+      id: ['Kirim Area Cikarang & Bekasi', 'Kurir Cepat & Sameday', 'Kargo Murah Partai Besar'],
+      en: ['Cikarang & Bekasi Coverage', 'Express & Same-day Delivery', 'Affordable Bulk Cargo']
+    },
+  },
+  {
+    id: 13,
+    categoryKey: 'Pemesanan',
+    icon: Clock,
+    question: {
+      id: 'Berapa lama proses produksi sablon dan konveksi?',
+      en: 'How long does production turnaround take?'
+    },
+    answer: {
+      id: 'Proses produksi standar untuk sablon kaos berkisar antara 2 hingga 5 hari kerja setelah pembayaran terkonfirmasi dan desain final disetujui (approval). Untuk pesanan konveksi partai besar ratusan hingga ribuan pcs, estimasi pengerjaan adalah 7-14 hari kerja tergantung antrean dan detail jahitan.',
+      en: 'Standard production turnaround for printed t-shirts is 2 to 5 business days after payment confirmation and final artwork approval. Bulk orders of hundreds or thousands of pieces typically take 7 to 14 business days.'
+    },
+    highlights: {
+      id: ['Standar: 2-5 Hari Kerja', 'Partai Besar: 7-14 Hari', 'Tepat Waktu Sesuai Deadline'],
+      en: ['Standard: 2-5 Business Days', 'Bulk Orders: 7-14 Days', 'Strict Deadline Punctuality']
+    },
+  },
+  {
+    id: 14,
+    categoryKey: 'Teknik Sablon',
+    icon: Layers,
+    question: {
+      id: 'Apa perbedaan sablon DTF dan Plastisol?',
+      en: 'What is the difference between DTF and Plastisol screen printing?'
+    },
+    answer: {
+      id: 'Sablon DTF mencetak tinta digital berbasis film, sangat fleksibel untuk desain bergradasi rumit atau foto tanpa batasan warna dan bisa satuan tanpa biaya film. Sedangkan sablon Plastisol menggunakan tinta pasta karet manual yang dipress panas (curing), menghasilkan cetakan sablon standar distro yang legendaris, tebal, awet, dan sangat tahan cuci.',
+      en: 'DTF prints digital ink onto film, ideal for complex color gradients or photographic graphics without color limits and with zero minimum order. Plastisol uses manual rubberized ink cured under heat, yielding the legendary streetwear distro texture that is exceptionally durable.'
+    },
+    highlights: {
+      id: ['DTF: Full Color & Bisa Satuan', 'Plastisol: Standar Distro & Sangat Awet', 'Hasil Lembut & Tahan Cuci'],
+      en: ['DTF: Full Color & Single Pcs', 'Plastisol: Streetwear Legend', 'Soft & Wash Resistant']
+    },
+  },
+  {
+    id: 15,
+    categoryKey: 'Konveksi',
+    icon: Award,
+    question: {
+      id: 'Apakah bisa membuat kaos custom untuk brand clothing?',
+      en: 'Can you produce custom apparel for clothing brands / distros?'
+    },
+    answer: {
+      id: 'Sangat bisa! Kami mendukung banyak brand clothing lokal dan distro dengan layanan konveksi private label: bahan kain Cotton Combed reaktif grade premium (24s, 30s, atau oversized heavyweight), sablon Plastisol / discharge presisi, sablon label leher (neck label), hangtag, hingga packaging plastik klip rapi siap display.',
+      en: 'Definitely! We support numerous independent clothing labels with private-label apparel manufacturing: premium reactive Cotton Combed fabrics (24s, 30s, or heavyweight oversized), sharp Plastisol prints, custom neck labels, hangtags, and retail-ready packaging.'
+    },
+    highlights: {
+      id: ['Private Label Distro', 'Custom Neck Label & Hangtag', 'Bahan Combed Reaktif & Oversize'],
+      en: ['Private Label Manufacturing', 'Custom Neck Labels & Tags', 'Reactive & Oversized Cotton']
+    },
+  },
+  {
+    id: 16,
+    categoryKey: 'Konveksi',
+    icon: Shirt,
+    question: {
+      id: 'Apa saja produk apparel dan merchandise yang tersedia di Dreamcatcher?',
+      en: 'What apparel and merchandise products are available at Dreamcatcher?'
+    },
+    answer: {
+      id: 'Untuk produk katalog toko, kami menyediakan Kaos Polos Katun Combed 24s/30s Premium serta merchandise kustom seperti Totebag Canvas, Topi Baseball, dan Mug Custom. Untuk layanan konveksi pesanan kustom partai, kami juga melayani produksi seragam kerja, polo shirt, dan kaos komunitas sesuai kebutuhan spesifikasi Anda.',
+      en: 'In our standard store catalog, we offer Premium 24s/30s Cotton Combed T-Shirts alongside custom merchandise like Canvas Totebags, Baseball Caps, and Custom Mugs. For bulk custom orders, our garment workshop also manufactures corporate uniforms, polos, and community apparel tailored to your specifications.'
+    },
+    highlights: {
+      id: ['Kaos Polos Combed Premium', 'Totebag, Topi & Mug Custom', 'Konveksi Seragam & Komunitas'],
+      en: ['Premium Combed T-Shirts', 'Custom Totebags, Caps & Mugs', 'Corporate & Community Garments']
+    },
+  },
+  {
+    id: 17,
+    categoryKey: 'Desain & Konsultasi',
+    icon: Sparkles,
+    question: {
+      id: 'Bagaimana AI Designer dan 3D Mockup membantu proses pemesanan?',
+      en: 'How do the AI Designer and 3D Mockup tools assist the ordering process?'
+    },
+    answer: {
+      id: 'AI Designer membantu Anda yang belum memiliki file desain jadi untuk mengeksplorasi ide dan membuat konsep visual beresolusi tinggi hanya dari ketikan teks. Anda kemudian dapat melihat letak, ukuran, dan visualisasi pakaian secara 3D interaktif sebelum pesanan diproduksi, sehingga hasil akhir lebih terukur dan sesuai ekspektasi.',
+      en: 'The AI Designer helps customers without ready-made graphic files brainstorm and generate high-resolution visual concepts from simple text prompts. You can then preview placement, sizing, and interactive 3D simulations on the garment before production begins, ensuring accurate results.'
+    },
+    highlights: {
+      id: ['Eksplorasi Ide dari Teks', 'Simulasi 3D Realistis', 'Hasil Terukur Sebelum Produksi'],
+      en: ['Text-to-Design Concept', 'Realistic 3D Simulation', 'Predictable Output Pre-Production']
     },
   },
 ];
@@ -187,7 +343,14 @@ function FAQItem({ faq, index, isOpen, onToggle, language, isLight }) {
   const IconComp = faq.icon || HelpCircle;
   const isEn = language === 'en';
   const categoryLabel = isEn
-    ? (faq.categoryKey === 'Pemesanan' ? 'Ordering' : faq.categoryKey === 'Teknik Sablon' ? 'Techniques' : faq.categoryKey === 'Desain & AI' ? 'Design & AI' : faq.categoryKey === 'Pembayaran' ? 'Payment' : faq.categoryKey === 'Pengiriman' ? 'Shipping' : faq.categoryKey === 'Garansi & QC' ? 'Warranty' : 'Discounts')
+    ? (faq.categoryKey === 'Layanan Cikarang' ? 'Cikarang Service'
+      : faq.categoryKey === 'Pemesanan' ? 'Ordering'
+      : faq.categoryKey === 'Teknik Sablon' ? 'Techniques'
+      : faq.categoryKey === 'Konveksi' ? 'Garment & Bulk'
+      : faq.categoryKey === 'Desain & Konsultasi' ? 'Design & AI'
+      : faq.categoryKey === 'Harga & Biaya' ? 'Pricing'
+      : faq.categoryKey === 'Harga & Pengiriman' ? 'Shipping'
+      : faq.categoryKey)
     : faq.categoryKey;
   const question = isEn ? faq.question.en : faq.question.id;
   const answer = isEn ? faq.answer.en : faq.answer.id;
@@ -239,7 +402,7 @@ function FAQItem({ faq, index, isOpen, onToggle, language, isLight }) {
                 FAQ #{String(index + 1).padStart(2, '0')}
               </span>
             </div>
-            <h3 className={`font-heading text-sm sm:text-base font-bold tracking-normal leading-snug m-0 transition-colors ${
+            <h3 className={`font-heading text-sm sm:text-base font-bold tracking-[1.8px] [word-spacing:3px] leading-snug m-0 transition-colors ${
               isLight ? 'text-slate-900 group-hover:text-primary' : 'text-white group-hover:text-primary'
             }`}>
               {question}
@@ -310,23 +473,23 @@ export default function LandingPage() {
   const [faqSearch, setFaqSearch] = useState('');
 
   const steps = useMemo(() => [
-    { num: '01', icon: 'layers', title: t('steps.step1Title', 'Pilih Layanan'), desc: t('steps.step1Desc', 'Tentukan produk (Kaos, Hoodie, Jersey) dan teknik sablon (DTF, Plastisol, Bordir).') },
-    { num: '02', icon: 'edit-3', title: t('steps.step2Title', 'Atur Konfigurasi'), desc: t('steps.step2Desc', 'Pilih jenis bahan katun, warna kain, dan tentukan ukuran posisi sablon.') },
-    { num: '03', icon: 'zap', title: t('steps.step3Title', 'Desain / AI Generator'), desc: t('steps.step3Desc', 'Unggah desain artwork milik Anda sendiri atau ciptakan langsung bersama asisten AI.') },
-    { num: '04', icon: 'shopping-cart', title: t('steps.step4Title', 'Checkout & DP'), desc: t('steps.step4Desc', 'Pilih opsi pembayaran fleksibel: DP 50% atau lunas melalui transfer / QRIS.') },
-    { num: '05', icon: 'check-circle', title: t('steps.step5Title', 'Produksi & Kirim'), desc: t('steps.step5Desc', 'Pesanan diproduksi dengan standar kontrol mutu ketat dan dikirim cepat ke alamat Anda.') },
+    { num: '01', icon: 'shirt', title: t('steps.step1Title', 'Pilih Apparel & Layanan'), desc: t('steps.step1Desc', 'Pilih produk apparel (seperti Kaos Premium) atau tentukan metode produksi sablon dan bordir.') },
+    { num: '02', icon: 'edit-3', title: t('steps.step2Title', 'Siapkan Desain'), desc: t('steps.step2Desc', 'Gunakan artwork desain milik Anda sendiri atau buat konsep visual baru bersama asisten AI.') },
+    { num: '03', icon: 'zap', title: t('steps.step3Title', 'Simulasi Mockup 3D'), desc: t('steps.step3Desc', 'Atur posisi cetak dan lihat preview realistis pakaian secara 3D atau AR sebelum masuk produksi.') },
+    { num: '04', icon: 'layers', title: t('steps.step4Title', 'Tentukan Spesifikasi'), desc: t('steps.step4Desc', 'Pilih detail ukuran, warna kain, varian bahan, dan jumlah pesanan dengan kalkulasi biaya transparan.') },
+    { num: '05', icon: 'check-circle', title: t('steps.step5Title', 'Pemesanan & Produksi'), desc: t('steps.step5Desc', 'Konfirmasi pesanan dengan opsi pembayaran fleksibel (DP 50% / Lunas), diproduksi rapi dan dikirim aman.') },
   ], [t]);
 
   const categories = useMemo(() => [
     { id: 'all', label: t('faq.tabs.all', 'Semua'), count: FAQ_DATA.length },
+    { id: 'Layanan Cikarang', label: isEn ? 'Cikarang' : 'Layanan Cikarang', count: FAQ_DATA.filter(f => f.categoryKey === 'Layanan Cikarang').length },
     { id: 'Pemesanan', label: t('faq.tabs.order', 'Pemesanan'), count: FAQ_DATA.filter(f => f.categoryKey === 'Pemesanan').length },
     { id: 'Teknik Sablon', label: t('faq.tabs.technique', 'Teknik Sablon'), count: FAQ_DATA.filter(f => f.categoryKey === 'Teknik Sablon').length },
-    { id: 'Desain & AI', label: t('faq.tabs.designAi', 'Desain & AI'), count: FAQ_DATA.filter(f => f.categoryKey === 'Desain & AI').length },
-    { id: 'Pembayaran', label: t('faq.tabs.payment', 'Pembayaran'), count: FAQ_DATA.filter(f => f.categoryKey === 'Pembayaran').length },
-    { id: 'Pengiriman', label: t('faq.tabs.shipping', 'Pengiriman'), count: FAQ_DATA.filter(f => f.categoryKey === 'Pengiriman').length },
-    { id: 'Garansi & QC', label: t('faq.tabs.warranty', 'Garansi & QC'), count: FAQ_DATA.filter(f => f.categoryKey === 'Garansi & QC').length },
-    { id: 'Diskon & Promo', label: t('faq.tabs.discount', 'Diskon & Promo'), count: FAQ_DATA.filter(f => f.categoryKey === 'Diskon & Promo').length },
-  ], [t]);
+    { id: 'Konveksi', label: isEn ? 'Garment' : 'Konveksi Kaos', count: FAQ_DATA.filter(f => f.categoryKey === 'Konveksi').length },
+    { id: 'Desain & Konsultasi', label: isEn ? 'Design' : 'Desain & AI', count: FAQ_DATA.filter(f => f.categoryKey === 'Desain & Konsultasi').length },
+    { id: 'Harga & Biaya', label: isEn ? 'Pricing' : 'Harga', count: FAQ_DATA.filter(f => f.categoryKey === 'Harga & Biaya').length },
+    { id: 'Harga & Pengiriman', label: isEn ? 'Shipping' : 'Pengiriman', count: FAQ_DATA.filter(f => f.categoryKey === 'Harga & Pengiriman').length },
+  ], [t, isEn]);
 
   const filteredFAQs = useMemo(() => {
     return FAQ_DATA.filter((faq) => {
@@ -377,34 +540,34 @@ export default function LandingPage() {
               <ScrollReveal direction="up" delay={100}>
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-bold tracking-[2px] uppercase shadow-sm">
                   <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-                  <span>{t('hero.tag', 'Konveksi & Sablon AI Generative')}</span>
+                  <span>{t('hero.tag', 'Platform Konveksi & Custom Apparel Modern')}</span>
                 </div>
               </ScrollReveal>
 
               <ScrollReveal direction="up" delay={250}>
                 {isEn ? (
-                  <h1 className="font-heading text-[clamp(44px,7.5vw,96px)] leading-[0.94] tracking-wide sm:tracking-wider text-white m-0">
-                    PRINT YOUR <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#ff60a8] to-primary">DREAMS</span><br />
-                    RIGHT HERE
+                  <h1 className="font-heading text-[clamp(38px,6.8vw,90px)] leading-[0.96] tracking-wide sm:tracking-wider text-white m-0">
+                    CUSTOM APPAREL <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#ff60a8] to-primary">&amp; GARMENT</span><br />
+                    BRING YOUR DESIGNS TO LIFE
                   </h1>
                 ) : (
-                  <h1 className="font-heading text-[clamp(48px,8vw,100px)] leading-[0.94] tracking-wide sm:tracking-wider text-white m-0">
-                    CETAK <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#ff60a8] to-primary">IMPIANMU</span><br />
-                    DI SINI
+                  <h1 className="font-heading text-[clamp(38px,6.8vw,90px)] leading-[0.96] tracking-wide sm:tracking-wider text-white m-0">
+                    KONVEKSI &amp; <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#ff60a8] to-primary">CUSTOM APPAREL</span><br />
+                    UNTUK WUJUDKAN DESAINMU
                   </h1>
                 )}
               </ScrollReveal>
 
               <ScrollReveal direction="blur" delay={400}>
                 <p className="text-zinc-300 text-base sm:text-lg leading-relaxed max-w-xl">
-                  {t('hero.subtitle', 'Wujudkan kaos custom, hoodie, seragam, dan merchandise berkualitas standar distro. Buat desain dengan asisten AI, lihat 3D mockup, dan pesan dalam hitungan menit.')}
+                  {t('hero.subtitle', 'Pesan kaos dan produk apparel kustom dengan proses desain interaktif, visualisasi mockup 3D, serta pengerjaan produksi terstandarisasi dalam satu platform.')}
                 </p>
               </ScrollReveal>
 
               <ScrollReveal direction="up" delay={550}>
                 <div className="flex items-center gap-4 flex-wrap pt-2">
                   <Link to="/pesan" className="btn-gradient-primary text-sm font-bold tracking-wider py-3.5 px-8 shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-transform">
-                    <span>{isEn ? 'Start Order Now' : 'Mulai Pesan Sekarang'}</span>
+                    <span>{isEn ? 'Start Custom Apparel' : 'Mulai Custom Apparel'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link to="/design-studio" className="btn-glass text-sm font-semibold tracking-wider py-3.5 px-6 hover:border-primary/50 transition-all">
@@ -438,12 +601,18 @@ export default function LandingPage() {
               <ScrollReveal direction="right" delay={400}>
                 <div className="relative mx-auto max-w-[420px] aspect-square rounded-3xl p-3 bg-gradient-to-tr from-white/10 via-white/5 to-primary/20 border border-white/15 shadow-2xl backdrop-blur-xl group">
                   <div className="relative w-full h-full rounded-2xl overflow-hidden bg-black/40">
-                    <img
-                      src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&h=800&fit=crop"
-                      alt={isEn ? 'Dreamcatcher Custom T-Shirt' : 'Kaos Sablon Kustom Dreamcatcher'}
+                    <OptimizedImage
+                      src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab"
+                      variant="medium"
+                      width={800}
+                      height={800}
+                      loading="eager"
+                      fetchPriority="high"
+                      alt={isEn ? 'Cikarang Custom T-Shirt Screen Printing - Dreamcatcher Workshop' : 'Tempat Sablon Cikarang Dreamcatcher - Kaos Custom DTF dan Plastisol Berkualitas'}
+                      containerClassName="w-full h-full"
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
                   </div>
 
                   {/* FLOATING BADGE 1 */}
@@ -493,16 +662,16 @@ export default function LandingPage() {
           <div className="text-center max-w-2xl mx-auto mb-16">
             <ScrollReveal>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-3">
-                {isEn ? 'Best Choices' : 'Pilihan Terbaik'}
+                {isEn ? 'Services & Production' : 'Layanan & Produksi'}
               </div>
               <h2 className="font-heading text-4xl sm:text-6xl text-white tracking-wide leading-tight">
-                {isEn ? 'FEATURED SERVICES' : 'LAYANAN UNGGULAN'}
+                {isEn ? 'CUSTOM APPAREL & PRODUCTION SERVICES' : 'LAYANAN KONVEKSI & PRODUKSI APPAREL CIKARANG'}
               </h2>
               <div className="w-16 h-1 bg-gradient-to-r from-primary to-[#ff60a8] rounded-full mx-auto my-4" />
               <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
                 {isEn
-                  ? 'Four high-precision garment & printing services tailored to your brand, community, or personal apparel needs.'
-                  : 'Empat layanan konveksi & cetak presisi tinggi yang disesuaikan dengan kebutuhan brand, komunitas, maupun pesanan personal Anda.'}
+                  ? 'Four precision apparel production and printing services in Cikarang area tailored for corporate uniforms, community merchandise, clothing brands, and custom orders.'
+                  : 'Layanan konveksi apparel dan cetak sablon presisi di area Cikarang untuk kebutuhan seragam kerja, merchandise komunitas, brand apparel, hingga pesanan kustom satuan.'}
               </p>
             </ScrollReveal>
           </div>
@@ -583,14 +752,14 @@ export default function LandingPage() {
           <div className="text-center max-w-2xl mx-auto mb-16">
             <ScrollReveal>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-3">
-                {t('steps.badge', 'Praktis & Cepat')}
+                {t('steps.badge', 'Praktis & Terstruktur')}
               </div>
               <h2 className="font-heading text-4xl sm:text-6xl text-white tracking-wide leading-tight">
                 {t('steps.title', 'CARA PEMESANAN')}
               </h2>
               <div className="w-16 h-1 bg-gradient-to-r from-primary to-[#ff60a8] rounded-full mx-auto my-4" />
               <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
-                {t('steps.subtitle', '5 langkah mudah dari ide desain hingga produk sablon jadi tiba di depan pintu rumah Anda.')}
+                {t('steps.subtitle', 'Alur praktis dari pemilihan apparel, eksplorasi konsep desain, simulasi mockup, hingga pakaian siap diproduksi.')}
               </p>
             </ScrollReveal>
           </div>
@@ -626,6 +795,227 @@ export default function LandingPage() {
               </ScrollReveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ==================== LOCAL SEO: TEMPAT SABLON CIKARANG ==================== */}
+      <section id="tempat-sablon-cikarang" className="px-[5%] py-24 relative bg-[#160e1d] border-t border-white/5 overflow-hidden">
+        {/* Ambient glowing backdrop */}
+        <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 bg-primary/15 rounded-full blur-[130px]" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 w-96 h-96 bg-purple-600/15 rounded-full blur-[130px]" />
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          {/* Section Header */}
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <ScrollReveal>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-bold uppercase tracking-wider mb-3">
+                <MapPin size={13} className="text-primary" />
+                <span>{isEn ? 'Cikarang Custom Apparel & Screen Printing' : 'Konveksi & Sablon Cikarang'}</span>
+              </div>
+              <h2 className="font-heading text-3xl sm:text-5xl lg:text-6xl text-white tracking-wide leading-tight">
+                {isEn ? (
+                  <>CIKARANG GARMENT &amp; PRINTING FOR <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#ff60a8] to-primary">CUSTOM APPAREL</span></>
+                ) : (
+                  <>KONVEKSI &amp; SABLON CIKARANG UNTUK <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#ff60a8] to-primary">APPAREL CUSTOM BERKUALITAS</span></>
+                )}
+              </h2>
+              <div className="w-20 h-1 bg-gradient-to-r from-primary to-[#ff60a8] rounded-full mx-auto my-4" />
+              <p className="text-zinc-300 text-sm sm:text-base leading-relaxed">
+                {isEn
+                  ? 'Dreamcatcher is a modern custom apparel and garment printing platform serving Cikarang and Bekasi. We combine digital design exploration, 3D mockup previews, and standardized production for single orders, community merch, and corporate workwear.'
+                  : 'Dreamcatcher hadir sebagai platform konveksi apparel dan cetak sablon di Cikarang. Kami menggabungkan kemudahan eksplorasi desain digital, visualisasi mockup 3D, dan pengerjaan produksi terstandarisasi untuk kebutuhan apparel satuan, komunitas, hingga seragam perusahaan.'}
+              </p>
+            </ScrollReveal>
+          </div>
+
+          {/* 4 Value Pillars Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <ScrollReveal direction="up" delay={100}>
+              <div className="h-full p-6 sm:p-7 rounded-3xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-primary/40 transition-all duration-300 backdrop-blur-md flex flex-col justify-between group">
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
+                    <Layers size={24} />
+                  </div>
+                  <h3 className="font-heading text-xl text-white tracking-wide mb-2 group-hover:text-primary transition-colors">
+                    {isEn ? 'DTF & Distro Plastisol' : 'Sablon DTF & Plastisol Distro'}
+                  </h3>
+                  <p className="text-zinc-400 text-xs sm:text-[13px] leading-relaxed">
+                    {isEn
+                      ? 'From single-piece full color DTF printing to crack-resistant Plastisol rubber inks favored by leading Indonesian streetwear clothing brands.'
+                      : 'Pilihan sablon DTF resolusi tinggi tanpa batasan warna (bisa satuan), hingga sablon Plastisol manual standar distro yang pekat, elastis, dan tahan cuci berkali-kali.'}
+                  </p>
+                </div>
+                <div className="pt-4 mt-4 border-t border-white/5">
+                  <span className="text-[11px] font-semibold text-primary inline-flex items-center gap-1">
+                    <Check size={12} /> {isEn ? 'Satuan & Grosir Lusinan' : 'Satuan & Partai Besar'}
+                  </span>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal direction="up" delay={200}>
+              <div className="h-full p-6 sm:p-7 rounded-3xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-primary/40 transition-all duration-300 backdrop-blur-md flex flex-col justify-between group">
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
+                    <Shirt size={24} />
+                  </div>
+                  <h3 className="font-heading text-xl text-white tracking-wide mb-2 group-hover:text-primary transition-colors">
+                    {isEn ? 'Corporate & Community Garments' : 'Konveksi Komunitas & Perusahaan'}
+                  </h3>
+                  <p className="text-zinc-400 text-xs sm:text-[13px] leading-relaxed">
+                    {isEn
+                      ? 'Specialized in producing company workwear, factory crew uniforms in Cikarang industrial estates, class t-shirts, and community gathering apparel.'
+                      : 'Berpengalaman memproduksi kaos event komunitas, gathering keluarga, seragam panitia, hingga seragam kaos kerja pabrik & kantor di kawasan industri Cikarang.'}
+                  </p>
+                </div>
+                <div className="pt-4 mt-4 border-t border-white/5">
+                  <span className="text-[11px] font-semibold text-primary inline-flex items-center gap-1">
+                    <Check size={12} /> {isEn ? 'Kapasitas Ribuan Pcs/Minggu' : 'Kapasitas Ribuan Pcs'}
+                  </span>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal direction="up" delay={300}>
+              <div className="h-full p-6 sm:p-7 rounded-3xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-primary/40 transition-all duration-300 backdrop-blur-md flex flex-col justify-between group">
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
+                    <Award size={24} />
+                  </div>
+                  <h3 className="font-heading text-xl text-white tracking-wide mb-2 group-hover:text-primary transition-colors">
+                    {isEn ? 'Premium 100% Combed Cotton' : 'Bahan Katun Combed Premium'}
+                  </h3>
+                  <p className="text-zinc-400 text-xs sm:text-[13px] leading-relaxed">
+                    {isEn
+                      ? 'Crafted with 100% reactive Cotton Combed 24s/30s that feels soft, breathable, and sweat-absorbent, paired with export-grade chain stitching.'
+                      : 'Menggunakan bahan 100% katun Combed 24s dan 30s reaktif yang sejuk, menyerap keringat, halus di kulit, serta dilengkapi jahitan rantai rapi standar ekspor.'}
+                  </p>
+                </div>
+                <div className="pt-4 mt-4 border-t border-white/5">
+                  <span className="text-[11px] font-semibold text-primary inline-flex items-center gap-1">
+                    <Check size={12} /> {isEn ? 'Kain Nyaman & Tidak Gerah' : 'Adem & Bebas Susut'}
+                  </span>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal direction="up" delay={400}>
+              <div className="h-full p-6 sm:p-7 rounded-3xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-primary/40 transition-all duration-300 backdrop-blur-md flex flex-col justify-between group">
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
+                    <Clock size={24} />
+                  </div>
+                  <h3 className="font-heading text-xl text-white tracking-wide mb-2 group-hover:text-primary transition-colors">
+                    {isEn ? 'Fast Production & 100% Guarantee' : 'Produksi Cepat & Garansi 100%'}
+                  </h3>
+                  <p className="text-zinc-400 text-xs sm:text-[13px] leading-relaxed">
+                    {isEn
+                      ? 'Standard turnaround time of 2-5 business days. Every single piece is inspected with strict QC and protected by our 100% reprint/refund guarantee.'
+                      : 'Estimasi pengerjaan cepat 2-5 hari kerja. Melalui 3 tahap Quality Control ketat dengan Garansi 100% ganti baru jika ada cacat cetak atau kain rusak.'}
+                  </p>
+                </div>
+                <div className="pt-4 mt-4 border-t border-white/5">
+                  <span className="text-[11px] font-semibold text-primary inline-flex items-center gap-1">
+                    <Check size={12} /> {isEn ? 'Garansi Kualitas Bebas Cacat' : 'Garansi Cacat Produksi'}
+                  </span>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+
+          {/* Coverage Areas & Local Context Box */}
+          <ScrollReveal direction="up" delay={200}>
+            <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-purple-950/30 via-black/40 to-primary/15 border border-white/10 backdrop-blur-xl">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div className="lg:col-span-8 space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+                    <MapPin size={16} />
+                    <span>{isEn ? 'Coverage & Service Areas' : 'Wilayah Jangkauan Layanan Sablon Cikarang'}</span>
+                  </div>
+                  <h3 className="font-heading text-2xl sm:text-3xl text-white tracking-wide">
+                    {isEn
+                      ? 'Serving Cikarang, Industrial Parks & Bekasi Regency'
+                      : 'Melayani Pemesanan se-Cikarang, Kawasan Industri & Sekitarnya'}
+                  </h3>
+                  <p className="text-zinc-300 text-xs sm:text-sm leading-relaxed">
+                    {isEn
+                      ? 'Dreamcatcher provides pickup, delivery, and express courier shipments to businesses, communities, and individuals across all Cikarang districts:'
+                      : 'Dreamcatcher siap melayani pengiriman pesanan kaos sablon dan konveksi langsung ke alamat Anda dengan opsi pengiriman instan, sameday, maupun kargo hemat untuk seluruh area:'}
+                  </p>
+
+                  {/* Area Pills */}
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {[
+                      'Cikarang Selatan',
+                      'Cikarang Utara',
+                      'Cikarang Barat',
+                      'Cikarang Timur',
+                      'Cikarang Pusat',
+                      'Lippo Cikarang',
+                      'Kawasan Industri Jababeka',
+                      'Kawasan EJIP & MM2100',
+                      'Delta Silicon & GIIC',
+                      'Cibarusah & Sekitarnya'
+                    ].map((loc, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 rounded-xl text-xs font-medium bg-white/5 border border-white/10 text-zinc-300 hover:border-primary/40 hover:text-white transition-colors"
+                      >
+                        📍 {loc}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-center">
+                  <Link
+                    to="/pesan"
+                    className="btn-gradient-primary py-3.5 px-6 text-xs font-bold tracking-wider text-center shadow-lg shadow-primary/25 hover:scale-105 transition-transform"
+                  >
+                    <span>{isEn ? 'Order Custom T-Shirts' : 'Mulai Pesan Kaos Custom'}</span>
+                    <ArrowRight className="w-4 h-4 ml-1 inline" />
+                  </Link>
+                  <Link
+                    to="/pricelist"
+                    className="btn-glass py-3.5 px-6 text-xs font-semibold tracking-wider text-center hover:border-primary/50 transition-all"
+                  >
+                    <span>{isEn ? 'View Pricing & Specs' : 'Cek Daftar Harga Sablon'}</span>
+                  </Link>
+                  <a
+                    href={WA_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-3.5 px-6 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 hover:text-white text-xs font-semibold tracking-wider text-center transition-all flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle size={15} />
+                    <span>{isEn ? 'Consult on WhatsApp' : 'Konsultasi Desain & Bahan'}</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Natural SEO Internal Links Navigation Strip */}
+              <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400">
+                <span className="font-semibold text-zinc-300">{isEn ? 'Explore Dreamcatcher:' : 'Jelajahi Layanan Kami:'}</span>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <Link to="/layanan" className="hover:text-primary transition-colors underline-offset-4 hover:underline">
+                    {isEn ? 'All Screen Printing Services' : 'Lihat Layanan Sablon Kaos'}
+                  </Link>
+                  <span>•</span>
+                  <Link to="/produk" className="hover:text-primary transition-colors underline-offset-4 hover:underline">
+                    {isEn ? 'Custom T-Shirt Catalog' : 'Jelajahi Produk Kaos Custom'}
+                  </Link>
+                  <span>•</span>
+                  <Link to="/design-studio" className="hover:text-primary transition-colors underline-offset-4 hover:underline">
+                    {isEn ? 'AI Design Studio & 3D Mockup' : 'Studio Desain Kaos AI'}
+                  </Link>
+                  <span>•</span>
+                  <Link to="/about" className="hover:text-primary transition-colors underline-offset-4 hover:underline">
+                    {isEn ? 'About Our Cikarang Workshop' : 'Tentang Workshop Dreamcatcher'}
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -866,7 +1256,7 @@ export default function LandingPage() {
               }`}>
                 <Search size={20} />
               </div>
-              <p className={`font-heading text-base font-bold mb-1 ${
+              <p className={`font-heading text-base font-bold tracking-[1.5px] mb-1 ${
                 isLight ? 'text-slate-900' : 'text-white'
               }`}>
                 {t('faq.emptyTitle', 'Pertanyaan Tidak Ditemukan')}
@@ -947,17 +1337,17 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto relative rounded-3xl p-10 sm:p-16 bg-gradient-to-r from-primary/20 via-purple-900/20 to-primary/20 border border-primary/40 shadow-2xl backdrop-blur-xl">
           <div className="pointer-events-none absolute inset-0 bg-primary/5 rounded-3xl" />
           <h2 className="font-heading text-4xl sm:text-6xl text-white tracking-wide mb-4">
-            {t('cta.title', 'SIAP MEMBUAT KAOS IMPIAN ANDA?')}
+            {t('cta.title', 'WUJUDKAN APPAREL CUSTOM SESUAI KONSEP DESAINMU')}
           </h2>
           <p className="text-zinc-300 text-sm sm:text-base max-w-xl mx-auto mb-8 leading-relaxed">
-            {t('cta.subtitle', 'Dapatkan hasil cetak presisi, bahan katun adem, dan pelayanan cepat bersama Dreamcatcher Studio.')}
+            {t('cta.subtitle', 'Nikmati kemudahan eksplorasi desain, visualisasi mockup presisi, dan hasil produksi konveksi terpercaya bersama Dreamcatcher.')}
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <Link
               to="/pesan"
               className="btn-gradient-primary py-4 px-9 text-sm font-bold tracking-wider hover:scale-105 active:scale-95 transition-transform"
             >
-              <span>{t('cta.orderBtn', 'Mulai Buat Pesanan')}</span>
+              <span>{t('cta.orderBtn', 'Mulai Custom Apparel')}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
             <a

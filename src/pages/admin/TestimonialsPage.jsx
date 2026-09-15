@@ -14,13 +14,13 @@ import {
   ChevronRight,
   Search,
   RotateCcw,
-  CheckCircle2,
   MessageSquareQuote,
   User,
   Check,
 } from 'lucide-react';
 import { getImageUrl } from '../../utils/getImageUrl';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
+import OptimizedImage from '../../components/ui/OptimizedImage';
 
 export default function TestimonialsPage() {
   const toast = useToast();
@@ -43,6 +43,26 @@ export default function TestimonialsPage() {
   const [page, setPage] = useState(1);
   const fileInputRef = useRef(null);
   const [filters, setFilters] = useState({ search: '', is_active: '', min_rating: '' });
+
+  const hasActiveFilters = Boolean(filters.search || filters.is_active || filters.min_rating);
+
+  const fetchData = async (signal, pageArg, overrideFilters) => {
+    const p = pageArg || page;
+    const f = overrideFilters || filters;
+    try {
+      const params = { page: p };
+      if (f.search) params.search = f.search;
+      if (f.is_active) params.is_active = f.is_active;
+      if (f.min_rating) params.min_rating = f.min_rating;
+      const result = await adminService.getTestimonials(params, signal);
+      setTestimonials(result.data);
+      setPagination(result.pagination);
+    } catch (error) {
+      if (error?.name !== 'CanceledError') console.error('Failed to fetch:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -70,26 +90,6 @@ export default function TestimonialsPage() {
     setFilters(reset);
     setPage(1);
     fetchData(null, 1, reset);
-  };
-
-  const hasActiveFilters = Boolean(filters.search || filters.is_active || filters.min_rating);
-
-  const fetchData = async (signal, pageArg, overrideFilters) => {
-    const p = pageArg || page;
-    const f = overrideFilters || filters;
-    try {
-      const params = { page: p };
-      if (f.search) params.search = f.search;
-      if (f.is_active) params.is_active = f.is_active;
-      if (f.min_rating) params.min_rating = f.min_rating;
-      const result = await adminService.getTestimonials(params, signal);
-      setTestimonials(result.data);
-      setPagination(result.pagination);
-    } catch (error) {
-      if (error?.name !== 'CanceledError') console.error('Failed to fetch:', error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const openModal = (item = null) => {
@@ -293,9 +293,11 @@ export default function TestimonialsPage() {
                   <div className="flex items-start gap-3">
                     <div className="w-11 h-11 rounded-full overflow-hidden bg-ink border border-border flex items-center justify-center text-primary flex-shrink-0">
                       {item.image_url ? (
-                        <img
-                          src={getImageUrl(item.image_url)}
-                          alt=""
+                        <OptimizedImage
+                          src={item.image_url}
+                          variant="thumbnail"
+                          alt={item.customer_name}
+                          containerClassName="w-full h-full rounded-full"
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -385,9 +387,11 @@ export default function TestimonialsPage() {
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full overflow-hidden bg-ink border border-border/80 flex items-center justify-center text-primary flex-shrink-0 group-hover:border-primary/40 transition-colors">
                               {item.image_url ? (
-                                <img
-                                  src={getImageUrl(item.image_url)}
-                                  alt=""
+                                <OptimizedImage
+                                  src={item.image_url}
+                                  variant="thumbnail"
+                                  alt={item.customer_name}
+                                  containerClassName="w-full h-full rounded-full"
                                   className="w-full h-full object-cover"
                                 />
                               ) : (

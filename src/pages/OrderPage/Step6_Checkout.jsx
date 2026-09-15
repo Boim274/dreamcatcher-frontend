@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOrderStore } from '../../store/orderStore';
 import { useLanguageStore } from '../../store/languageStore';
+import { useThemeStore } from '../../store/themeStore';
 import { orderService } from '../../services/orderService';
 import { useAuthStore } from '../../store/authStore';
 import { useToast } from '../../components/ui/Toast';
@@ -201,34 +202,45 @@ export default function Step6Checkout() {
   const inputClass = (field) =>
     `input-premium ${errors[field] ? 'border-pink-500 focus:border-pink-500' : ''}`;
 
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+
   const configSummary = Object.entries(config)
     .filter(([key, val]) => val && key !== 'size')
     .map(([, val]) => td(val))
     .join(' / ');
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+    <div className={`rounded-3xl border p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden transition-colors ${
+      isLight ? 'bg-white border-slate-200 shadow-slate-900/5 text-slate-800' : 'border-white/10 bg-white/[0.03] text-white'
+    }`}>
       {/* Ambient background glow */}
       <div className="absolute -top-24 -right-24 w-60 h-60 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Step Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b border-white/10">
+      <div className={`flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b ${
+        isLight ? 'border-slate-100' : 'border-white/10'
+      }`}>
         <div>
           <span className="text-[10px] font-bold tracking-[2px] uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
             {language === 'en' ? 'Step 6 of 6' : 'Langkah 6 dari 6'}
           </span>
-          <h2 className="font-heading text-2xl sm:text-3xl text-white tracking-[0.5px] mt-2">
+          <h2 className={`font-heading text-2xl sm:text-3xl tracking-[1.5px] mt-2 ${
+            isLight ? 'text-slate-900' : 'text-white'
+          }`}>
             {language === 'en' ? 'CUSTOMER DETAILS & CHECKOUT' : 'DATA PEMESAN & CHECKOUT'}
           </h2>
         </div>
         <div className="text-right">
-          <span className="text-xs text-gray-400">{language === 'en' ? '50% Down Payment:' : 'Total DP 50%:'}</span>
+          <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>{language === 'en' ? '50% Down Payment:' : 'Total DP 50%:'}</span>
           <p className="text-sm font-bold text-primary">{formatRupiah(dp)}</p>
         </div>
       </div>
 
       {/* Mini Summary Accordion / Card */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 mb-6">
+      <div className={`rounded-2xl border p-5 mb-6 ${
+        isLight ? 'border-slate-200 bg-slate-50' : 'border-white/10 bg-white/[0.02]'
+      }`}>
         <p className="text-primary text-[11px] tracking-[1.5px] uppercase mb-3 font-bold">
           {language === 'en' ? 'Final Summary' : 'Ringkasan Akhir'}
         </p>

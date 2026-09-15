@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useOrderStore } from '../../store/orderStore';
 import { useLanguageStore } from '../../store/languageStore';
+import { useThemeStore } from '../../store/themeStore';
 import Icon from '../../components/ui/Icon';
 import { useToast } from '../../components/ui/Toast';
 import { CheckCircle, Ruler } from 'lucide-react';
@@ -233,10 +234,15 @@ export default function Step2ServiceConfig() {
     nextStep();
   };
 
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+
   const optionClass = (isActive) =>
     `p-3.5 rounded-2xl border text-left transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
       isActive
         ? 'border-primary/80 bg-primary/15 shadow-lg shadow-primary/20 ring-1 ring-primary/40'
+        : isLight
+        ? 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
         : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]'
     }`;
 
@@ -246,22 +252,28 @@ export default function Step2ServiceConfig() {
     show ? <p className="text-pink-400 text-[11px] mt-2 flex items-center gap-1"><span>⚠️</span> {children}</p> : null;
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+    <div className={`rounded-3xl border p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden transition-colors ${
+      isLight ? 'bg-white border-slate-200 shadow-slate-900/5 text-slate-800' : 'border-white/10 bg-white/[0.03] text-white'
+    }`}>
       {/* Ambient background glow */}
       <div className="absolute -top-24 -right-24 w-60 h-60 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b border-white/10">
+      <div className={`flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b ${
+        isLight ? 'border-slate-100' : 'border-white/10'
+      }`}>
         <div>
           <span className="text-[10px] font-bold tracking-[2px] uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
             {language === 'en' ? 'Step 2 of 6' : 'Langkah 2 dari 6'}
           </span>
-          <h2 className="font-heading text-2xl sm:text-3xl text-white tracking-[0.5px] mt-2">
+          <h2 className={`font-heading text-2xl sm:text-3xl tracking-[1.5px] mt-2 ${
+            isLight ? 'text-slate-900' : 'text-white'
+          }`}>
             {language === 'en' ? 'SERVICE CONFIGURATION' : 'KONFIGURASI LAYANAN'}
           </h2>
         </div>
         <div className="text-right">
-          <span className="text-xs text-gray-400">{language === 'en' ? 'Selected Service:' : 'Layanan Dipilih:'}</span>
-          <p className="text-sm font-semibold text-white">{td(selectedService.name)}</p>
+          <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>{language === 'en' ? 'Selected Service:' : 'Layanan Dipilih:'}</span>
+          <p className={`text-sm font-semibold ${isLight ? 'text-slate-800' : 'text-white'}`}>{td(selectedService.name)}</p>
         </div>
       </div>
 

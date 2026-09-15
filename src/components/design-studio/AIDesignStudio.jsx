@@ -11,6 +11,7 @@ import { getImageUrl } from '../../utils/getImageUrl';
 import { getUserSession } from '../../utils/userSession';
 import AiChatPanel from './AiChatPanel';
 import AIPromptComposer from './AIPromptComposer';
+import OptimizedImage from '../ui/OptimizedImage';
 import { getDynamicChips, getRecommendations } from './promptSuggestions';
 
 const GENERATE_DONE_MESSAGE =
@@ -1352,7 +1353,15 @@ export default function AIDesignStudio({
                                   : 'border-white/10 hover:border-primary/50'
                               }`}
                             >
-                              <img src={r.imageUrl} alt={`Varian ${i + 1}`} className="w-full h-full object-cover" />
+                              <OptimizedImage
+                                src={r.imageUrl}
+                                thumbnailSrc={r.thumbnail_url}
+                                previewSrc={r.preview_url}
+                                variant="thumbnail"
+                                alt={`Varian ${i + 1}`}
+                                containerClassName="w-full h-full"
+                                className="w-full h-full object-cover"
+                              />
                               <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-0.5 rounded-lg border border-white/10">
                                 Varian {i + 1}
                               </div>
@@ -1493,10 +1502,13 @@ export default function AIDesignStudio({
               {selectedResult ? (
                 <div className="space-y-3">
                   <div className="relative aspect-square bg-black/50 border border-white/10 rounded-2xl overflow-hidden group">
-                    <img
+                    <OptimizedImage
                       src={selectedResult.imageUrl}
+                      previewSrc={selectedResult.preview_url}
+                      variant="medium"
                       alt="Preview desain"
-                      className="w-full h-full object-contain cursor-zoom-in p-2"
+                      containerClassName="w-full h-full cursor-zoom-in"
+                      className="w-full h-full object-contain p-2"
                       onClick={() => setLightbox({ url: selectedResult.imageUrl, label: 'Preview desain' })}
                     />
                     <button
@@ -1649,7 +1661,14 @@ export default function AIDesignStudio({
                       title={`Versi ${v.version} — ${v.kind || v.type || ''}`}
                     >
                       <div className="relative aspect-square w-full bg-[#0d0714] p-2 flex items-center justify-center overflow-hidden">
-                        <img src={v.imageUrl} alt={`Versi ${v.version}`} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200" />
+                        <OptimizedImage
+                          src={v.imageUrl}
+                          thumbnailSrc={v.thumbnail_url}
+                          variant="thumbnail"
+                          alt={`Versi ${v.version}`}
+                          containerClassName="w-full h-full"
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
+                        />
                         <span className="absolute top-2 left-2 bg-black/80 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-lg border border-white/10">
                           v{v.version}
                         </span>

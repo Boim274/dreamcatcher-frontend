@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { orderService } from '../services/orderService';
 import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
 import { useLanguageStore } from '../store/languageStore';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
@@ -22,6 +23,7 @@ import {
 } from 'lucide-react';
 import { getImageUrl } from '../utils/getImageUrl';
 import { getStatusSteps, getFilterTabs, statusOrder, getProgressPercent } from '../utils/orderStatus';
+import OptimizedImage from '../components/ui/OptimizedImage';
 
 function VerticalTimeline({ status, deliveryMethod }) {
   const { language } = useLanguageStore();
@@ -286,17 +288,20 @@ function OrderDetailSection({ order }) {
                   {item.product ? (
                     <>
                       {item.product.images?.[0]?.image_url && (
-                        <div className="relative group/img shrink-0">
-                          <img
-                            src={getImageUrl(item.product.images[0].image_url)}
+                        <div className="relative group/img shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-[#120a16] border border-white/10 hover:border-primary transition-all shadow-sm">
+                          <OptimizedImage
+                            src={item.product.images[0].image_url}
+                            thumbnailSrc={item.product.images[0].thumbnail_url}
+                            variant="thumbnail"
                             alt={item.product.name}
-                            className="w-16 h-16 object-contain bg-[#120a16] rounded-xl border border-white/10 cursor-pointer hover:border-primary transition-all shadow-sm"
+                            containerClassName="w-full h-full cursor-pointer"
+                            className="w-full h-full object-contain"
                             onClick={() => setLightboxImage(getImageUrl(item.product.images[0].image_url))}
                           />
                           <button
                             type="button"
                             onClick={() => setLightboxImage(getImageUrl(item.product.images[0].image_url))}
-                            className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 rounded-xl flex items-center justify-center text-white transition-opacity cursor-pointer"
+                            className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 rounded-xl flex items-center justify-center text-white transition-opacity cursor-pointer z-10"
                             title={language === 'en' ? 'Enlarge Image' : 'Perbesar Gambar'}
                           >
                             <ZoomIn className="w-4 h-4" />
@@ -317,18 +322,21 @@ function OrderDetailSection({ order }) {
                   ) : (
                     <>
                       {itemImg ? (
-                        <div className="relative group/img shrink-0">
-                          <img
-                            src={itemImg}
+                        <div className="relative group/img shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-[#120a16] border border-white/10 hover:border-primary transition-all shadow-sm">
+                          <OptimizedImage
+                            src={item.design?.image_url || itemImg}
+                            thumbnailSrc={item.design?.thumbnail_url}
+                            variant="thumbnail"
                             alt={language === 'en' ? 'Print Design' : 'Desain Sablon'}
-                            className="w-16 h-16 object-contain bg-[#120a16] rounded-xl border border-white/10 cursor-pointer hover:border-primary transition-all shadow-sm"
+                            containerClassName="w-full h-full cursor-pointer"
+                            className="w-full h-full object-contain"
                             onClick={() => setLightboxImage(itemImg)}
                             title={language === 'en' ? 'Click to enlarge design image' : 'Klik untuk memperbesar gambar desain'}
                           />
                           <button
                             type="button"
                             onClick={() => setLightboxImage(itemImg)}
-                            className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 rounded-xl flex items-center justify-center text-white transition-opacity cursor-pointer"
+                            className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 rounded-xl flex items-center justify-center text-white transition-opacity cursor-pointer z-10"
                             title={language === 'en' ? 'Enlarge' : 'Perbesar'}
                           >
                             <ZoomIn className="w-4 h-4" />
@@ -616,14 +624,10 @@ function GuestTrackForm() {
             <div className="w-20 h-20 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
               {(() => {
                 const items = order.items || [];
-                const imgSrc = (() => {
-                  const d = items.find(i => i.design?.image_url);
-                  if (d) return getImageUrl(d.design.image_url);
-                  const p = items.find(i => i.product?.images?.length > 0);
-                  if (p) return p.product.images[0].image_url;
-                  return null;
-                })();
-                if (imgSrc) return <img src={imgSrc} alt="Item" className="w-full h-full object-contain" />;
+                const d = items.find(i => i.design?.thumbnail_url || i.design?.image_url);
+                const p = items.find(i => i.product?.images?.length > 0);
+                const imgSrc = d ? (d.design.thumbnail_url || d.design.image_url) : p ? (p.product.images[0].thumbnail_url || p.product.images[0].image_url) : null;
+                if (imgSrc) return <OptimizedImage src={imgSrc} variant="thumbnail" alt="Item" containerClassName="w-full h-full" className="w-full h-full object-contain" />;
                 return <ImageIcon className="w-8 h-8 text-white/40" />;
               })()}
             </div>
@@ -812,9 +816,11 @@ function OrderCard({ order, onRefresh }) {
             {/* Thumbnail */}
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#120a16] border border-white/10 p-1 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-primary/40 transition-colors shadow-sm">
               {thumbUrl ? (
-                <img
+                <OptimizedImage
                   src={thumbUrl}
+                  variant="thumbnail"
                   alt="Preview"
+                  containerClassName="w-full h-full rounded-xl"
                   className="w-full h-full object-contain rounded-xl"
                 />
               ) : (
@@ -1012,6 +1018,8 @@ function OrderCard({ order, onRefresh }) {
 
 export default function MyOrdersPage() {
   const { language } = useLanguageStore();
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1087,7 +1095,9 @@ export default function MyOrdersPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#120c16] text-white relative overflow-hidden selection:bg-primary selection:text-white">
+      <div className={`min-h-screen flex flex-col relative overflow-hidden selection:bg-primary selection:text-white transition-colors ${
+        isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#120c16] text-white'
+      }`}>
         {/* Ambient Glows */}
         <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-primary/15 via-purple-600/10 to-transparent blur-3xl rounded-full" />
         <div className="pointer-events-none absolute top-1/3 -left-48 w-96 h-96 bg-primary/10 blur-3xl rounded-full" />
@@ -1098,12 +1108,18 @@ export default function MyOrdersPage() {
             <div className="text-center mb-10 relative">
               <ScrollReveal>
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary uppercase tracking-wider mb-3">
-                  <Package size={13} />
-                  <span>{language === 'en' ? 'Order Tracking' : 'Pelacakan Pesanan'}</span>
+                  <Search size={13} />
+                  <span>{language === 'en' ? 'Quick Tracking' : 'Lacak Cepat'}</span>
                 </div>
-                <h1 className="font-heading text-3xl sm:text-4xl text-white tracking-wide mb-3">{language === 'en' ? 'MY ORDERS' : 'PESANAN SAYA'}</h1>
+                <h1 className={`font-heading text-3xl sm:text-4xl tracking-wide mb-3 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {language === 'en' ? 'TRACK YOUR ORDER' : 'LACAK STATUS PESANAN'}
+                </h1>
                 <div className="w-16 h-1 bg-gradient-to-r from-primary to-purple-500 rounded-full mx-auto mb-3" />
-                <p className="text-white/60 text-xs sm:text-sm max-w-md mx-auto">{language === 'en' ? 'Enter your order code and phone number to track your order status in real-time' : 'Masukkan kode pesanan dan nomor HP untuk melacak status pesanan Anda secara real-time'}</p>
+                <p className={`text-xs sm:text-sm max-w-md mx-auto ${isLight ? 'text-slate-600' : 'text-white/60'}`}>
+                  {language === 'en'
+                    ? 'Check real-time production status of your custom order anytime'
+                    : 'Pantau perkembangan produksi pesanan sablon Anda secara real-time kapan saja'}
+                </p>
               </ScrollReveal>
             </div>
             <GuestTrackForm />
@@ -1116,7 +1132,9 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#120c16] text-white relative overflow-hidden selection:bg-primary selection:text-white">
+    <div className={`min-h-screen flex flex-col relative overflow-hidden selection:bg-primary selection:text-white transition-colors ${
+      isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#120c16] text-white'
+    }`}>
       {/* Ambient Glows */}
       <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-primary/15 via-purple-600/10 to-transparent blur-3xl rounded-full" />
       <div className="pointer-events-none absolute top-1/3 -left-48 w-96 h-96 bg-primary/10 blur-3xl rounded-full" />
@@ -1130,9 +1148,9 @@ export default function MyOrdersPage() {
               <Package size={13} />
               <span>{language === 'en' ? 'Member Dashboard' : 'Dashboard Member'}</span>
             </div>
-            <h1 className="font-heading text-3xl sm:text-4xl text-white tracking-wide mb-3">{language === 'en' ? 'MY ORDERS' : 'PESANAN SAYA'}</h1>
+            <h1 className={`font-heading text-3xl sm:text-4xl tracking-wide mb-3 ${isLight ? 'text-slate-900' : 'text-white'}`}>{language === 'en' ? 'MY ORDERS' : 'PESANAN SAYA'}</h1>
             <div className="w-16 h-1 bg-gradient-to-r from-primary to-purple-500 rounded-full mx-auto mb-3" />
-            <p className="text-white/60 text-xs sm:text-sm max-w-md mx-auto">{language === 'en' ? 'Manage and track progress of all your orders in one place' : 'Kelola dan pantau progres seluruh pesanan Anda di satu tempat'}</p>
+            <p className={`text-xs sm:text-sm max-w-md mx-auto ${isLight ? 'text-slate-600' : 'text-white/60'}`}>{language === 'en' ? 'Manage and track progress of all your orders in one place' : 'Kelola dan pantau progres seluruh pesanan Anda di satu tempat'}</p>
           </ScrollReveal>
         </div>
 

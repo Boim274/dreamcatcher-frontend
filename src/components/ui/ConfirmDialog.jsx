@@ -101,7 +101,7 @@ export default function ConfirmDialog({
             <IconComp size={22} />
           </div>
           <div className="flex-1 min-w-0 pr-4">
-            <h3 className="font-heading text-lg sm:text-xl font-bold text-white tracking-[0.5px] mb-1.5 leading-snug">
+            <h3 className="font-heading text-lg sm:text-xl font-bold text-white tracking-[1.5px] mb-1.5 leading-snug">
               {title}
             </h3>
             <p className="text-zinc-300 text-xs sm:text-[13px] leading-relaxed font-normal">{message}</p>

@@ -20,8 +20,12 @@ import { LoadingSpinner } from '../common/LoadingSpinner';
 import PhoneCountryInput from '../common/PhoneCountryInput';
 import GoogleAuthButton from '../common/GoogleAuthButton';
 import { useToast } from './Toast';
+import { useThemeStore } from '../../store/themeStore';
 
 export default function AuthModal() {
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+
   const { login, register, updateProfile } = useAuthStore();
   const { isOpen, activeTab, setTab, closeModal } = useAuthModalStore();
   const { language } = useLanguageStore();
@@ -183,7 +187,11 @@ export default function AuthModal() {
       className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md transition-all duration-300 animate-in fade-in"
       onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
     >
-      <div className="relative w-full max-w-[460px] max-h-[92vh] overflow-y-auto rounded-3xl bg-gradient-to-b from-[#2a1d2e] via-[#1d1422] to-[#140e18] border border-white/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_rgba(236,74,150,0.18)] p-6 sm:p-8 scrollbar-thin scrollbar-thumb-white/10 animate-in zoom-in-95 duration-200">
+      <div className={`relative w-full max-w-[460px] max-h-[92vh] overflow-y-auto rounded-3xl p-6 sm:p-8 scrollbar-thin animate-in zoom-in-95 duration-200 transition-colors ${
+        isLight
+          ? 'bg-white border border-slate-200 shadow-2xl shadow-slate-900/15 scrollbar-thumb-slate-200'
+          : 'bg-gradient-to-b from-[#2a1d2e] via-[#1d1422] to-[#140e18] border border-white/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_rgba(236,74,150,0.18)] scrollbar-thumb-white/10'
+      }`}>
         
         {/* Dekorasi Ambient Glow Modern */}
         <div className="pointer-events-none absolute -top-24 -right-24 w-56 h-56 bg-primary/20 rounded-full blur-3xl" />
@@ -192,7 +200,11 @@ export default function AuthModal() {
         {/* Tombol Tutup Bulat Minimalis */}
         <button
           onClick={closeModal}
-          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 z-20 cursor-pointer"
+          className={`absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 z-20 cursor-pointer ${
+            isLight
+              ? 'bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-500 hover:text-slate-800'
+              : 'bg-white/5 hover:bg-white/15 border border-white/10 text-zinc-400 hover:text-white'
+          }`}
           aria-label={isEn ? 'Close' : 'Tutup'}
         >
           <X className="w-4 h-4" />
@@ -210,20 +222,22 @@ export default function AuthModal() {
               <span>{isEn ? 'One Last Step' : 'Satu Langkah Terakhir'}</span>
             </div>
 
-            <h2 className="font-heading text-3xl sm:text-4xl text-white mb-2">
+            <h2 className={`font-heading text-3xl sm:text-4xl mb-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
               {isEn ? 'COMPLETE WHATSAPP' : 'LENGKAPI WHATSAPP'}
             </h2>
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed mb-6 max-w-sm mx-auto">
+            <p className={`text-xs sm:text-sm leading-relaxed mb-6 max-w-sm mx-auto ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
               {isEn ? (
-                <>Hello <strong className="text-white">{googleUser?.name}</strong>, please enter your WhatsApp number so we can send updates on your order production & delivery.</>
+                <>Hello <strong className={isLight ? 'text-slate-900' : 'text-white'}>{googleUser?.name}</strong>, please enter your WhatsApp number so we can send updates on your order production & delivery.</>
               ) : (
-                <>Halo <strong className="text-white">{googleUser?.name}</strong>, cantumkan nomor WhatsApp Anda agar kami dapat mengirimkan update produksi & pengiriman pesanan Anda.</>
+                <>Halo <strong className={isLight ? 'text-slate-900' : 'text-white'}>{googleUser?.name}</strong>, cantumkan nomor WhatsApp Anda agar kami dapat mengirimkan update produksi & pengiriman pesanan Anda.</>
               )}
             </p>
 
             <form onSubmit={handleSaveGooglePhone} className="space-y-4 text-left">
               <div>
-                <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+                <label className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider mb-1.5 ${
+                  isLight ? 'text-slate-700' : 'text-zinc-300'
+                }`}>
                   <Phone className="w-3.5 h-3.5 text-primary" /> {isEn ? 'WhatsApp Number' : 'Nomor WhatsApp'}
                 </label>
                 <PhoneCountryInput
@@ -233,7 +247,7 @@ export default function AuthModal() {
                   id="google-phone-input"
                   required
                 />
-                <p className="text-zinc-500 text-[11px] mt-1.5">
+                <p className={`text-[11px] mt-1.5 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
                   {isEn
                     ? 'Select country code (+62 for Indonesia or international).'
                     : 'Pilih bendera/kode negara Anda (+62 Indonesia atau negara asing).'}
@@ -256,7 +270,9 @@ export default function AuthModal() {
                 <button
                   type="button"
                   onClick={handleSkipGooglePhone}
-                  className="w-full py-2 text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                  className={`w-full py-2 text-xs transition-colors cursor-pointer ${
+                    isLight ? 'text-slate-500 hover:text-slate-800' : 'text-zinc-400 hover:text-white'
+                  }`}
                 >
                   {isEn ? 'Skip for now' : 'Lewati untuk sekarang'}
                 </button>
@@ -271,12 +287,12 @@ export default function AuthModal() {
                 <Sparkles className="w-3 h-3 text-primary animate-pulse" />
                 <span>Dreamcatcher AI Studio</span>
               </div>
-              <h2 className="font-heading text-4xl sm:text-[42px] tracking-wide text-white leading-tight">
+              <h2 className={`font-heading text-4xl sm:text-[42px] tracking-wide leading-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {activeTab === 'login'
                   ? (isEn ? 'LOGIN TO ACCOUNT' : 'MASUK KE AKUN')
                   : (isEn ? 'CREATE NEW ACCOUNT' : 'DAFTAR AKUN BARU')}
               </h2>
-              <p className="text-zinc-400 text-xs sm:text-[13px] mt-1 leading-relaxed">
+              <p className={`text-xs sm:text-[13px] mt-1 leading-relaxed ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
                 {activeTab === 'login'
                   ? (isEn
                       ? 'Access AI designs, track screen printing orders, and get special discounts.'
@@ -288,13 +304,17 @@ export default function AuthModal() {
             </div>
 
             {/* Segmented Pill Tabs Switcher */}
-            <div className="grid grid-cols-2 p-1 bg-black/40 rounded-2xl border border-white/10 mb-6 backdrop-blur-sm">
+            <div className={`grid grid-cols-2 p-1 rounded-2xl mb-6 backdrop-blur-sm ${
+              isLight ? 'bg-slate-100 border border-slate-200' : 'bg-black/40 border border-white/10'
+            }`}>
               <button
                 type="button"
                 onClick={() => setTab('login')}
                 className={`py-2.5 rounded-xl text-xs font-bold tracking-widest uppercase transition-all duration-200 cursor-pointer ${
                   activeTab === 'login'
                     ? 'bg-gradient-to-r from-primary to-[#ff60a8] text-white shadow-lg shadow-primary/25'
+                    : isLight
+                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -306,6 +326,8 @@ export default function AuthModal() {
                 className={`py-2.5 rounded-xl text-xs font-bold tracking-widest uppercase transition-all duration-200 cursor-pointer ${
                   activeTab === 'register'
                     ? 'bg-gradient-to-r from-primary to-[#ff60a8] text-white shadow-lg shadow-primary/25'
+                    : isLight
+                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -315,8 +337,8 @@ export default function AuthModal() {
 
             {/* Banner Pesan Error */}
             {error && (
-              <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2.5 leading-snug animate-in fade-in">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2.5 leading-snug animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
@@ -326,7 +348,9 @@ export default function AuthModal() {
               <div>
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div>
-                    <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+                    <label className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider mb-1.5 ${
+                      isLight ? 'text-slate-700' : 'text-zinc-300'
+                    }`}>
                       <Mail className="w-3.5 h-3.5 text-primary" /> Email
                     </label>
                     <input
@@ -334,13 +358,19 @@ export default function AuthModal() {
                       value={loginForm.email}
                       onChange={(e) => handleLoginChange('email', e.target.value)}
                       placeholder="nama@email.com"
-                      className="w-full bg-white/[0.04] hover:bg-white/[0.06] border border-white/10 focus:border-primary/70 focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 transition-all outline-none"
+                      className={`w-full rounded-xl px-4 py-3 text-sm transition-all outline-none ${
+                        isLight
+                          ? 'border border-slate-200 bg-slate-50 hover:bg-slate-100/70 focus:bg-white focus:border-primary text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-primary/20'
+                          : 'bg-white/[0.04] hover:bg-white/[0.06] border border-white/10 focus:border-primary/70 focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/20 text-white placeholder-zinc-500'
+                      }`}
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+                    <label className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider mb-1.5 ${
+                      isLight ? 'text-slate-700' : 'text-zinc-300'
+                    }`}>
                       <Lock className="w-3.5 h-3.5 text-primary" /> Password
                     </label>
                     <div className="relative">
@@ -349,13 +379,19 @@ export default function AuthModal() {
                         value={loginForm.password}
                         onChange={(e) => handleLoginChange('password', e.target.value)}
                         placeholder={isEn ? 'Enter your password' : 'Masukkan password Anda'}
-                        className="w-full bg-white/[0.04] hover:bg-white/[0.06] border border-white/10 focus:border-primary/70 focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-3 pr-12 text-sm text-white placeholder-zinc-500 transition-all outline-none"
+                        className={`w-full rounded-xl px-4 py-3 pr-12 text-sm transition-all outline-none ${
+                          isLight
+                            ? 'border border-slate-200 bg-slate-50 hover:bg-slate-100/70 focus:bg-white focus:border-primary text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-primary/20'
+                            : 'bg-white/[0.04] hover:bg-white/[0.06] border border-white/10 focus:border-primary/70 focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/20 text-white placeholder-zinc-500'
+                        }`}
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 transition-colors cursor-pointer"
+                        className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 transition-colors cursor-pointer ${
+                          isLight ? 'text-slate-400 hover:text-slate-700' : 'text-zinc-400 hover:text-white'
+                        }`}
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -378,11 +414,11 @@ export default function AuthModal() {
 
                 {/* Pemisah Google */}
                 <div className="my-5 flex items-center gap-3">
-                  <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-                  <span className="text-[11px] text-zinc-400 uppercase tracking-widest font-semibold">
+                  <div className={`h-[1px] flex-1 ${isLight ? 'bg-slate-200' : 'bg-gradient-to-r from-transparent via-white/15 to-transparent'}`} />
+                  <span className={`text-[11px] uppercase tracking-widest font-semibold ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                     {isEn ? 'or continue with' : 'atau masuk dengan'}
                   </span>
-                  <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                  <div className={`h-[1px] flex-1 ${isLight ? 'bg-slate-200' : 'bg-gradient-to-r from-transparent via-white/15 to-transparent'}`} />
                 </div>
 
                 <GoogleAuthButton
@@ -392,7 +428,7 @@ export default function AuthModal() {
                 />
 
                 {/* Footer Switcher */}
-                <div className="text-center mt-6 pt-4 border-t border-white/5 text-xs text-zinc-400">
+                <div className={`text-center mt-6 pt-4 border-t text-xs ${isLight ? 'border-slate-200 text-slate-600' : 'border-white/5 text-zinc-400'}`}>
                   {isEn ? "Don't have an account?" : 'Belum punya akun?'}{' '}
                   <button
                     type="button"
@@ -401,8 +437,8 @@ export default function AuthModal() {
                   >
                     {isEn ? 'Register free now' : 'Daftar gratis sekarang'} <ArrowRight className="w-3 h-3 inline" />
                   </button>
-                  <div className="flex items-center justify-center gap-1.5 text-[11px] text-zinc-500 mt-3">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <div className={`flex items-center justify-center gap-1.5 text-[11px] mt-3 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                     <span>{isEn ? 'Your privacy & data are securely encrypted' : 'Privasi & data Anda terenkripsi aman'}</span>
                   </div>
                 </div>
@@ -412,7 +448,9 @@ export default function AuthModal() {
               <div>
                 <form onSubmit={handleRegister} className="space-y-3.5">
                   <div>
-                    <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+                    <label className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider mb-1.5 ${
+                      isLight ? 'text-slate-700' : 'text-zinc-300'
+                    }`}>
                       <User className="w-3.5 h-3.5 text-primary" /> {isEn ? 'Full Name *' : 'Nama Lengkap *'}
                     </label>
                     <input
@@ -420,20 +458,24 @@ export default function AuthModal() {
                       value={registerForm.name}
                       onChange={(e) => handleRegisterChange('name', e.target.value)}
                       placeholder={isEn ? 'e.g. John Doe' : 'Contoh: Budi Santoso'}
-                      className={`w-full bg-white/[0.04] hover:bg-white/[0.06] border ${
-                        errors.name ? 'border-rose-500' : 'border-white/10'
-                      } focus:border-primary/70 focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-500 transition-all outline-none`}
+                      className={`w-full rounded-xl px-4 py-2.5 text-sm transition-all outline-none ${
+                        isLight
+                          ? `${errors.name ? 'border-rose-500 bg-rose-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100/70 focus:bg-white focus:border-primary'} text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-primary/20 border`
+                          : `${errors.name ? 'border-rose-500' : 'border-white/10 hover:bg-white/[0.06] focus:border-primary/70 focus:bg-white/[0.07]'} bg-white/[0.04] text-white placeholder-zinc-500 focus:ring-2 focus:ring-primary/20 border`
+                      }`}
                       required
                     />
                     {errors.name && (
-                      <p className="text-rose-400 text-xs flex items-center gap-1 mt-1 font-medium">
+                      <p className="text-rose-500 text-xs flex items-center gap-1 mt-1 font-medium">
                         <AlertCircle className="w-3 h-3" /> {errors.name[0]}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+                    <label className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider mb-1.5 ${
+                      isLight ? 'text-slate-700' : 'text-zinc-300'
+                    }`}>
                       <Mail className="w-3.5 h-3.5 text-primary" /> Email *
                     </label>
                     <input
@@ -441,20 +483,24 @@ export default function AuthModal() {
                       value={registerForm.email}
                       onChange={(e) => handleRegisterChange('email', e.target.value)}
                       placeholder="nama@email.com"
-                      className={`w-full bg-white/[0.04] hover:bg-white/[0.06] border ${
-                        errors.email ? 'border-rose-500' : 'border-white/10'
-                      } focus:border-primary/70 focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-500 transition-all outline-none`}
+                      className={`w-full rounded-xl px-4 py-2.5 text-sm transition-all outline-none ${
+                        isLight
+                          ? `${errors.email ? 'border-rose-500 bg-rose-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100/70 focus:bg-white focus:border-primary'} text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-primary/20 border`
+                          : `${errors.email ? 'border-rose-500' : 'border-white/10 hover:bg-white/[0.06] focus:border-primary/70 focus:bg-white/[0.07]'} bg-white/[0.04] text-white placeholder-zinc-500 focus:ring-2 focus:ring-primary/20 border`
+                      }`}
                       required
                     />
                     {errors.email && (
-                      <p className="text-rose-400 text-xs flex items-center gap-1 mt-1 font-medium">
+                      <p className="text-rose-500 text-xs flex items-center gap-1 mt-1 font-medium">
                         <AlertCircle className="w-3 h-3" /> {errors.email[0]}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+                    <label className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider mb-1.5 ${
+                      isLight ? 'text-slate-700' : 'text-zinc-300'
+                    }`}>
                       <Phone className="w-3.5 h-3.5 text-primary" /> {isEn ? 'WhatsApp Number *' : 'Nomor WhatsApp *'}
                     </label>
                     <PhoneCountryInput
@@ -465,11 +511,11 @@ export default function AuthModal() {
                       required
                     />
                     {errors.phone ? (
-                      <p className="text-rose-400 text-xs flex items-center gap-1 mt-1 font-medium">
+                      <p className="text-rose-500 text-xs flex items-center gap-1 mt-1 font-medium">
                         <AlertCircle className="w-3 h-3" /> {errors.phone[0]}
                       </p>
                     ) : (
-                      <p className="text-zinc-400 text-[11px] mt-1">
+                      <p className={`text-[11px] mt-1 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                         {isEn
                           ? 'Select country flag code (+62 Indonesia or international).'
                           : 'Pilih kode bendera negara (+62 Indonesia atau negara asing).'}
@@ -478,7 +524,9 @@ export default function AuthModal() {
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+                    <label className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider mb-1.5 ${
+                      isLight ? 'text-slate-700' : 'text-zinc-300'
+                    }`}>
                       <Lock className="w-3.5 h-3.5 text-primary" /> {isEn ? 'Password (Min. 8 Characters) *' : 'Password (Min. 8 Karakter) *'}
                     </label>
                     <div className="relative">
@@ -487,28 +535,34 @@ export default function AuthModal() {
                         value={registerForm.password}
                         onChange={(e) => handleRegisterChange('password', e.target.value)}
                         placeholder={isEn ? 'Create secure password' : 'Buat password aman'}
-                        className={`w-full bg-white/[0.04] hover:bg-white/[0.06] border ${
-                          errors.password ? 'border-rose-500' : 'border-white/10'
-                        } focus:border-primary/70 focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-2.5 pr-12 text-sm text-white placeholder-zinc-500 transition-all outline-none`}
+                        className={`w-full rounded-xl px-4 py-2.5 pr-12 text-sm transition-all outline-none ${
+                          isLight
+                            ? `${errors.password ? 'border-rose-500 bg-rose-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100/70 focus:bg-white focus:border-primary'} text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-primary/20 border`
+                            : `${errors.password ? 'border-rose-500' : 'border-white/10 hover:bg-white/[0.06] focus:border-primary/70 focus:bg-white/[0.07]'} bg-white/[0.04] text-white placeholder-zinc-500 focus:ring-2 focus:ring-primary/20 border`
+                        }`}
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 transition-colors cursor-pointer"
+                        className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 transition-colors cursor-pointer ${
+                          isLight ? 'text-slate-400 hover:text-slate-700' : 'text-zinc-400 hover:text-white'
+                        }`}
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                     {errors.password && (
-                      <p className="text-rose-400 text-xs flex items-center gap-1 mt-1 font-medium">
+                      <p className="text-rose-500 text-xs flex items-center gap-1 mt-1 font-medium">
                         <AlertCircle className="w-3 h-3" /> {errors.password[0]}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+                    <label className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider mb-1.5 ${
+                      isLight ? 'text-slate-700' : 'text-zinc-300'
+                    }`}>
                       <Lock className="w-3.5 h-3.5 text-primary" /> {isEn ? 'Confirm Password *' : 'Konfirmasi Password *'}
                     </label>
                     <div className="relative">
@@ -517,21 +571,25 @@ export default function AuthModal() {
                         value={registerForm.password_confirmation}
                         onChange={(e) => handleRegisterChange('password_confirmation', e.target.value)}
                         placeholder={isEn ? 'Repeat password' : 'Ulangi password'}
-                        className={`w-full bg-white/[0.04] hover:bg-white/[0.06] border ${
-                          errors.password_confirmation ? 'border-rose-500' : 'border-white/10'
-                        } focus:border-primary/70 focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-2.5 pr-12 text-sm text-white placeholder-zinc-500 transition-all outline-none`}
+                        className={`w-full rounded-xl px-4 py-2.5 pr-12 text-sm transition-all outline-none ${
+                          isLight
+                            ? `${errors.password_confirmation ? 'border-rose-500 bg-rose-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100/70 focus:bg-white focus:border-primary'} text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-primary/20 border`
+                            : `${errors.password_confirmation ? 'border-rose-500' : 'border-white/10 hover:bg-white/[0.06] focus:border-primary/70 focus:bg-white/[0.07]'} bg-white/[0.04] text-white placeholder-zinc-500 focus:ring-2 focus:ring-primary/20 border`
+                        }`}
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 transition-colors cursor-pointer"
+                        className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 transition-colors cursor-pointer ${
+                          isLight ? 'text-slate-400 hover:text-slate-700' : 'text-zinc-400 hover:text-white'
+                        }`}
                       >
                         {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                     {errors.password_confirmation && (
-                      <p className="text-rose-400 text-xs flex items-center gap-1 mt-1 font-medium">
+                      <p className="text-rose-500 text-xs flex items-center gap-1 mt-1 font-medium">
                         <AlertCircle className="w-3 h-3" /> {errors.password_confirmation[0]}
                       </p>
                     )}
@@ -553,11 +611,11 @@ export default function AuthModal() {
 
                 {/* Pemisah Google */}
                 <div className="my-5 flex items-center gap-3">
-                  <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-                  <span className="text-[11px] text-zinc-400 uppercase tracking-widest font-semibold">
+                  <div className={`h-[1px] flex-1 ${isLight ? 'bg-slate-200' : 'bg-gradient-to-r from-transparent via-white/15 to-transparent'}`} />
+                  <span className={`text-[11px] uppercase tracking-widest font-semibold ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                     {isEn ? 'or register with' : 'atau daftar dengan'}
                   </span>
-                  <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                  <div className={`h-[1px] flex-1 ${isLight ? 'bg-slate-200' : 'bg-gradient-to-r from-transparent via-white/15 to-transparent'}`} />
                 </div>
 
                 <GoogleAuthButton
@@ -567,7 +625,7 @@ export default function AuthModal() {
                 />
 
                 {/* Footer Switcher */}
-                <div className="text-center mt-6 pt-4 border-t border-white/5 text-xs text-zinc-400">
+                <div className={`text-center mt-6 pt-4 border-t text-xs ${isLight ? 'border-slate-200 text-slate-600' : 'border-white/5 text-zinc-400'}`}>
                   {isEn ? 'Already have an account?' : 'Sudah punya akun?'}{' '}
                   <button
                     type="button"
@@ -576,8 +634,8 @@ export default function AuthModal() {
                   >
                     {isEn ? 'Login to account' : 'Masuk ke akun'} <ArrowRight className="w-3 h-3 inline" />
                   </button>
-                  <div className="flex items-center justify-center gap-1.5 text-[11px] text-zinc-500 mt-3">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <div className={`flex items-center justify-center gap-1.5 text-[11px] mt-3 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                     <span>{isEn ? 'Your privacy & data are securely encrypted' : 'Privasi & data Anda terenkripsi aman'}</span>
                   </div>
                 </div>

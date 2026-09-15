@@ -146,10 +146,14 @@ export default function Step1ServiceSelect() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-8">
           {activeServices.map((service) => {
             const isActive = selectedService?.id === service.id;
-            const minPrice =
+            const sName = (service.name || '').toLowerCase();
+            const rawUnit = sName.includes('banner') ? 'm²' : sName.includes('stiker') ? 'lbr' : 'pcs';
+            const unit = isEn ? (rawUnit === 'm²' ? 'sqm' : rawUnit === 'lbr' ? 'sheet' : 'pcs') : rawUnit;
+            const minOrder = service.minimum_order || 1;
+            const startingPrice =
               service.pricing_type === 'tiered'
-                ? getMinPrice(service)
-                : service.base_price;
+                ? formatRupiah(getMinPrice(service))
+                : formatRupiah(service.base_price || service.price_per_unit);
 
             return (
               <div
@@ -206,7 +210,7 @@ export default function Step1ServiceSelect() {
                 <div className="mb-5">
                   <div className="flex flex-wrap items-center gap-2.5 mb-2.5">
                     <h3
-                      className={`font-heading text-lg sm:text-xl font-bold tracking-normal sm:tracking-wide leading-snug transition-colors ${
+                      className={`font-heading text-lg sm:text-xl font-bold tracking-[1.5px] sm:tracking-wide leading-snug transition-colors ${
                         isActive
                           ? 'text-primary'
                           : isLight
@@ -217,17 +221,15 @@ export default function Step1ServiceSelect() {
                       {td(service.name)}
                     </h3>
 
-                    {service.pricing_type === 'tiered' && (
-                      <span
-                        className={`px-2.5 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider border ${
-                          isLight
-                            ? 'bg-amber-50 text-amber-700 border-amber-200'
-                            : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                        }`}
-                      >
-                        {isEn ? 'Tiered Price' : 'Grosir Bertingkat'}
-                      </span>
-                    )}
+                    <span
+                      className={`px-2.5 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider border ${
+                        service.pricing_type === 'tiered'
+                          ? (isLight ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-amber-500/15 text-amber-300 border-amber-500/30')
+                          : (isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-white/5 text-zinc-300 border-white/10')
+                      }`}
+                    >
+                      {service.pricing_type === 'tiered' ? (isEn ? 'Wholesale Price' : 'Harga Grosir') : (isEn ? 'Fixed Price' : 'Harga Tetap')}
+                    </span>
                   </div>
 
                   <p
@@ -255,17 +257,15 @@ export default function Step1ServiceSelect() {
                     </span>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-primary font-bold text-lg sm:text-xl font-mono">
-                        {formatRupiah(minPrice)}
+                        {startingPrice}
                       </span>
-                      {service.pricing_type === 'flat' && (
-                        <span
-                          className={`text-xs font-medium ml-0.5 ${
-                            isLight ? 'text-slate-500' : 'text-zinc-400'
-                          }`}
-                        >
-                          / pcs
-                        </span>
-                      )}
+                      <span
+                        className={`text-xs font-medium ml-0.5 ${
+                          isLight ? 'text-slate-500' : 'text-zinc-400'
+                        }`}
+                      >
+                        / {unit}
+                      </span>
                     </div>
                   </div>
 
@@ -276,7 +276,7 @@ export default function Step1ServiceSelect() {
                         : 'bg-white/5 border-white/10 text-zinc-300'
                     }`}
                   >
-                    Min. {service.minimum_order} pcs
+                    Min. {minOrder} {unit}
                   </span>
                 </div>
               </div>

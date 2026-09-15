@@ -534,7 +534,7 @@ export default function Step4Design() {
           <span className="text-[10px] font-bold tracking-[2px] uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
             {language === 'en' ? 'Step 4 of 6' : 'Langkah 4 dari 6'}
           </span>
-          <h2 className="font-heading text-2xl sm:text-3xl text-white tracking-[0.5px] mt-2">
+          <h2 className="font-heading text-2xl sm:text-3xl text-white tracking-[1.5px] mt-2">
             {language === 'en' ? 'DESIGN & MOCKUP' : 'DESAIN & MOCKUP'}
           </h2>
         </div>

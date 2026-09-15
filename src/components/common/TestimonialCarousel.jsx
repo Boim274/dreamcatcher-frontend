@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Star, Quote, CheckCircle2, Sparkles, ShieldCheck } from 'lucide-react';
 import ScrollReveal from '../ui/ScrollReveal';
-import { getImageUrl } from '../../utils/getImageUrl';
+import OptimizedImage from '../ui/OptimizedImage';
 
 const GAP_PX = 20;
 
@@ -106,9 +106,11 @@ function TestimonialCard({ item }) {
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary via-[#ff60a8] to-purple-600 p-[1.5px] shadow-md shadow-primary/20 shrink-0 group-hover:scale-105 transition-transform">
             <div className="w-full h-full rounded-[14px] overflow-hidden bg-[#120c16] flex items-center justify-center">
               {item.image_url ? (
-                <img
-                  src={getImageUrl(item.image_url)}
+                <OptimizedImage
+                  src={item.image_url}
+                  variant="thumbnail"
                   alt={item.customer_name}
+                  containerClassName="w-full h-full"
                   className="w-full h-full object-cover"
                 />
               ) : (

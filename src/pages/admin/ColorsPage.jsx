@@ -171,13 +171,13 @@ export default function ColorsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="font-heading text-2xl sm:text-3xl text-white tracking-[1px]">Warna Sablon & Bahan</h1>
+              <h1 className="font-heading text-2xl sm:text-3xl text-white tracking-[1px]">Warna Apparel & Sablon</h1>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                 {pagination.total} Total
               </span>
             </div>
             <p className="text-gray text-xs sm:text-sm mt-1">
-              Kelola palet warna tinta sablon dan pilihan warna kain kaos untuk simulasi mockup dan katalog.
+              Kelola palet warna kain apparel, merchandise, dan opsi warna sablon untuk simulasi mockup dan katalog.
             </p>
           </div>
           <button

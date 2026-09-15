@@ -48,6 +48,12 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
     letter-spacing: 1.5px;
+    word-spacing: 2.5px;
+  }
+
+  .font-heading {
+    letter-spacing: 1.5px;
+    word-spacing: 2px;
   }
 }
 
@@ -355,9 +361,9 @@
 }
 
 /* Fix Native Select Dropdowns in Dark Mode (prevents glaring white background & unstyled options) */
-select.input-dark,
-.input-dark select,
-select {
+html:not(.light) select.input-dark,
+html:not(.light) .input-dark select,
+html:not(.light) select {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -372,14 +378,14 @@ select {
   cursor: pointer;
 }
 
-select.input-dark:hover,
-select:hover {
+html:not(.light) select.input-dark:hover,
+html:not(.light) select:hover {
   background-color: #1d1223 !important;
   border-color: rgba(236, 74, 150, 0.4);
 }
 
-select.input-dark:focus,
-select:focus {
+html:not(.light) select.input-dark:focus,
+html:not(.light) select:focus {
   border-color: var(--color-primary) !important;
   background-color: #1f1426 !important;
   box-shadow: 0 0 0 3px rgba(236, 74, 150, 0.2) !important;
@@ -387,26 +393,26 @@ select:focus {
 }
 
 /* Style Option List Items in Dropdown */
-select.input-dark option,
-select option,
-select optgroup {
+html:not(.light) select.input-dark option,
+html:not(.light) select option,
+html:not(.light) select optgroup {
   background-color: #170e1c !important;
   color: #ffffff !important;
   padding: 10px 14px;
   font-size: 13px;
 }
 
-select.input-dark option:hover,
-select.input-dark option:focus,
-select.input-dark option:checked,
-select option:checked {
+html:not(.light) select.input-dark option:hover,
+html:not(.light) select.input-dark option:focus,
+html:not(.light) select.input-dark option:checked,
+html:not(.light) select option:checked {
   background-color: var(--color-primary) !important;
   color: #ffffff !important;
 }
 
 /* Native Date Inputs (enables native dark calendar popup) */
-input[type="date"].input-dark,
-input[type="date"] {
+html:not(.light) input[type="date"].input-dark,
+html:not(.light) input[type="date"] {
   color-scheme: dark !important;
   background-color: #170e1c;
   color: #ffffff;
@@ -981,6 +987,9 @@ html.light [class*="bg-[#261630]"],
 html.light [class*="bg-[#2a1736]"],
 html.light [class*="bg-[#1f1426]"],
 html.light [class*="bg-[#221528]"],
+html.light [class*="bg-[#160e1d]"],
+html.light [class*="bg-[#120a16]"],
+html.light [class*="bg-[#130d17]"],
 html.light [class*="bg-[#1e1423]"],
 html.light [class*="bg-[#25172d]"],
 html.light [class*="bg-[#190f22]"],
@@ -997,6 +1006,9 @@ html.light [class*="bg-[#190f22]"],
 [data-theme="light"] [class*="bg-[#150d1b]"],
 [data-theme="light"] [class*="bg-[#160d1b]"],
 [data-theme="light"] [class*="bg-[#160d1c]"],
+[data-theme="light"] [class*="bg-[#160e1d]"],
+[data-theme="light"] [class*="bg-[#120a16]"],
+[data-theme="light"] [class*="bg-[#130d17]"],
 [data-theme="light"] [class*="bg-[#170e1c]"],
 [data-theme="light"] [class*="bg-[#180e1e]"],
 [data-theme="light"] [class*="bg-[#180e20]"],
@@ -1018,14 +1030,16 @@ html.light [class*="bg-[#190f22]"],
 
 /* Secondary Section backgrounds */
 html.light section[class*="bg-[#150d1a]"],
+html.light section[class*="bg-[#160e1d]"],
 html.light section[class*="bg-[#180e1e]"],
 html.light section[class*="bg-[#140c1a]"],
 html.light section[class*="bg-[#100814]"],
 [data-theme="light"] section[class*="bg-[#150d1a]"],
+[data-theme="light"] section[class*="bg-[#160e1d]"],
 [data-theme="light"] section[class*="bg-[#180e1e]"],
 [data-theme="light"] section[class*="bg-[#140c1a]"],
 [data-theme="light"] section[class*="bg-[#100814]"] {
-  background-color: #f1f5f9 !important;
+  background-color: #f8fafc !important;
 }
 
 /* Cards & Inset Containers */
@@ -1260,17 +1274,30 @@ html.light div[class*="bg-[#0d0714]"],
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05) !important;
 }
 
-html.light div.bg-black\/80,
-html.light div.bg-black\/60,
-html.light div.bg-black\/70,
-html.light div.bg-black\/90,
-[data-theme="light"] div.bg-black\/80,
-[data-theme="light"] div.bg-black\/60,
-[data-theme="light"] div.bg-black\/70,
-[data-theme="light"] div.bg-black\/90 {
+/* Studio Panels using semi-transparent dark backgrounds (non-fullscreen) */
+html.light div:not(.fixed):not(.absolute) > div.bg-black\/80,
+html.light div:not(.fixed):not(.absolute) > div.bg-black\/60,
+html.light div:not(.fixed):not(.absolute) > div.bg-black\/70,
+[data-theme="light"] div:not(.fixed):not(.absolute) > div.bg-black\/80,
+[data-theme="light"] div:not(.fixed):not(.absolute) > div.bg-black\/60,
+[data-theme="light"] div:not(.fixed):not(.absolute) > div.bg-black\/70 {
   background-color: rgba(255, 255, 255, 0.96) !important;
   border-color: #e2e8f0 !important;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Maintain Dark Backdrop for Lightbox Image Previews and Media Zoom in Light Mode */
+html.light .fixed.inset-0.bg-black\/90,
+html.light .fixed.inset-0.bg-black\/95,
+[data-theme="light"] .fixed.inset-0.bg-black\/90,
+[data-theme="light"] .fixed.inset-0.bg-black\/95 {
+  background-color: rgba(15, 23, 42, 0.92) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+html.light .fixed.inset-0.bg-black\/90 button,
+[data-theme="light"] .fixed.inset-0.bg-black\/90 button {
+  color: #ffffff !important;
 }
 
 /* Studio Canvas / Preview Backdrop */

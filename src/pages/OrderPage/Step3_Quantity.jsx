@@ -1,5 +1,6 @@
 import { useOrderStore } from '../../store/orderStore';
 import { useLanguageStore } from '../../store/languageStore';
+import { useThemeStore } from '../../store/themeStore';
 import Icon from '../../components/ui/Icon';
 import { useToast } from '../../components/ui/Toast';
 import { formatRupiah } from '../../utils/formatRupiah';
@@ -69,28 +70,39 @@ export default function Step3Quantity() {
     nextStep();
   };
 
+  const { theme } = useThemeStore();
+  const isLight = theme === 'light';
+
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+    <div className={`rounded-3xl border p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden transition-colors ${
+      isLight ? 'bg-white border-slate-200 shadow-slate-900/5 text-slate-800' : 'border-white/10 bg-white/[0.03] text-white'
+    }`}>
       {/* Ambient background glow */}
       <div className="absolute -top-24 -right-24 w-60 h-60 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b border-white/10">
+      <div className={`flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b ${
+        isLight ? 'border-slate-100' : 'border-white/10'
+      }`}>
         <div>
           <span className="text-[10px] font-bold tracking-[2px] uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
             {language === 'en' ? 'Step 3 of 6' : 'Langkah 3 dari 6'}
           </span>
-          <h2 className="font-heading text-2xl sm:text-3xl text-white tracking-[0.5px] mt-2">
+          <h2 className={`font-heading text-2xl sm:text-3xl tracking-[1.5px] mt-2 ${
+            isLight ? 'text-slate-900' : 'text-white'
+          }`}>
             {language === 'en' ? 'SIZE & QUANTITY' : 'UKURAN & JUMLAH'}
           </h2>
         </div>
         <div className="text-right">
-          <span className="text-xs text-gray-400">{language === 'en' ? 'Service:' : 'Layanan:'}</span>
-          <p className="text-sm font-semibold text-white">{td(selectedService.name)}</p>
+          <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>{language === 'en' ? 'Service:' : 'Layanan:'}</span>
+          <p className={`text-sm font-semibold ${isLight ? 'text-slate-800' : 'text-white'}`}>{td(selectedService.name)}</p>
         </div>
       </div>
 
       {/* Config Summary Pills */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 mb-6">
+      <div className={`rounded-2xl border p-4 mb-6 ${
+        isLight ? 'border-slate-200 bg-slate-50' : 'border-white/10 bg-white/[0.02]'
+      }`}>
         <p className="text-primary text-[11px] tracking-[1.5px] uppercase mb-2.5 font-bold">
           {language === 'en' ? 'Configuration Summary' : 'Ringkasan Konfigurasi'}
         </p>
@@ -120,13 +132,15 @@ export default function Step3Quantity() {
                 className={`p-3 rounded-2xl border text-center transition-all duration-200 ${
                   totalQty === pcs
                     ? 'border-primary bg-primary/20 text-white shadow-lg shadow-primary/20 ring-1 ring-primary/40'
+                    : isLight
+                    ? 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                     : 'border-white/10 bg-white/[0.02] text-gray-300 hover:border-white/20 hover:bg-white/[0.04]'
                 }`}
               >
-                <p className={`font-bold text-sm ${totalQty === pcs ? 'text-primary' : 'text-white'}`}>
+                <p className={`font-bold text-sm ${totalQty === pcs ? 'text-primary' : isLight ? 'text-slate-900' : 'text-white'}`}>
                   {language === 'en' ? `${lusin} Dozen` : `${lusin} Lusin`}
                 </p>
-                <p className="text-gray-400 text-[11px] mt-0.5">{pcs} pcs</p>
+                <p className={`text-[11px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>{pcs} pcs</p>
               </button>
             ))}
           </div>

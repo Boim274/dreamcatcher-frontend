@@ -9,6 +9,7 @@ import { formatRupiah } from '../../utils/formatRupiah';
 
 import { getImageUrl } from '../../utils/getImageUrl';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
+import OptimizedImage from '../../components/ui/OptimizedImage';
 
 const paymentTypeLabel = {
   full: 'Lunas',
@@ -321,14 +322,17 @@ export default function PaymentsPage() {
                               amount: payment.amount,
                               date: payment.created_at,
                             })}
-                            className="relative group flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl overflow-hidden border border-white/15 hover:border-primary/50 transition-all cursor-pointer"
+                            className="relative group flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl overflow-hidden border border-white/15 hover:border-primary/50 transition-all cursor-pointer w-28 h-28 sm:w-32 sm:h-32"
                           >
-                            <img
-                              src={getImageUrl(payment.payment_proof)}
+                            <OptimizedImage
+                              src={payment.payment_proof}
+                              thumbnailSrc={payment.thumbnail_url}
+                              variant="thumbnail"
                               alt="Bukti pembayaran"
-                              className="w-28 h-28 sm:w-32 sm:h-32 object-cover transition-transform duration-300 group-hover:scale-105"
+                              containerClassName="w-full h-full"
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                             />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[11px] font-bold">
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[11px] font-bold z-10">
                               Lihat Bukti
                             </div>
                           </button>

@@ -16,12 +16,11 @@ import {
   ImageIcon,
   Search,
   RotateCcw,
-  CheckCircle2,
-  Sparkles,
   Check,
 } from 'lucide-react';
 import { getImageUrl } from '../../utils/getImageUrl';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
+import OptimizedImage from '../../components/ui/OptimizedImage';
 
 export default function PortfoliosPage() {
   const toast = useToast();
@@ -47,6 +46,26 @@ export default function PortfoliosPage() {
   const [page, setPage] = useState(1);
   const fileInputRef = useRef(null);
   const [filters, setFilters] = useState({ search: '', service_id: '', is_featured: '' });
+
+  const fetchData = async (signal, pageArg, overrideFilters) => {
+    const p = pageArg || page;
+    const f = overrideFilters || filters;
+    try {
+      const params = { page: p, per_page: 15 };
+      if (f.search) params.search = f.search;
+      if (f.service_id) params.service_id = f.service_id;
+      if (f.is_featured) params.is_featured = f.is_featured;
+      const result = await adminService.getPortfolios(params, signal);
+      const svcRes = p === 1 ? await adminService.getServices({}, signal) : null;
+      setPortfolios(result.data);
+      setPagination(result.pagination);
+      if (svcRes) setServices(svcRes.data);
+    } catch (error) {
+      if (error?.name !== 'CanceledError') console.error('Failed to fetch data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -77,26 +96,6 @@ export default function PortfoliosPage() {
   };
 
   const hasActiveFilters = Boolean(filters.search || filters.service_id || filters.is_featured);
-
-  const fetchData = async (signal, pageArg, overrideFilters) => {
-    const p = pageArg || page;
-    const f = overrideFilters || filters;
-    try {
-      const params = { page: p, per_page: 15 };
-      if (f.search) params.search = f.search;
-      if (f.service_id) params.service_id = f.service_id;
-      if (f.is_featured) params.is_featured = f.is_featured;
-      const result = await adminService.getPortfolios(params, signal);
-      const svcRes = p === 1 ? await adminService.getServices({}, signal) : null;
-      setPortfolios(result.data);
-      setPagination(result.pagination);
-      if (svcRes) setServices(svcRes.data);
-    } catch (error) {
-      if (error?.name !== 'CanceledError') console.error('Failed to fetch data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const openModal = (portfolio = null) => {
     if (portfolio) {
@@ -224,13 +223,13 @@ export default function PortfoliosPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="font-heading text-2xl sm:text-3xl text-white tracking-[1px]">Koleksi Portfolio</h1>
+              <h1 className="font-heading text-2xl sm:text-3xl text-white tracking-[1px]">Portofolio Produksi Apparel & Cetak</h1>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                 {pagination.total} Total
               </span>
             </div>
             <p className="text-gray text-xs sm:text-sm mt-1">
-              Kelola showcase foto hasil produksi sablon terbaik untuk dipamerkan di halaman galeri dan beranda utama.
+              Kelola galeri hasil produksi konveksi apparel dan cetak sablon presisi untuk ditampilkan di showcase galeri dan beranda.
             </p>
           </div>
           <button
@@ -325,13 +324,13 @@ export default function PortfoliosPage() {
                   <div className="flex items-start gap-3">
                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-ink border border-border/60 flex-shrink-0">
                       {item.image_url ? (
-                        <img
-                          src={getImageUrl(item.image_url)}
+                        <OptimizedImage
+                          src={item.image_url}
+                          thumbnailSrc={item.thumbnail_url}
+                          variant="thumbnail"
                           alt={item.title}
+                          containerClassName="w-full h-full"
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray">
@@ -422,13 +421,13 @@ export default function PortfoliosPage() {
                         <td className="px-5 py-3.5">
                           <div className="w-12 h-12 rounded-xl overflow-hidden bg-ink border border-border/80 flex items-center justify-center flex-shrink-0 group-hover:border-primary/40 transition-colors">
                             {item.image_url ? (
-                              <img
-                                src={getImageUrl(item.image_url)}
+                              <OptimizedImage
+                                src={item.image_url}
+                                thumbnailSrc={item.thumbnail_url}
+                                variant="thumbnail"
                                 alt={item.title}
+                                containerClassName="w-full h-full"
                                 className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.target.style.display = 'none';
-                                }}
                               />
                             ) : (
                               <ImageIcon size={20} className="text-gray" />

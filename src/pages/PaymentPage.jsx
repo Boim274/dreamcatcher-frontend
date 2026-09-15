@@ -14,13 +14,16 @@ import Footer from '../components/common/Footer';
 import { formatRupiah } from '../utils/formatRupiah';
 
 import { useLanguageStore } from '../store/languageStore';
+import { useThemeStore } from '../store/themeStore';
 import { getImageUrl } from '../utils/getImageUrl';
 
 export default function PaymentPage() {
   const { orderCode } = useParams();
   const [searchParams] = useSearchParams();
   const { t, td, language } = useLanguageStore();
+  const { theme } = useThemeStore();
   const isEn = language === 'en';
+  const isLight = theme === 'light';
 
   const [order, setOrder] = useState(null);
   const [payments, setPayments] = useState([]);
@@ -163,7 +166,9 @@ export default function PaymentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#120c16] text-white">
+      <div className={`min-h-screen flex flex-col transition-colors ${
+        isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#120c16] text-white'
+      }`}>
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner size="lg" />
@@ -175,7 +180,9 @@ export default function PaymentPage() {
 
   if (!order) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#120c16] text-white">
+      <div className={`min-h-screen flex flex-col transition-colors ${
+        isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#120c16] text-white'
+      }`}>
         <Navbar />
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="glass-card max-w-md w-full p-8 rounded-3xl border border-white/10 text-center">
@@ -193,7 +200,9 @@ export default function PaymentPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#120c16] text-white relative overflow-hidden selection:bg-primary selection:text-white">
+    <div className={`min-h-screen flex flex-col relative overflow-hidden selection:bg-primary selection:text-white transition-colors ${
+      isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#120c16] text-white'
+    }`}>
       {/* Background Ambient Glows */}
       <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-primary/20 via-purple-600/10 to-transparent blur-3xl rounded-full" />
       <div className="pointer-events-none absolute top-1/3 -left-48 w-96 h-96 bg-primary/10 blur-3xl rounded-full" />
@@ -362,12 +371,20 @@ export default function PaymentPage() {
                         onClick={() => setSelectedType(type.id)}
                         className={`p-5 rounded-2xl border text-left transition-all relative overflow-hidden ${
                           isActive
-                            ? 'border-primary bg-primary/15 shadow-[0_0_25px_rgba(236,74,150,0.2)]'
+                            ? 'border-primary bg-primary/15 shadow-[0_0_25px_rgba(236,74,150,0.2)] ring-1 ring-primary/40'
+                            : isLight
+                            ? 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100/80'
                             : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isActive ? 'bg-primary text-white' : 'bg-white/5 text-white/60'}`}>
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                            isActive
+                              ? 'bg-primary text-white'
+                              : isLight
+                              ? 'bg-slate-200 text-slate-700'
+                              : 'bg-white/5 text-white/60'
+                          }`}>
                             <Icon size={20} />
                           </div>
                           {isActive && (
@@ -376,10 +393,10 @@ export default function PaymentPage() {
                             </span>
                           )}
                         </div>
-                        <p className={`font-bold text-sm ${isActive ? 'text-primary' : 'text-white'}`}>
+                        <p className={`font-bold text-sm ${isActive ? 'text-primary' : isLight ? 'text-slate-900' : 'text-white'}`}>
                           {type.label}
                         </p>
-                        <p className="text-white/60 text-xs mt-1 leading-relaxed">{type.desc}</p>
+                        <p className={`text-xs mt-1 leading-relaxed ${isLight ? 'text-slate-600' : 'text-white/60'}`}>{type.desc}</p>
                       </button>
                     );
                   })}
@@ -388,12 +405,12 @@ export default function PaymentPage() {
 
               <div className="mt-5 p-5 bg-gradient-to-r from-primary/20 via-purple-500/10 to-transparent border border-primary/30 rounded-2xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <span className="text-white/80 font-medium text-sm">{isEn ? 'Amount to be paid:' : 'Nominal yang harus dibayar:'}</span>
+                  <span className={`font-medium text-sm ${isLight ? 'text-slate-700' : 'text-white/80'}`}>{isEn ? 'Amount to be paid:' : 'Nominal yang harus dibayar:'}</span>
                   <span className="text-3xl font-bold text-gradient-primary leading-none">{formatRupiah(payAmount)}</span>
                 </div>
                 {!isPelunasanMode && selectedType !== 'full' && remaining > payAmount && (
-                  <p className="text-white/50 text-xs mt-3 pt-2 border-t border-white/10">
-                    {isEn ? 'Remaining after this payment:' : 'Sisa setelah pembayaran ini:'} <span className="font-semibold text-white">{formatRupiah(remaining - payAmount)}</span> {isEn ? '(paid before delivery/pickup).' : '(dibayar sebelum pengiriman/pengambilan).'}
+                  <p className={`text-xs mt-3 pt-2 border-t ${isLight ? 'border-slate-200 text-slate-500' : 'border-white/10 text-white/50'}`}>
+                    {isEn ? 'Remaining after this payment:' : 'Sisa setelah pembayaran ini:'} <span className={`font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>{formatRupiah(remaining - payAmount)}</span> {isEn ? '(paid before delivery/pickup).' : '(dibayar sebelum pengiriman/pengambilan).'}
                   </p>
                 )}
               </div>
@@ -408,13 +425,15 @@ export default function PaymentPage() {
               </h3>
               <div className="space-y-3">
                 {BANK_ACCOUNTS.map((acc) => (
-                  <div key={acc.number} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 bg-white/[0.02] rounded-2xl border border-white/10 hover:border-primary/30 transition-all gap-4">
+                  <div key={acc.number} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl border transition-all gap-4 ${
+                    isLight ? 'bg-slate-50 border-slate-200 hover:border-primary/40' : 'bg-white/[0.02] border-white/10 hover:border-primary/30'
+                  }`}>
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 rounded-lg bg-primary/20 text-primary text-xs font-bold uppercase">{acc.bank}</span>
-                        <span className="text-white/50 text-xs">a.n. {acc.name}</span>
+                        <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-white/50'}`}>a.n. {acc.name}</span>
                       </div>
-                      <p className="text-2xl font-bold font-mono tracking-wider text-white mt-1.5">{acc.number}</p>
+                      <p className={`text-2xl font-bold font-mono tracking-wider mt-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>{acc.number}</p>
                     </div>
                     <button
                       type="button"
@@ -511,14 +530,28 @@ export default function PaymentPage() {
                       </div>
                     </div>
                   ) : (
-                    <label className="border-2 border-dashed border-white/15 hover:border-primary/60 bg-white/[0.02] hover:bg-primary/5 rounded-3xl p-8 sm:p-12 text-center block cursor-pointer transition-all group">
-                      <div className="w-14 h-14 rounded-2xl bg-white/5 group-hover:bg-primary/20 border border-white/10 group-hover:border-primary/40 flex items-center justify-center mx-auto mb-4 transition-all">
-                        <Upload className="w-7 h-7 text-white/60 group-hover:text-primary transition-colors" />
+                    <label className={`border-2 border-dashed rounded-3xl p-8 sm:p-12 text-center block cursor-pointer transition-all group ${
+                      isLight
+                        ? 'border-slate-300 hover:border-primary/60 bg-slate-50 hover:bg-primary/5'
+                        : 'border-white/15 hover:border-primary/60 bg-white/[0.02] hover:bg-primary/5'
+                    }`}>
+                      <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center mx-auto mb-4 transition-all ${
+                        isLight
+                          ? 'bg-white group-hover:bg-primary/20 border-slate-200 group-hover:border-primary/40'
+                          : 'bg-white/5 group-hover:bg-primary/20 border border-white/10 group-hover:border-primary/40'
+                      }`}>
+                        <Upload className={`w-7 h-7 group-hover:text-primary transition-colors ${
+                          isLight ? 'text-slate-500' : 'text-white/60'
+                        }`} />
                       </div>
-                      <p className="text-white font-bold text-sm mb-1 group-hover:text-primary transition-colors">
+                      <p className={`font-bold text-sm mb-1 group-hover:text-primary transition-colors ${
+                        isLight ? 'text-slate-900' : 'text-white'
+                      }`}>
                         {isEn ? 'Click or drag transfer receipt photo here' : 'Klik atau seret foto bukti transfer ke sini'}
                       </p>
-                      <p className="text-white/40 text-xs">{isEn ? 'Supports JPG, PNG, or WEBP (max. 5MB)' : 'Mendukung format JPG, PNG, atau WEBP (maks. 5MB)'}</p>
+                      <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-white/40'}`}>
+                        {isEn ? 'Supports JPG, PNG, or WEBP (max. 5MB)' : 'Mendukung format JPG, PNG, atau WEBP (maks. 5MB)'}
+                      </p>
                       <input
                         type="file"
                         accept="image/*"

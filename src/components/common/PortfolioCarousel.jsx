@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../utils/getImageUrl';
+import OptimizedImage from '../ui/OptimizedImage';
 
 export default function PortfolioCarousel({ portfolios }) {
   if (!portfolios || portfolios.length === 0) {
@@ -13,9 +13,13 @@ export default function PortfolioCarousel({ portfolios }) {
     <div className="port-grid">
       {portfolios.map((portfolio) => (
         <div key={portfolio.id} className="port-item">
-          <img
-            src={getImageUrl(portfolio.image_url)}
+          <OptimizedImage
+            src={portfolio.image_url}
+            thumbnailSrc={portfolio.thumbnail_url}
+            mediumSrc={portfolio.medium_url}
+            variant="medium"
             alt={portfolio.title}
+            containerClassName="w-full h-full"
             className="port-thumb"
           />
           <div className="port-overlay">

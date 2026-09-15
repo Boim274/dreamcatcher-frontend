@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { getOptimizedImageUrl } from '../../utils/optimizedImage';
 
 /**
  * Robust UserAvatar component with automatic error fallback to name initials
@@ -18,6 +19,7 @@ export default function UserAvatar({
   alt,
 }) {
   const avatarUrl = src || user?.avatar || null;
+  const optimizedSrc = avatarUrl ? getOptimizedImageUrl(avatarUrl, { width: 160, height: 160, fit: 'crop', quality: 85 }) : null;
   const displayName = name || user?.name || 'User';
   const initial = (displayName.trim().charAt(0) || 'U').toUpperCase();
 
@@ -59,7 +61,7 @@ export default function UserAvatar({
     >
       {showImage ? (
         <img
-          src={avatarUrl}
+          src={optimizedSrc}
           alt={alt || displayName}
           onError={() => setHasError(true)}
           className={`w-full h-full object-cover object-center ${imgClassName}`}

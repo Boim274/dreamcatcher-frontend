@@ -6,6 +6,7 @@ import { formatRupiah } from '../../utils/formatRupiah';
 import { getImageUrl } from '../../utils/getImageUrl';
 import { StatusBadge } from '../common/StatusBadge';
 import ScrollReveal from '../ui/ScrollReveal';
+import OptimizedImage from '../ui/OptimizedImage';
 import ProgressBar from './ProgressBar';
 import VerticalTimeline from './VerticalTimeline';
 import OrderDetailSection from './OrderDetailSection';
@@ -64,14 +65,10 @@ export default function GuestTrackForm() {
             <div className="w-20 h-20 rounded-[14px] bg-ink border border-border flex items-center justify-center flex-shrink-0 overflow-hidden">
               {(() => {
                 const items = order.items || [];
-                const imgSrc = (() => {
-                  const d = items.find(i => i.design?.image_url);
-                  if (d) return getImageUrl(d.design.image_url);
-                  const p = items.find(i => i.product?.images?.length > 0);
-                  if (p) return p.product.images[0].image_url;
-                  return null;
-                })();
-                if (imgSrc) return <img src={imgSrc} alt="Item" className="w-full h-full object-contain" />;
+                const d = items.find(i => i.design?.thumbnail_url || i.design?.image_url);
+                const p = items.find(i => i.product?.images?.length > 0);
+                const imgSrc = d ? (d.design.thumbnail_url || d.design.image_url) : p ? (p.product.images[0].thumbnail_url || p.product.images[0].image_url) : null;
+                if (imgSrc) return <OptimizedImage src={imgSrc} variant="thumbnail" alt="Item" containerClassName="w-full h-full" className="w-full h-full object-contain" />;
                 return <ImageIcon className="w-8 h-8 text-gray/40" />;
               })()}
             </div>
