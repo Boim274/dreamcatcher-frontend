@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useOrderStore } from '../store/orderStore';
 import {
   ChevronDown,
   Sparkles,
@@ -33,6 +34,7 @@ import ServiceIcon from '../components/ui/ServiceIcons';
 import ScrollReveal from '../components/ui/ScrollReveal';
 import PortfolioCarousel from '../components/common/PortfolioCarousel';
 import TestimonialCarousel from '../components/common/TestimonialCarousel';
+import HeroCarousel from '../components/common/HeroCarousel';
 import { useLanguageStore } from '../store/languageStore';
 import { useThemeStore } from '../store/themeStore';
 import api from '../services/api';
@@ -46,6 +48,23 @@ const marqueeItemsId = [
 const marqueeItemsEn = [
   'CUSTOM APPAREL & GARMENT', 'HIGH DEFINITION DTF', 'DURABLE PLASTISOL', 'COMPUTER EMBROIDERY', 'AI DESIGN ASSISTANT', '3D MOCKUP PREVIEW', 'TESTED QUALITY STANDARDS'
 ];
+
+export const SERVICE_IMAGES = {
+  sablon: '/services/service-sablon.jpg',
+  banner: '/services/service-banner.jpg?v=2',
+  stiker: '/services/service-stiker.jpg',
+  bordir: '/services/service-bordir.jpg?v=2',
+};
+
+export function getServiceImage(service) {
+  if (service?.thumbnail) return service.thumbnail;
+  const name = (service?.name || '').toLowerCase();
+  if (name.includes('sablon') || name.includes('kaos')) return SERVICE_IMAGES.sablon;
+  if (name.includes('banner') || name.includes('spanduk')) return SERVICE_IMAGES.banner;
+  if (name.includes('stiker') || name.includes('sticker')) return SERVICE_IMAGES.stiker;
+  if (name.includes('bordir') || name.includes('embroidery')) return SERVICE_IMAGES.bordir;
+  return SERVICE_IMAGES.sablon;
+}
 
 const FAQ_DATA = [
   {
@@ -339,19 +358,8 @@ const FAQ_DATA = [
   },
 ];
 
-function FAQItem({ faq, index, isOpen, onToggle, language, isLight }) {
-  const IconComp = faq.icon || HelpCircle;
+function FAQItem({ faq, isOpen, onToggle, language, isLight }) {
   const isEn = language === 'en';
-  const categoryLabel = isEn
-    ? (faq.categoryKey === 'Layanan Cikarang' ? 'Cikarang Service'
-      : faq.categoryKey === 'Pemesanan' ? 'Ordering'
-      : faq.categoryKey === 'Teknik Sablon' ? 'Techniques'
-      : faq.categoryKey === 'Konveksi' ? 'Garment & Bulk'
-      : faq.categoryKey === 'Desain & Konsultasi' ? 'Design & AI'
-      : faq.categoryKey === 'Harga & Biaya' ? 'Pricing'
-      : faq.categoryKey === 'Harga & Pengiriman' ? 'Shipping'
-      : faq.categoryKey)
-    : faq.categoryKey;
   const question = isEn ? faq.question.en : faq.question.id;
   const answer = isEn ? faq.answer.en : faq.answer.id;
   const highlights = isEn ? faq.highlights.en : faq.highlights.id;
@@ -371,47 +379,19 @@ function FAQItem({ faq, index, isOpen, onToggle, language, isLight }) {
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-start sm:items-center justify-between p-4 sm:p-5 text-left cursor-pointer select-none gap-3.5 group"
+        className="w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer select-none gap-3.5 group"
         aria-expanded={isOpen}
       >
-        <div className="flex items-start sm:items-center gap-3.5 flex-1 min-w-0">
-          <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${
-              isLight
-                ? isOpen
-                  ? 'bg-primary/10 text-primary border-primary/25'
-                  : 'bg-slate-100 text-slate-500 border-slate-200/80 group-hover:text-primary'
-                : isOpen
-                  ? 'bg-primary/20 text-primary border-primary/30'
-                  : 'bg-white/5 text-zinc-400 border-white/10 group-hover:text-primary'
-            }`}
-          >
-            <IconComp size={17} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
-                isLight
-                  ? 'text-primary bg-primary/10 border-primary/20'
-                  : 'text-primary bg-primary/15 border-primary/25'
-              }`}>
-                {categoryLabel}
-              </span>
-              <span className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>•</span>
-              <span className={`text-[10px] font-mono ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
-                FAQ #{String(index + 1).padStart(2, '0')}
-              </span>
-            </div>
-            <h3 className={`font-heading text-sm sm:text-base font-bold tracking-[1.8px] [word-spacing:3px] leading-snug m-0 transition-colors ${
-              isLight ? 'text-slate-900 group-hover:text-primary' : 'text-white group-hover:text-primary'
-            }`}>
-              {question}
-            </h3>
-          </div>
+        <div className="min-w-0 flex-1">
+          <h3 className={`text-sm sm:text-base font-normal leading-snug m-0 transition-colors ${
+            isLight ? 'text-slate-900 group-hover:text-primary' : 'text-zinc-100 group-hover:text-primary'
+          }`}>
+            {question}
+          </h3>
         </div>
 
         <div
-          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 shrink-0 mt-0.5 sm:mt-0 ${
+          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 shrink-0 ${
             isOpen
               ? 'rotate-180 bg-primary/10 text-primary'
               : isLight
@@ -424,7 +404,7 @@ function FAQItem({ faq, index, isOpen, onToggle, language, isLight }) {
       </button>
 
       {isOpen && (
-        <div className={`px-4 pb-5 sm:px-5 sm:pb-5 ml-0 sm:ml-12 border-t pt-4 animate-in fade-in duration-150 ${
+        <div className={`px-4 pb-5 sm:px-5 sm:pb-5 border-t pt-4 animate-in fade-in duration-150 ${
           isLight ? 'border-slate-100' : 'border-white/5'
         }`}>
           <p className={`text-xs sm:text-sm leading-relaxed mb-3.5 ${
@@ -463,6 +443,21 @@ export default function LandingPage() {
   const { theme } = useThemeStore();
   const isEn = language === 'en';
   const isLight = theme === 'light';
+  const navigate = useNavigate();
+  const selectService = useOrderStore((s) => s.selectService);
+  const setStep = useOrderStore((s) => s.setStep);
+
+  const handleSelectService = (service) => {
+    selectService(service);
+    const sName = (service.name || '').toLowerCase();
+    const isKaos = sName.includes('kaos');
+    if (isKaos) {
+      navigate('/layanan/kaos');
+      return;
+    }
+    setStep(2);
+    navigate(`/pesan?service=${service.id}`);
+  };
 
   const [services, setServices] = useState([]);
   const [portfolios, setPortfolios] = useState([]);
@@ -537,14 +532,7 @@ export default function LandingPage() {
 
             {/* KIRI: TEKS & CTA */}
             <div className="lg:col-span-7 space-y-6 text-left">
-              <ScrollReveal direction="up" delay={100}>
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-bold tracking-[2px] uppercase shadow-sm">
-                  <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-                  <span>{t('hero.tag', 'Platform Konveksi & Custom Apparel Modern')}</span>
-                </div>
-              </ScrollReveal>
-
-              <ScrollReveal direction="up" delay={250}>
+              <ScrollReveal direction="up" delay={200}>
                 {isEn ? (
                   <h1 className="font-heading text-[clamp(38px,6.8vw,90px)] leading-[0.96] tracking-wide sm:tracking-wider text-white m-0">
                     CUSTOM APPAREL <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#ff60a8] to-primary">&amp; GARMENT</span><br />
@@ -572,7 +560,7 @@ export default function LandingPage() {
                   </Link>
                   <Link to="/design-studio" className="btn-glass text-sm font-semibold tracking-wider py-3.5 px-6 hover:border-primary/50 transition-all">
                     <Zap className="w-4 h-4 text-primary" />
-                    <span>{t('nav.studio', 'AI Design Studio')}</span>
+                    <span>{t('nav.studio', isEn ? 'Design Studio' : 'Studio Desain')}</span>
                   </Link>
                 </div>
               </ScrollReveal>
@@ -596,47 +584,10 @@ export default function LandingPage() {
               </ScrollReveal>
             </div>
 
-            {/* KANAN: SHOWCASE PRODUK / MOCKUP */}
+            {/* KANAN: SHOWCASE PRODUK / HERO CAROUSEL */}
             <div className="lg:col-span-5 relative">
               <ScrollReveal direction="right" delay={400}>
-                <div className="relative mx-auto max-w-[420px] aspect-square rounded-3xl p-3 bg-gradient-to-tr from-white/10 via-white/5 to-primary/20 border border-white/15 shadow-2xl backdrop-blur-xl group">
-                  <div className="relative w-full h-full rounded-2xl overflow-hidden bg-black/40">
-                    <OptimizedImage
-                      src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab"
-                      variant="medium"
-                      width={800}
-                      height={800}
-                      loading="eager"
-                      fetchPriority="high"
-                      alt={isEn ? 'Cikarang Custom T-Shirt Screen Printing - Dreamcatcher Workshop' : 'Tempat Sablon Cikarang Dreamcatcher - Kaos Custom DTF dan Plastisol Berkualitas'}
-                      containerClassName="w-full h-full"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-                  </div>
-
-                  {/* FLOATING BADGE 1 */}
-                  <div className="absolute -top-4 -right-4 px-4 py-2.5 rounded-2xl bg-[#1c1322]/90 border border-primary/40 shadow-xl backdrop-blur-md flex items-center gap-2.5 animate-bounce-subtle">
-                    <div className="w-7 h-7 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
-                      <Zap className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-white leading-tight">{isEn ? 'AI Generated' : 'AI Generated'}</p>
-                      <p className="text-[9px] text-zinc-400">{isEn ? 'Ready to DTF Print' : 'Siap Cetak DTF'}</p>
-                    </div>
-                  </div>
-
-                  {/* FLOATING BADGE 2 */}
-                  <div className="absolute -bottom-4 -left-4 px-4 py-2.5 rounded-2xl bg-[#1c1322]/90 border border-white/15 shadow-xl backdrop-blur-md flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                      <ShieldCheck className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-white leading-tight">{isEn ? 'Print Guarantee' : 'Garansi Sablon'}</p>
-                      <p className="text-[9px] text-zinc-400">{isEn ? 'Durable & Non-fading' : 'Tidak Luntur & Kuat'}</p>
-                    </div>
-                  </div>
-                </div>
+                <HeroCarousel isEn={isEn} />
               </ScrollReveal>
             </div>
 
@@ -691,51 +642,75 @@ export default function LandingPage() {
 
                 return (
                   <ScrollReveal key={service.id} direction="up" delay={index * 100}>
-                    <div className="group relative h-full flex flex-col justify-between p-6 sm:p-7 rounded-3xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-primary/50 transition-all duration-300 shadow-xl hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(236,74,150,0.15)]">
-                      <div>
-                        <div className="flex items-center justify-between mb-5">
-                          <div className="w-13 h-13 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                            <ServiceIcon name={service.name} size={26} />
-                          </div>
-                          <span className="font-mono text-2xl font-bold text-white/10 group-hover:text-primary/30 transition-colors">
+                    <div 
+                      onClick={() => handleSelectService(service)}
+                      className="group relative h-full flex flex-col justify-between rounded-3xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-primary/50 transition-all duration-300 shadow-xl hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(236,74,150,0.18)] overflow-hidden cursor-pointer"
+                    >
+                      {/* Image Banner with Floating Icon */}
+                      <div className="relative w-full h-44 sm:h-48 overflow-hidden bg-black/40">
+                        <img
+                          src={getServiceImage(service)}
+                          alt={service.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#150d1a] via-[#150d1a]/25 to-transparent pointer-events-none" />
+
+                        {/* Floating Service Icon */}
+                        <div className="absolute top-3 left-3 w-10 h-10 rounded-xl bg-black/60 border border-white/20 backdrop-blur-md flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-md">
+                          <ServiceIcon name={service.name} size={20} />
+                        </div>
+
+                        {/* Index Number */}
+                        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-black/60 border border-white/15 backdrop-blur-md">
+                          <span className="font-mono text-xs font-bold text-white/70 group-hover:text-primary transition-colors">
                             {String(index + 1).padStart(2, '0')}
                           </span>
                         </div>
-
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-primary">
-                            {service.pricing_type === 'tiered' ? (isEn ? 'Wholesale Price' : 'Harga Grosir') : (isEn ? 'Fixed Price' : 'Harga Tetap')}
-                          </span>
-                        </div>
-
-                        <h3 className="font-heading text-2xl text-white tracking-wide mb-2.5 group-hover:text-primary transition-colors">
-                          {td(service.name)}
-                        </h3>
-                        <p className="text-zinc-400 text-xs sm:text-[13px] leading-relaxed line-clamp-3 mb-5">
-                          {td(service.description)}
-                        </p>
                       </div>
 
-                      <div className="pt-4 border-t border-white/10">
-                        <div className="flex items-baseline justify-between mb-1">
-                          <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">{isEn ? 'Starts From' : 'Harga Mulai'}</span>
-                          <span className="text-[11px] font-medium text-zinc-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-lg">
-                            Min. {minOrder} {unit}
-                          </span>
-                        </div>
-                        <div className="flex items-baseline gap-1 mb-4">
-                          <span className="text-primary font-bold text-2xl font-mono">
-                            {startingPrice}
-                          </span>
-                          <span className="text-zinc-400 text-xs font-medium">/ {unit}</span>
+                      {/* Card Content */}
+                      <div className="p-6 pt-3 flex flex-col justify-between flex-1">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-primary">
+                              {service.pricing_type === 'tiered' ? (isEn ? 'Wholesale Price' : 'Harga Grosir') : (isEn ? 'Fixed Price' : 'Harga Tetap')}
+                            </span>
+                          </div>
+
+                          <h3 className="font-heading text-2xl text-white tracking-wide mb-2 group-hover:text-primary transition-colors">
+                            {td(service.name)}
+                          </h3>
+                          <p className="text-zinc-400 text-xs sm:text-[13px] leading-relaxed line-clamp-3 mb-5">
+                            {td(service.description)}
+                          </p>
                         </div>
 
-                        <Link
-                          to={`/pesan?service=${service.id}`}
-                          className="block w-full py-2.5 rounded-xl text-center text-xs font-bold uppercase tracking-wider text-white bg-white/5 hover:bg-primary border border-white/15 hover:border-primary transition-all duration-200 no-underline shadow-md hover:shadow-primary/25"
-                        >
-                          {isEn ? 'Order Now' : 'Pesan Sekarang'}
-                        </Link>
+                        <div className="pt-4 border-t border-white/10">
+                          <div className="flex items-baseline justify-between mb-1">
+                            <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">{isEn ? 'Starts From' : 'Harga Mulai'}</span>
+                            <span className="text-[11px] font-medium text-zinc-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-lg">
+                              Min. {minOrder} {unit}
+                            </span>
+                          </div>
+                          <div className="flex items-baseline gap-1 mb-4">
+                            <span className="text-primary font-bold text-2xl font-mono">
+                              {startingPrice}
+                            </span>
+                            <span className="text-zinc-400 text-xs font-medium">/ {unit}</span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectService(service);
+                            }}
+                            className="block w-full py-2.5 rounded-xl text-center text-xs font-bold uppercase tracking-wider text-white bg-white/5 hover:bg-primary border border-white/15 hover:border-primary transition-all duration-200 no-underline shadow-md hover:shadow-primary/25 cursor-pointer"
+                          >
+                            {isEn ? 'Order Now' : 'Pesan Sekarang'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </ScrollReveal>
@@ -959,9 +934,10 @@ export default function LandingPage() {
                     ].map((loc, idx) => (
                       <span
                         key={idx}
-                        className="px-3 py-1 rounded-xl text-xs font-medium bg-white/5 border border-white/10 text-zinc-300 hover:border-primary/40 hover:text-white transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium bg-white/5 border border-white/10 text-zinc-300 hover:border-primary/40 hover:text-white transition-colors"
                       >
-                        📍 {loc}
+                        <MapPin size={12} className="text-primary shrink-0" />
+                        <span>{loc}</span>
                       </span>
                     ))}
                   </div>

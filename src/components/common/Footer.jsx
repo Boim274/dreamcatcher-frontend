@@ -41,11 +41,6 @@ export default function Footer() {
             <p className="text-zinc-400 text-xs leading-relaxed max-w-xs">
               {t('footer.aboutText')}
             </p>
-            <div className="pt-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] text-zinc-400 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> {t('footer.workshopActive')}
-              </span>
-            </div>
           </div>
 
           {/* NAVIGASI */}

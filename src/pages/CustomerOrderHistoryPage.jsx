@@ -77,6 +77,7 @@ function HistoryCard({ order, onRefresh }) {
   };
 
   const renderItemDetails = (item) => [
+    item.shirt_model && `${language === 'en' ? 'Model: ' : 'Model: '}${item.shirt_model}`,
     item.size && `${language === 'en' ? 'Size: ' : 'Ukuran: '}${item.size}`,
     item.selected_color && `${language === 'en' ? 'Color: ' : 'Warna: '}${td(item.selected_color)}`,
     item.sablon_type && `${language === 'en' ? 'Print: ' : 'Sablon: '}${td(item.sablon_type)}`,
@@ -285,10 +286,14 @@ function HistoryCard({ order, onRefresh }) {
               </div>
               <div className="space-y-2.5">
                 {items.map((item, idx) => {
-                  const itemName = td(item.product?.name || item.service?.name || item.product_name || (language === 'en' ? 'Screen Printing Item' : 'Item Sablon'));
+                  const itemName = td(item.product_name || (item.service?.name ? (item.shirt_model ? `${item.service.name} (${item.shirt_model})` : item.service.name) : null) || item.product?.name || (language === 'en' ? 'Screen Printing Item' : 'Item Sablon'));
+                  const isSablon = Boolean(item.service_id || item.sablon_type || item.design_type || item.design_id);
+                  const fallbackOrderImg = items.find((i) => i.design?.image_url)?.design?.image_url;
                   const itemImg = item.design?.image_url
                     ? getImageUrl(item.design.image_url)
-                    : (item.product?.images?.[0]?.image_url ? getImageUrl(item.product.images[0].image_url) : null);
+                    : (item.product?.images?.[0]?.image_url
+                      ? getImageUrl(item.product.images[0].image_url)
+                      : (isSablon && fallbackOrderImg ? getImageUrl(fallbackOrderImg) : null));
                   const itemPrice = item.unit_price || item.price || 0;
                   const itemSubtotal = item.subtotal || (item.quantity * itemPrice);
                   const details = renderItemDetails(item);

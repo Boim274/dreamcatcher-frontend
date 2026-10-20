@@ -99,15 +99,31 @@ export default function Step6Checkout() {
         .join(' / ');
 
       const items = [];
+      const itemProductName = config.shirtModel
+        ? `${selectedService.name} (${config.shirtModel})`
+        : selectedService.name;
+
       if (breakdown.length > 0) {
         breakdown.forEach(({ size, qty, unitPrice }) => {
           printAreas.forEach((area, areaIndex) => {
             const areaPrice = areaIndex > 0 ? areaSurcharge : unitPrice;
-            const targetDesignId = area.design?.id || (areaIndex === 0 ? design?.id : null) || null;
-            const targetDesignType = (area.design?.type === 'chat_upload' ? 'uploaded' : area.design?.type) || design?.type || 'uploaded';
+            const targetDesignId = area.design?.id || printAreas[0]?.design?.id || design?.id || null;
+            const targetDesignType = (area.design?.type === 'chat_upload' ? 'uploaded' : area.design?.type)
+              || (printAreas[0]?.design?.type === 'chat_upload' ? 'uploaded' : printAreas[0]?.design?.type)
+              || design?.type
+              || 'uploaded';
+
+            const variantParts = [];
+            if (config.shirtModel) variantParts.push(`Model: ${config.shirtModel}`);
+            if (size) variantParts.push(`Size: ${size}`);
+            if (config.material) variantParts.push(`Bahan: ${config.material}`);
+
             items.push({
               service_id: selectedService.id,
-              product_name: selectedService.name,
+              product_id: config.shirtModelProductId || null,
+              product_name: itemProductName,
+              shirt_model: config.shirtModel || null,
+              variant_label: variantParts.join(', ') || null,
               size: size,
               quantity: qty,
               unit_price: areaPrice,
@@ -127,9 +143,18 @@ export default function Step6Checkout() {
         const unitPrice = useOrderStore.getState().getUnitPrice() || parseFloat(selectedService.base_price) || 0;
         const targetDesignId = printAreas[0]?.design?.id || design?.id || null;
         const targetDesignType = (printAreas[0]?.design?.type === 'chat_upload' ? 'uploaded' : printAreas[0]?.design?.type) || design?.type || 'uploaded';
+
+        const variantParts = [];
+        if (config.shirtModel) variantParts.push(`Model: ${config.shirtModel}`);
+        if (config.size) variantParts.push(`Size: ${config.size}`);
+        if (config.material) variantParts.push(`Bahan: ${config.material}`);
+
         items.push({
           service_id: selectedService.id,
-          product_name: selectedService.name,
+          product_id: config.shirtModelProductId || null,
+          product_name: itemProductName,
+          shirt_model: config.shirtModel || null,
+          variant_label: variantParts.join(', ') || null,
           size: config.size || null,
           quantity: totalQty,
           unit_price: unitPrice,
@@ -249,6 +274,20 @@ export default function Step6Checkout() {
           {configSummary && <span className="text-gray-200 font-medium text-right max-w-[65%]">{configSummary}</span>}
         </div>
 
+        {config.shirtModel && (
+          <div className="flex justify-between text-xs pb-2 border-b border-white/5">
+            <span className="text-gray-400 font-medium">{language === 'en' ? 'Shirt Model:' : 'Model Kaos:'}</span>
+            <span className="text-primary font-bold">{config.shirtModel}</span>
+          </div>
+        )}
+
+        {config.material && (
+          <div className="flex justify-between text-xs pb-2 border-b border-white/5">
+            <span className="text-gray-400 font-medium">{language === 'en' ? 'Fabric:' : 'Bahan Kain:'}</span>
+            <span className="text-white font-medium">{config.material}</span>
+          </div>
+        )}
+
         {/* Print Areas */}
         {printAreas.length > 0 && (
           <div className="my-2.5 space-y-1">
@@ -306,7 +345,12 @@ export default function Step6Checkout() {
               placeholder={language === 'en' ? 'Enter your full name' : 'Masukkan nama lengkap Anda'}
               className={inputClass('name')}
             />
-            {errors.name && <p className="text-pink-400 text-xs mt-1 font-medium">⚠️ {errors.name}</p>}
+            {errors.name && (
+              <p className="text-pink-400 text-xs mt-1 font-medium flex items-center gap-1.5">
+                <Icon name="alert-triangle" size={13} className="shrink-0 text-pink-400 inline-flex" />
+                <span>{errors.name}</span>
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -322,7 +366,12 @@ export default function Step6Checkout() {
                 required
                 className={errors.phone ? 'ring-1 ring-pink-500 rounded-2xl' : ''}
               />
-              {errors.phone && <p className="text-pink-400 text-xs mt-1 font-medium">⚠️ {errors.phone}</p>}
+              {errors.phone && (
+                <p className="text-pink-400 text-xs mt-1 font-medium flex items-center gap-1.5">
+                  <Icon name="alert-triangle" size={13} className="shrink-0 text-pink-400 inline-flex" />
+                  <span>{errors.phone}</span>
+                </p>
+              )}
             </div>
             <div>
               <label className="text-gray-300 text-xs font-semibold mb-1.5 block">
@@ -415,7 +464,12 @@ export default function Step6Checkout() {
               rows={3}
               className={`input-premium min-h-[90px] resize-none ${errors.address ? 'border-pink-500' : ''}`}
             />
-            {errors.address && <p className="text-pink-400 text-xs mt-1 font-medium">⚠️ {errors.address}</p>}
+            {errors.address && (
+              <p className="text-pink-400 text-xs mt-1 font-medium flex items-center gap-1.5">
+                <Icon name="alert-triangle" size={13} className="shrink-0 text-pink-400 inline-flex" />
+                <span>{errors.address}</span>
+              </p>
+            )}
           </div>
         )}
       </div>

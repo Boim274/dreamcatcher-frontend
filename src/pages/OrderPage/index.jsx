@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useOrderStore } from '../../store/orderStore';
 import { useLanguageStore } from '../../store/languageStore';
 import { useThemeStore } from '../../store/themeStore';
@@ -11,13 +12,88 @@ import Step3Quantity from './Step3_Quantity';
 import Step4Design from './Step4_Design';
 import Step5PricePreview from './Step5_PricePreview';
 import Step6Checkout from './Step6_Checkout';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 
 export default function OrderPage() {
-  const { currentStep } = useOrderStore();
+  const [searchParams] = useSearchParams();
+  const serviceParam = searchParams.get('service');
+  const modelParam = searchParams.get('model');
+  const {
+    currentStep,
+    setStep,
+    services,
+    selectService,
+    fetchServices,
+    selectedService,
+  } = useOrderStore();
   const { language } = useLanguageStore();
   const { theme } = useThemeStore();
   const isEn = language === 'en';
   const isLight = theme === 'light';
+
+  // Check if we already have the target service selected at step 2
+  const isAlreadyMatched = Boolean(
+    serviceParam &&
+    selectedService &&
+    (String(selectedService.id) === String(serviceParam) || String(selectedService.slug) === String(serviceParam)) &&
+    currentStep === 2
+  );
+
+  const [isResolvingService, setIsResolvingService] = useState(
+    Boolean(serviceParam && !isAlreadyMatched)
+  );
+  const handledServiceRef = useRef(isAlreadyMatched ? `${serviceParam}_${modelParam || ''}` : null);
+
+  useEffect(() => {
+    if (!serviceParam) {
+      setIsResolvingService(false);
+      return;
+    }
+
+    const stateKey = `${serviceParam}_${modelParam || ''}`;
+    if (handledServiceRef.current === stateKey) {
+      setIsResolvingService(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    const resolve = async () => {
+      let list = services;
+      if (!list || list.length === 0) {
+        await fetchServices();
+        list = useOrderStore.getState().services || [];
+      }
+
+      if (!isMounted) return;
+
+      const matched = (list || []).find(
+        (s) => String(s.id) === String(serviceParam) || String(s.slug) === String(serviceParam)
+      );
+
+      if (matched) {
+        selectService(matched);
+        if (modelParam) {
+          const isLong = modelParam === 'long_sleeve' || modelParam === 'long-sleeve' || modelParam.includes('panjang');
+          useOrderStore.getState().setConfig({
+            shirtModel: isLong ? 'Kaos Lengan Panjang' : 'Kaos Lengan Pendek',
+            shirtModelId: isLong ? 'long_sleeve' : 'short_sleeve',
+            shirtModelImage: isLong ? '/products/kaos-lengan-panjang.jpg' : '/products/kaos-lengan-pendek.jpg',
+            shirtModelSurcharge: isLong ? 5000 : 0,
+          });
+        }
+        setStep(2);
+        handledServiceRef.current = stateKey;
+      }
+      setIsResolvingService(false);
+    };
+
+    resolve();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [serviceParam, modelParam, services, selectService, setStep, fetchServices]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -26,7 +102,7 @@ export default function OrderPage() {
   const renderStep = () => {
     switch (currentStep) {
       case 1: return <Step1ServiceSelect />;
-      case 2: return <Step2ServiceConfig />;
+      case 2: return selectedService ? <Step2ServiceConfig /> : <Step1ServiceSelect />;
       case 3: return <Step3Quantity />;
       case 4: return <Step4Design />;
       case 5: return <Step5PricePreview />;
@@ -80,9 +156,18 @@ export default function OrderPage() {
 
         <StepIndicator />
 
-        <div className="mt-8 animate-fade-in" key={currentStep}>
-          {renderStep()}
-        </div>
+        {isResolvingService ? (
+          <div className="py-20 flex flex-col items-center justify-center gap-3">
+            <LoadingSpinner size="lg" />
+            <p className="text-xs text-zinc-400">
+              {isEn ? 'Preparing service configuration...' : 'Memuat konfigurasi layanan...'}
+            </p>
+          </div>
+        ) : (
+          <div className="mt-8 animate-fade-in" key={currentStep}>
+            {renderStep()}
+          </div>
+        )}
       </main>
 
       <Footer />

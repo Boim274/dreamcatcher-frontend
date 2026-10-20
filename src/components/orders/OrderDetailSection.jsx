@@ -66,13 +66,15 @@ export default function OrderDetailSection({ order }) {
         </div>
         <div className="space-y-3">
           {items.map((item, idx) => {
-            const rawImg = item.design?.image_url || item.product?.images?.[0]?.image_url;
-            const itemImg = rawImg ? getImageUrl(rawImg) : null;
-            const thumbImg = item.design?.thumbnail_url || item.product?.images?.[0]?.thumbnail_url || itemImg;
             const isSablon = Boolean(item.service_id || item.sablon_type || item.design_type || item.design_id);
+            const fallbackOrderImg = items.find((i) => i.design?.image_url)?.design?.image_url;
+            const fallbackOrderThumb = items.find((i) => i.design?.thumbnail_url)?.design?.thumbnail_url;
+            const rawImg = item.design?.image_url || item.product?.images?.[0]?.image_url || (isSablon ? fallbackOrderImg : null);
+            const itemImg = rawImg ? getImageUrl(rawImg) : null;
+            const thumbImg = item.design?.thumbnail_url || item.product?.images?.[0]?.thumbnail_url || (isSablon ? fallbackOrderThumb : null) || itemImg;
             const isAi = item.design_type === 'ai_generated' || item.design?.design_type === 'ai_generated';
             const details = renderItemDetails(item);
-            const itemName = item.product?.name || item.service?.name || item.product_name || 'Item Sablon';
+            const itemName = item.product_name || (item.service?.name ? (item.shirt_model ? `${item.service.name} (${item.shirt_model})` : item.service.name) : null) || item.product?.name || 'Item Sablon';
             const itemPrice = item.unit_price || item.price || 0;
             const itemSubtotal = item.subtotal || (item.quantity * itemPrice);
 
@@ -114,6 +116,11 @@ export default function OrderDetailSection({ order }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
                         <p className="text-white text-xs sm:text-sm font-semibold truncate">{itemName}</p>
+                        {item.shirt_model && (
+                          <span className="inline-flex items-center gap-1 text-[10px] px-2.5 py-0.5 rounded-full font-medium text-cyan-300 bg-cyan-400/10 border border-cyan-400/20">
+                            {item.shirt_model}
+                          </span>
+                        )}
                         {isSablon && (
                           <span className={`inline-flex items-center gap-1.5 text-[10px] px-2.5 py-0.5 rounded-full font-medium ${
                             isAi ? 'text-amber-400 bg-amber-400/10 border border-amber-400/20' : 'text-primary bg-primary/10 border border-primary/20'
@@ -124,7 +131,7 @@ export default function OrderDetailSection({ order }) {
                         )}
                       </div>
 
-                      {item.product?.id && (
+                      {!isSablon && !item.design && item.product?.id && (
                         <div className="flex items-center gap-2 mb-1.5">
                           <span className="text-white/40 text-[10px] font-mono">ID: #{item.product.id}</span>
                           <CopyId id={item.product.id} />

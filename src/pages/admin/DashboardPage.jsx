@@ -18,6 +18,7 @@ import {
   Layers,
   ChevronRight,
   ExternalLink,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 import { getImageUrl } from '../../utils/getImageUrl';
@@ -452,11 +453,11 @@ export default function DashboardPage() {
                   <span className="font-medium truncate">Cek Bukti Bayar</span>
                 </Link>
                 <Link
-                  to="/admin/layanan"
+                  to="/admin/portfolio"
                   className="p-3 rounded-xl bg-ink/70 border border-border hover:border-primary/40 text-gray-light hover:text-white transition-all flex items-center gap-2 no-underline"
                 >
-                  <Package size={15} className="text-sky-400 flex-shrink-0" />
-                  <span className="font-medium truncate">Layanan Sablon</span>
+                  <ImageIcon size={15} className="text-sky-400 flex-shrink-0" />
+                  <span className="font-medium truncate">Portofolio</span>
                 </Link>
                 <Link
                   to="/admin/laporan"

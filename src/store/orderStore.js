@@ -76,11 +76,24 @@ export const useOrderStore = create(
         const sizes = service?.options_config?.sizes || [];
         const sizeQuantities = {};
         sizes.forEach((s) => { sizeQuantities[s] = 0; });
-        set({
-          selectedService: service,
-          config: {},
-          sizeQuantities,
-          quantity: 0,
+        const isKaos = (service?.name || '').toLowerCase().includes('kaos');
+        set((state) => {
+          const existingShirtModel = state.config?.shirtModel;
+          return {
+            selectedService: service,
+            config: {
+              ...(isKaos
+                ? {
+                    shirtModel: existingShirtModel || 'Kaos Lengan Pendek',
+                    shirtModelId: state.config?.shirtModelId || (existingShirtModel?.includes('Panjang') ? 'long_sleeve' : 'short_sleeve'),
+                    shirtModelImage: state.config?.shirtModelImage || (existingShirtModel?.includes('Panjang') ? '/products/kaos-lengan-panjang.jpg' : '/products/kaos-lengan-pendek.jpg'),
+                    shirtModelSurcharge: state.config?.shirtModelSurcharge || (existingShirtModel?.includes('Panjang') ? 5000 : 0),
+                  }
+                : {}),
+            },
+            sizeQuantities,
+            quantity: 0,
+          };
         });
       },
 
@@ -192,21 +205,27 @@ export const useOrderStore = create(
         const { selectedService, config, quantity } = get();
         if (!selectedService) return 0;
 
+        let base = 0;
         if (selectedService.pricing_type === 'flat') {
-          return parseFloat(selectedService.base_price) || 0;
-        }
-
-        const pricingConfig = selectedService.pricing_config || {};
-        const sablonType = config.sablonType || '';
-        const typeConfig = pricingConfig[sablonType.toLowerCase()] || {};
-
-        if (quantity >= 24) {
-          return parseFloat(typeConfig.lusin_2_6 || typeConfig.lusin_1 || selectedService.base_price) || 0;
-        } else if (quantity >= 12) {
-          return parseFloat(typeConfig.lusin_1 || selectedService.base_price) || 0;
+          base = parseFloat(selectedService.base_price) || 0;
         } else {
-          return parseFloat(typeConfig.satuan || selectedService.base_price) || 0;
+          const pricingConfig = selectedService.pricing_config || {};
+          const sablonType = config.sablonType || '';
+          const typeConfig = pricingConfig[sablonType.toLowerCase()] || {};
+
+          if (quantity >= 24) {
+            base = parseFloat(typeConfig.lusin_2_6 || typeConfig.lusin_1 || selectedService.base_price) || 0;
+          } else if (quantity >= 12) {
+            base = parseFloat(typeConfig.lusin_1 || selectedService.base_price) || 0;
+          } else {
+            base = parseFloat(typeConfig.satuan || selectedService.base_price) || 0;
+          }
         }
+
+        const isLongSleeve = config.shirtModelId === 'long_sleeve' || (config.shirtModel || '').toLowerCase().includes('panjang');
+        const modelSurcharge = isLongSleeve ? (config.shirtModelSurcharge !== undefined ? config.shirtModelSurcharge : 5000) : 0;
+
+        return base + modelSurcharge;
       },
 
       getSizePrice: (size) => {
@@ -224,8 +243,9 @@ export const useOrderStore = create(
       getPriceBreakdown: () => {
         const { sizeQuantities, selectedService } = get();
         if (!selectedService) return [];
-        const sizes = selectedService.options_config?.sizes || [];
-        return sizes
+        const configSizes = selectedService.options_config?.sizes || [];
+        const allSizes = Array.from(new Set([...configSizes, ...Object.keys(sizeQuantities || {})]));
+        return allSizes
           .filter((size) => (sizeQuantities[size] || 0) > 0)
           .map((size) => {
             const qty = sizeQuantities[size] || 0;
@@ -281,8 +301,9 @@ export const useOrderStore = create(
               if (freshService) {
                 updates.selectedService = freshService;
                 const sizes = freshService.options_config?.sizes || [];
+                const allKeys = Array.from(new Set([...sizes, ...Object.keys(state.sizeQuantities || {})]));
                 const newSQ = {};
-                sizes.forEach((s) => { newSQ[s] = state.sizeQuantities[s] || 0; });
+                allKeys.forEach((s) => { newSQ[s] = state.sizeQuantities[s] || 0; });
                 updates.sizeQuantities = newSQ;
                 updates.quantity = Object.values(newSQ).reduce((sum, q) => sum + q, 0);
               }

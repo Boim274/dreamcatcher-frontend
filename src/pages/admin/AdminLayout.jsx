@@ -63,16 +63,6 @@ const adminNavSections = [
     ],
   },
   {
-    label: 'Kelola Layanan Spesifik',
-    items: [
-      { to: '/admin/layanan?type=sablon', label: 'Sablon Kaos', icon: Shirt },
-      { to: '/admin/layanan?type=banner', label: 'Printing Banner', icon: Layers },
-      { to: '/admin/layanan?type=stiker', label: 'Cetak Stiker', icon: Tag },
-      { to: '/admin/layanan?type=bordir', label: 'Bordir Komputer', icon: Scissors },
-      { to: '/admin/layanan', label: 'Semua Layanan', icon: Package },
-    ],
-  },
-  {
     label: 'Katalog Apparel & Produk',
     items: [
       { to: '/admin/produk', label: 'Produk Apparel', icon: Shirt },
@@ -98,7 +88,6 @@ const pageTitles = {
   '/admin/histori-pesanan': 'Histori Pesanan',
   '/admin/pembayaran': 'Kelola Pembayaran',
   '/admin/histori-pembayaran': 'Histori Pembayaran',
-  '/admin/layanan': 'Kelola Layanan',
   '/admin/portfolio': 'Kelola Portofolio Produksi',
   '/admin/produk': 'Kelola Produk Apparel',
   '/admin/kategori': 'Kelola Kategori',

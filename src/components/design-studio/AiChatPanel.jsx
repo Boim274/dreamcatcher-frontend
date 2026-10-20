@@ -143,7 +143,7 @@ function InteractiveOptions({ questions, onConfirm }) {
       <button
         onClick={handleConfirm}
         disabled={!hasSelection}
-        className="btn-gradient-primary flex items-center justify-center gap-2 w-full text-white font-bold py-2.5 rounded-xl text-[12px] shadow-lg shadow-primary/20 disabled:opacity-40 transition-all"
+        className="bg-primary hover:brightness-110 flex items-center justify-center gap-2 w-full text-white font-bold py-2.5 rounded-xl text-[12px] shadow-lg shadow-primary/20 disabled:opacity-40 transition-all cursor-pointer"
       >
         <Check className="w-4 h-4" /> Konfirmasi Pilihan
       </button>
@@ -176,7 +176,7 @@ function BubbleGroup({ role, items, onConfirm, isLatest }) {
                 key={i}
                 className={`rounded-2xl ${roundedCorner} shadow-md overflow-hidden ${
                   isUser
-                    ? 'ai-bubble-user bg-gradient-to-r from-primary via-[#a855f7] to-[#ec4899] text-white shadow-primary/15'
+                    ? 'ai-bubble-user bg-primary text-white shadow-md shadow-primary/20'
                     : 'ai-bubble-assistant bg-[#181120]/95 border border-white/10 text-gray-100 shadow-xl'
                 }`}
               >
@@ -383,12 +383,17 @@ export default function AiChatPanel({
             disabled={chatLoading || disabled}
           />
           <button
+            type="button"
             onClick={() => handleSend()}
             disabled={chatLoading || disabled || !localInput.trim()}
-            className="btn-gradient-primary w-10 h-10 flex items-center justify-center rounded-xl text-white shadow-lg shadow-primary/20 hover:scale-105 transition-all disabled:opacity-40 disabled:scale-100 shrink-0"
+            className={`w-10 h-10 p-0 flex items-center justify-center rounded-xl transition-all shrink-0 border ${
+              localInput.trim() && !chatLoading && !disabled
+                ? 'bg-primary text-white border-primary shadow-lg shadow-primary/25 hover:brightness-110 active:scale-95 cursor-pointer'
+                : 'bg-primary/20 text-white border-primary/30 cursor-not-allowed'
+            }`}
             title="Kirim pesan"
           >
-            {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {chatLoading ? <Loader2 className="w-4 h-4 text-white animate-spin shrink-0" /> : <Send className="w-4 h-4 text-white stroke-[2.2] shrink-0" />}
           </button>
         </div>
       )}

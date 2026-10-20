@@ -9,6 +9,7 @@ import feather from 'feather-icons';
 
 import LandingPage from './pages/LandingPage';
 import CatalogPage from './pages/CatalogPage';
+import ShirtModelSelectPage from './pages/ShirtModelSelectPage';
 import ProductListPage from './pages/ProductListPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
@@ -29,7 +30,6 @@ import OrderHistoryPage from './pages/admin/OrderHistoryPage';
 import OrderDetailPage from './pages/admin/OrderDetailPage';
 import PaymentsPage from './pages/admin/PaymentsPage';
 import PaymentHistoryPage from './pages/admin/PaymentHistoryPage';
-import ServicesPage from './pages/admin/ServicesPage';
 import PortfoliosPage from './pages/admin/PortfoliosPage';
 import ProductsPage from './pages/admin/ProductsPage';
 import CategoriesPage from './pages/admin/CategoriesPage';
@@ -146,6 +146,8 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/layanan" element={<CatalogPage />} />
+        <Route path="/layanan/kaos" element={<ShirtModelSelectPage />} />
+        <Route path="/layanan/model-kaos" element={<ShirtModelSelectPage />} />
         <Route path="/produk" element={<ProductListPage />} />
         <Route path="/produk/:id" element={<ProductDetailPage />} />
         <Route path="/keranjang" element={
@@ -205,7 +207,7 @@ function AppContent() {
           <Route path="pesanan/:id" element={<OrderDetailPage />} />
           <Route path="pembayaran" element={<PaymentsPage />} />
           <Route path="histori-pembayaran" element={<PaymentHistoryPage />} />
-          <Route path="layanan" element={<ServicesPage />} />
+          <Route path="layanan" element={<Navigate to="/admin" replace />} />
           <Route path="portfolio" element={<PortfoliosPage />} />
           <Route path="produk" element={<ProductsPage />} />
           <Route path="kategori" element={<CategoriesPage />} />

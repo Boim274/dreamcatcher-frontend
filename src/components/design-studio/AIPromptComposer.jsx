@@ -46,16 +46,21 @@ export default function AIPromptComposer({ value, onChange, onSend, loading, dis
           />
         </div>
         <button
+          type="button"
           onClick={handleSend}
           disabled={!canSend}
-          className="btn-gradient-primary w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl bg-gradient-to-r from-primary via-[#ff58a0] to-primary text-white shadow-lg shadow-primary/25 hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:scale-100 shrink-0 p-0 border-0"
+          className={`w-11 h-11 min-w-[44px] min-h-[44px] p-0 flex items-center justify-center rounded-xl transition-all shrink-0 border ${
+            canSend
+              ? 'bg-gradient-to-r from-primary to-[#ff58a0] text-white border-primary shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 cursor-pointer'
+              : 'bg-primary/20 text-white border-primary/30 cursor-not-allowed'
+          }`}
           title="Kirim ke AI"
           aria-label="Kirim ke AI"
         >
           {loading ? (
-            <Loader2 className="w-5 h-5 text-white animate-spin" />
+            <Loader2 className="w-5 h-5 text-white animate-spin shrink-0" />
           ) : (
-            <Send className="w-5 h-5 text-white stroke-[2.2]" />
+            <Send className="w-5 h-5 text-white stroke-[2.2] shrink-0" />
           )}
         </button>
         {onSendImage && (

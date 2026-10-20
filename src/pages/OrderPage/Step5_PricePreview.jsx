@@ -73,6 +73,21 @@ export default function Step5PricePreview() {
                 <span className="text-gray-400">{language === 'en' ? 'Service:' : 'Layanan:'}</span>
                 <span className="text-white font-semibold">{td(selectedService.name)}</span>
               </div>
+              {config.shirtModel && (
+                <div className="flex justify-between pb-2 border-b border-white/5">
+                  <span className="text-gray-400">{language === 'en' ? 'Shirt Model:' : 'Model Kaos:'}</span>
+                  <span className="text-primary font-bold flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    {config.shirtModel}
+                  </span>
+                </div>
+              )}
+              {config.material && (
+                <div className="flex justify-between pb-2 border-b border-white/5">
+                  <span className="text-gray-400">{language === 'en' ? 'Fabric Material:' : 'Bahan Kain:'}</span>
+                  <span className="text-white font-medium">{config.material}</span>
+                </div>
+              )}
               {configSummary && (
                 <div className="flex justify-between pb-2 border-b border-white/5">
                   <span className="text-gray-400">{language === 'en' ? 'Configuration:' : 'Konfigurasi:'}</span>

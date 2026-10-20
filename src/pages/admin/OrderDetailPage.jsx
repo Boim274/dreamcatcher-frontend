@@ -535,10 +535,12 @@ export default function OrderDetailPage() {
               </thead>
               <tbody className="divide-y divide-white/5 text-sm">
                 {order.items?.map((item) => {
-                  const rawOriginal = item.design?.image_url || item.product?.images?.[0]?.image_url;
-                  const fullImg = rawOriginal ? getImageUrl(rawOriginal) : null;
-                  const thumbImg = item.design?.thumbnail_url || item.product?.images?.[0]?.thumbnail_url || fullImg;
                   const isSablon = Boolean(item.service_id || item.sablon_type || item.design_type || item.design_id);
+                  const fallbackOrderImg = order.items?.find((i) => i.design?.image_url)?.design?.image_url;
+                  const fallbackOrderThumb = order.items?.find((i) => i.design?.thumbnail_url)?.design?.thumbnail_url;
+                  const rawOriginal = item.design?.image_url || item.product?.images?.[0]?.image_url || (isSablon ? fallbackOrderImg : null);
+                  const fullImg = rawOriginal ? getImageUrl(rawOriginal) : null;
+                  const thumbImg = item.design?.thumbnail_url || item.product?.images?.[0]?.thumbnail_url || (isSablon ? fallbackOrderThumb : null) || fullImg;
                   const isAiDesign = item.design_type === 'ai_generated' || item.design?.design_type === 'ai_generated';
 
                   return (
@@ -620,9 +622,14 @@ export default function OrderDetailPage() {
 
                       <td className="px-4 py-4 align-top">
                         <div className="flex flex-wrap gap-1.5 text-[11px]">
+                          {item.shirt_model && (
+                            <span className="px-2 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/20 text-purple-300 font-bold">
+                              Model: <strong className="text-white">{item.shirt_model}</strong>
+                            </span>
+                          )}
                           {(item.variant_label || item.size) && (
                             <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-zinc-200">
-                              Ukuran: <strong className="text-white">{item.variant_label || item.size}</strong>
+                              {item.variant_label && !item.variant_label.startsWith('Size:') ? item.variant_label : `Ukuran: ${item.size || item.variant_label}`}
                             </span>
                           )}
                           {item.sablon_type && (

@@ -123,6 +123,7 @@ export default function TestimonialForm({ order, existingTestimonial, onClose, o
         rating,
         review: review.trim(),
         image_url: user?.avatar || order?.user?.avatar || existingTestimonial?.image_url || null,
+        customer_name: user?.name || order?.customer_name || existingTestimonial?.customer_name,
       };
 
       if (isEdit && existingTestimonial?.id) {
@@ -149,52 +150,56 @@ export default function TestimonialForm({ order, existingTestimonial, onClose, o
 
   return (
     <div
-      className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-200 animate-in fade-in"
+      className="fixed inset-0 z-[150] overflow-y-auto p-3 sm:p-6 flex items-center justify-center bg-black/75 backdrop-blur-sm transition-all duration-200 animate-in fade-in"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className={`relative w-full max-w-lg rounded-2xl border transition-all duration-200 animate-in zoom-in-95 p-6 sm:p-7 shadow-2xl ${
+        className={`relative w-full max-w-lg rounded-2xl border transition-all duration-200 animate-in zoom-in-95 shadow-2xl my-auto flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-3.5rem)] overflow-hidden ${
           isLight
             ? 'bg-white text-slate-900 border-slate-200 shadow-slate-900/10'
             : 'bg-[#18121c] text-white border-white/10 shadow-black/80'
         }`}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className={`absolute top-5 right-5 w-8 h-8 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
-            isLight
-              ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-500 hover:text-slate-800'
-              : 'bg-white/5 hover:bg-white/15 border-white/10 text-zinc-400 hover:text-white'
-          }`}
-          aria-label={isEn ? 'Close' : 'Tutup'}
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {/* Header (Pinned) */}
+        <div className={`p-5 sm:p-6 pb-4 border-b shrink-0 relative pr-12 ${
+          isLight ? 'border-slate-100 bg-white' : 'border-white/5 bg-[#18121c]'
+        }`}>
+          {/* Close Button */}
+          <button
+            type="button"
+            onClick={onClose}
+            className={`absolute top-5 right-5 w-8 h-8 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
+              isLight
+                ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-500 hover:text-slate-800'
+                : 'bg-white/5 hover:bg-white/15 border-white/10 text-zinc-400 hover:text-white'
+            }`}
+            aria-label={isEn ? 'Close' : 'Tutup'}
+          >
+            <X className="w-4 h-4" />
+          </button>
 
-        {/* Header */}
-        <div className="mb-5 pr-8">
-          <div className="flex items-center gap-2 mb-1.5">
+          <div className="flex items-center gap-2 mb-1">
             <span className="text-primary font-bold text-xs uppercase tracking-wider flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5" />
               {isEn ? 'Order Review' : 'Ulasan Pesanan'}
             </span>
           </div>
 
-          <h2 className={`font-heading text-2xl sm:text-[26px] font-bold tracking-wide sm:tracking-wider ${isLight ? 'text-slate-900' : 'text-white'}`}>
+          <h2 className={`font-heading text-2xl sm:text-[26px] font-bold tracking-[1.5px] ${isLight ? 'text-slate-900' : 'text-white'}`}>
             {isEdit
               ? (isEn ? 'Edit Testimonial' : 'Edit Testimoni')
               : (isEn ? 'Give Testimonial' : 'Beri Testimoni')}
           </h2>
 
-          <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+          <p className={`text-xs mt-0.5 leading-relaxed ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
             {isEn
               ? 'Tell us how satisfied you are with your custom apparel.'
               : 'Ceritakan kepuasan Anda mengenai hasil sablon dan pakaian pesanan ini.'}
           </p>
 
           {isEdit && existingTestimonial?.order_id && existingTestimonial.order_id !== order.id && (
-            <div className={`mt-3 p-2.5 px-3 rounded-xl text-xs flex items-center gap-2 border ${
+            <div className={`mt-2.5 p-2 px-2.5 rounded-xl text-xs flex items-center gap-2 border ${
               isLight ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-amber-500/10 text-amber-300 border-amber-500/20'
             }`}>
               <Sparkles className="w-3.5 h-3.5 shrink-0 text-amber-500" />
@@ -207,38 +212,40 @@ export default function TestimonialForm({ order, existingTestimonial, onClose, o
           )}
         </div>
 
-        {/* User Profile & Order Context (Minimalist) */}
-        <div
-          className={`p-3 rounded-xl border mb-5 flex items-center justify-between gap-3 ${
-            isLight ? 'bg-slate-50 border-slate-200/80' : 'bg-white/[0.03] border-white/10'
-          }`}
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <UserAvatar
-              user={user}
-              src={customerAvatar}
-              name={customerName}
-              size="md"
-              border
-              className="shrink-0"
-            />
-            <div className="min-w-0">
-              <p className={`font-bold text-xs sm:text-sm truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                {customerName}
-              </p>
-              <div className="flex items-center gap-2 text-[11px]">
-                <span className={`font-mono ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
-                  #{order.order_code}
-                </span>
-                <span className={`w-1 h-1 rounded-full ${isLight ? 'bg-slate-300' : 'bg-zinc-600'}`} />
-                <span className="text-emerald-500 font-semibold flex items-center gap-1">
-                  <UserCheck className="w-3 h-3" />
-                  {isEn ? 'Profile Photo Synced' : 'Foto Profil Otomatis'}
-                </span>
+        {/* Scrollable Content Body */}
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 overscroll-contain">
+          {/* User Profile & Order Context (Minimalist) */}
+          <div
+            className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${
+              isLight ? 'bg-slate-50 border-slate-200/80' : 'bg-white/[0.03] border-white/10'
+            }`}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <UserAvatar
+                user={user}
+                src={customerAvatar}
+                name={customerName}
+                size="md"
+                border
+                className="shrink-0"
+              />
+              <div className="min-w-0">
+                <p className={`font-bold text-xs sm:text-sm truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {customerName}
+                </p>
+                <div className="flex items-center gap-2 text-[11px]">
+                  <span className={`font-mono ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                    #{order.order_code}
+                  </span>
+                  <span className={`w-1 h-1 rounded-full ${isLight ? 'bg-slate-300' : 'bg-zinc-600'}`} />
+                  <span className="text-emerald-500 font-semibold flex items-center gap-1">
+                    <UserCheck className="w-3 h-3" />
+                    {isEn ? 'Profile Photo Synced' : 'Foto Profil Otomatis'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -344,7 +351,7 @@ export default function TestimonialForm({ order, existingTestimonial, onClose, o
             />
           </div>
 
-          {/* Minimalist Trust & Moderation Note */}
+          {/* Minimalist Trust & Status Note */}
           <div
             className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs ${
               isLight
@@ -355,8 +362,8 @@ export default function TestimonialForm({ order, existingTestimonial, onClose, o
             <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-500" />
             <p className="leading-snug">
               {isEn
-                ? 'Testimonials are published with your profile name & avatar once approved.'
-                : 'Testimoni akan tampil dengan nama & foto profil Anda setelah diverifikasi admin.'}
+                ? 'Your testimonial is published immediately with your profile name & avatar.'
+                : 'Testimoni Anda langsung aktif dan ditampilkan dengan nama & foto profil Anda.'}
             </p>
           </div>
 
@@ -394,6 +401,7 @@ export default function TestimonialForm({ order, existingTestimonial, onClose, o
           </div>
 
         </form>
+        </div>
       </div>
     </div>
   );

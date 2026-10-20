@@ -19,7 +19,7 @@ import {
   PartyPopper, XCircle, Phone, Hash, Lock,
   Truck, MapPin, MessageCircle, AlertTriangle, SearchX, Loader2,
   ChevronDown, ChevronUp, Image as ImageIcon, Ban, Star, Upload, X, Copy, Check,
-  ZoomIn, ExternalLink, Sparkles, Palette
+  ZoomIn, ExternalLink, Sparkles, Palette, Shirt
 } from 'lucide-react';
 import { getImageUrl } from '../utils/getImageUrl';
 import { getStatusSteps, getFilterTabs, statusOrder, getProgressPercent } from '../utils/orderStatus';
@@ -193,6 +193,7 @@ function OrderDetailSection({ order }) {
 
   const renderItemDetails = (item) =>
     [
+      item.shirt_model && `${language === 'en' ? 'Model' : 'Model'} ${item.shirt_model}`,
       item.size && `${language === 'en' ? 'Size' : 'Ukuran'} ${item.size}`,
       item.selected_color && `${language === 'en' ? 'Color' : 'Warna'} ${td(item.selected_color)}`,
       item.sablon_type && `${language === 'en' ? 'Print' : 'Sablon'} ${td(item.sablon_type)}`,
@@ -271,13 +272,18 @@ function OrderDetailSection({ order }) {
         </h4>
         <div className="space-y-3">
           {items.map((item, idx) => {
+            const isSablon = Boolean(item.service_id || item.sablon_type || item.design_type || item.design_id || item.shirt_model);
+            const fallbackOrderImg = items.find((i) => i.design?.image_url)?.design?.image_url;
+            const fallbackOrderThumb = items.find((i) => i.design?.thumbnail_url)?.design?.thumbnail_url;
             const itemImg = item.design?.image_url
               ? getImageUrl(item.design.image_url)
               : item.product?.images?.[0]?.image_url
               ? getImageUrl(item.product.images[0].image_url)
-              : null;
-            const isSablon = Boolean(item.service_id || item.sablon_type || item.design_type || item.design_id);
+              : (isSablon && fallbackOrderImg ? getImageUrl(fallbackOrderImg) : null);
             const isAi = item.design_type === 'ai_generated' || item.design?.design_type === 'ai_generated';
+            const isCustomSablon = Boolean(isSablon || item.design || item.design_id || item.service_id);
+            const productModelImg = item.product?.images?.[0]?.image_url ? getImageUrl(item.product.images[0].image_url) : null;
+            const productModelThumb = item.product?.images?.[0]?.thumbnail_url ? getImageUrl(item.product.images[0].thumbnail_url) : productModelImg;
 
             return (
               <div
@@ -285,7 +291,7 @@ function OrderDetailSection({ order }) {
                 className="bg-white/[0.02] hover:bg-white/[0.04] border border-white/10 rounded-2xl p-4 transition-colors"
               >
                 <div className="flex items-start gap-3.5">
-                  {item.product ? (
+                  {!isCustomSablon && item.product ? (
                     <>
                       {item.product.images?.[0]?.image_url && (
                         <div className="relative group/img shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-[#120a16] border border-white/10 hover:border-primary transition-all shadow-sm">
@@ -321,39 +327,80 @@ function OrderDetailSection({ order }) {
                     </>
                   ) : (
                     <>
-                      {itemImg ? (
-                        <div className="relative group/img shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-[#120a16] border border-white/10 hover:border-primary transition-all shadow-sm">
-                          <OptimizedImage
-                            src={item.design?.image_url || itemImg}
-                            thumbnailSrc={item.design?.thumbnail_url}
-                            variant="thumbnail"
-                            alt={language === 'en' ? 'Print Design' : 'Desain Sablon'}
-                            containerClassName="w-full h-full cursor-pointer"
-                            className="w-full h-full object-contain"
-                            onClick={() => setLightboxImage(itemImg)}
-                            title={language === 'en' ? 'Click to enlarge design image' : 'Klik untuk memperbesar gambar desain'}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setLightboxImage(itemImg)}
-                            className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 rounded-xl flex items-center justify-center text-white transition-opacity cursor-pointer z-10"
-                            title={language === 'en' ? 'Enlarge' : 'Perbesar'}
-                          >
-                            <ZoomIn className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : isSablon ? (
-                        <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex flex-col items-center justify-center shrink-0 text-zinc-400">
-                          <Palette className="w-5 h-5 text-primary mb-0.5" />
-                          <span className="text-[9px] uppercase font-bold text-zinc-500">{language === 'en' ? 'Print' : 'Sablon'}</span>
-                        </div>
-                      ) : null}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {/* 1. Customer Uploaded/AI Design Preview */}
+                        {itemImg ? (
+                          <div className="relative group/img shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-[#120a16] border border-white/10 hover:border-primary transition-all shadow-sm">
+                            <OptimizedImage
+                              src={item.design?.image_url || itemImg}
+                              thumbnailSrc={item.design?.thumbnail_url || (isSablon ? fallbackOrderThumb : null)}
+                              variant="thumbnail"
+                              alt={language === 'en' ? 'Print Design' : 'Desain Sablon'}
+                              containerClassName="w-full h-full cursor-pointer"
+                              className="w-full h-full object-contain"
+                              onClick={() => setLightboxImage(itemImg)}
+                              title={language === 'en' ? 'Click to enlarge design image' : 'Klik untuk memperbesar gambar desain'}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setLightboxImage(itemImg)}
+                              className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 rounded-xl flex items-center justify-center text-white transition-opacity cursor-pointer z-10"
+                              title={language === 'en' ? 'Enlarge Design' : 'Perbesar Desain'}
+                            >
+                              <ZoomIn className="w-4 h-4" />
+                            </button>
+                            <div className="absolute bottom-0 inset-x-0 bg-black/75 py-0.5 text-[8px] text-center font-bold uppercase text-white/90 pointer-events-none">
+                              {language === 'en' ? 'Design' : 'Desain'}
+                            </div>
+                          </div>
+                        ) : isSablon ? (
+                          <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex flex-col items-center justify-center shrink-0 text-zinc-400">
+                            <Palette className="w-5 h-5 text-primary mb-0.5" />
+                            <span className="text-[9px] uppercase font-bold text-zinc-500">{language === 'en' ? 'Print' : 'Sablon'}</span>
+                          </div>
+                        ) : null}
+
+                        {/* 2. Shirt Model Preview (if available) */}
+                        {productModelImg && (
+                          <div className="relative group/img shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-[#120a16] border border-white/10 hover:border-cyan-400 transition-all shadow-sm hidden sm:block">
+                            <OptimizedImage
+                              src={productModelImg}
+                              thumbnailSrc={productModelThumb}
+                              variant="thumbnail"
+                              alt={item.shirt_model || item.product?.name || 'Kaos'}
+                              containerClassName="w-full h-full cursor-pointer"
+                              className="w-full h-full object-contain"
+                              onClick={() => setLightboxImage(productModelImg)}
+                              title={item.shirt_model || item.product?.name}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setLightboxImage(productModelImg)}
+                              className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 rounded-xl flex items-center justify-center text-white transition-opacity cursor-pointer z-10"
+                              title={language === 'en' ? 'Enlarge Model' : 'Perbesar Model'}
+                            >
+                              <ZoomIn className="w-4 h-4" />
+                            </button>
+                            <div className="absolute bottom-0 inset-x-0 bg-black/75 py-0.5 text-[8px] text-center font-bold uppercase text-cyan-300 pointer-events-none truncate px-0.5">
+                              {item.shirt_model ? (item.shirt_model.includes('Panjang') ? 'L. Panjang' : 'L. Pendek') : 'Kaos'}
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <p className="text-white text-[13.5px] font-semibold">
-                            {td(item.service?.name || item.product_name || (language === 'en' ? 'Printing Service' : 'Layanan Sablon'))}
+                          <p className="text-white text-[13.5px] font-semibold leading-snug">
+                            {td(item.product_name || (item.service?.name ? (item.shirt_model ? `${item.service.name} (${item.shirt_model})` : item.service.name) : null) || item.product?.name || (language === 'en' ? 'Printing Service' : 'Layanan Sablon'))}
                           </p>
+
+                          {item.shirt_model && (
+                            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-cyan-300 bg-cyan-400/10 border border-cyan-400/20">
+                              <Shirt size={10} />
+                              {item.shirt_model}
+                            </span>
+                          )}
+
                           {isSablon && (
                             <span
                               className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
@@ -378,26 +425,40 @@ function OrderDetailSection({ order }) {
                           {renderItemDetails(item)}
                         </p>
 
-                        {itemImg && (
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setLightboxImage(itemImg)}
-                              className="text-[11px] text-primary hover:text-primary-light flex items-center gap-1 font-semibold cursor-pointer"
-                            >
-                              <ZoomIn className="w-3.5 h-3.5" /> {language === 'en' ? 'Enlarge Design' : 'Perbesar Desain'}
-                            </button>
-                            <span className="text-white/20">·</span>
-                            <a
-                              href={itemImg}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 no-underline"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" /> {language === 'en' ? 'New Tab' : 'Tab Baru'}
-                            </a>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {itemImg && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setLightboxImage(itemImg)}
+                                className="text-[11px] text-primary hover:text-primary-light flex items-center gap-1 font-semibold cursor-pointer"
+                              >
+                                <ZoomIn className="w-3.5 h-3.5" /> {language === 'en' ? 'Enlarge Design' : 'Perbesar Desain'}
+                              </button>
+                              <span className="text-white/20">·</span>
+                              <a
+                                href={itemImg}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 no-underline"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" /> {language === 'en' ? 'New Tab' : 'Tab Baru'}
+                              </a>
+                            </>
+                          )}
+                          {productModelImg && (
+                            <>
+                              <span className="text-white/20">·</span>
+                              <button
+                                type="button"
+                                onClick={() => setLightboxImage(productModelImg)}
+                                className="text-[11px] text-cyan-300 hover:text-cyan-200 flex items-center gap-1 font-semibold cursor-pointer"
+                              >
+                                <Shirt className="w-3.5 h-3.5" /> {language === 'en' ? 'View Shirt Model' : 'Lihat Model Kaos'}
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </>
                   )}
@@ -637,7 +698,7 @@ function GuestTrackForm() {
                 <StatusBadge status={order.status} />
               </div>
               {(() => {
-                const itemNames = (order.items || []).map(i => i.product?.name || i.service?.name || i.product_name).filter(Boolean);
+                const itemNames = (order.items || []).map(i => i.product_name || (i.service?.name ? (i.shirt_model ? `${i.service.name} (${i.shirt_model})` : i.service.name) : null) || i.product?.name).filter(Boolean);
                 if (itemNames.length === 0) return null;
                 const title = itemNames.length === 1 ? td(itemNames[0]) : `${td(itemNames[0])} (+${itemNames.length - 1} ${language === 'en' ? 'other items' : 'item lainnya'})`;
                 return <p className="text-white text-sm font-medium leading-snug mb-1">{title}</p>;
@@ -776,7 +837,7 @@ function OrderCard({ order, onRefresh }) {
 
   const heroText = (() => {
     const itemNames = items
-      .map((i) => i.product?.name || i.service?.name || i.product_name)
+      .map((i) => i.product_name || (i.service?.name ? (i.shirt_model ? `${i.service.name} (${i.shirt_model})` : i.service.name) : null) || i.product?.name)
       .filter(Boolean);
     if (itemNames.length > 0) {
       if (itemNames.length === 1) return td(itemNames[0]);

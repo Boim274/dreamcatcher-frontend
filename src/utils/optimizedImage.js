@@ -23,7 +23,7 @@ export function getOptimizedImageUrl(url, options = {}) {
   if (!url) return SVG_PLACEHOLDER;
 
   const resolved = getImageUrl(url);
-  if (!resolved || resolved.startsWith('data:')) return resolved;
+  if (!resolved || resolved.startsWith('data:') || resolved.startsWith('blob:')) return resolved;
 
   const {
     width,

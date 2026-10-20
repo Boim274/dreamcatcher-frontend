@@ -12,6 +12,7 @@ import { formatRupiah, getMinPrice } from '../utils/formatRupiah';
 import { WA_URL } from '../constants/whatsapp';
 import { useLanguageStore } from '../store/languageStore';
 import { useThemeStore } from '../store/themeStore';
+import { useOrderStore } from '../store/orderStore';
 
 const colorMap = {
   Putih: '#FFFFFF', Hitam: '#000000', 'Abu Muda': '#D3D3D3', 'Abu Tua': '#555555',
@@ -33,6 +34,8 @@ const getOptionLabels = (language = 'id') => ({
 export default function PricelistPage() {
   const { language, td } = useLanguageStore();
   const optionLabels = getOptionLabels(language);
+  const selectService = useOrderStore((s) => s.selectService);
+  const setStep = useOrderStore((s) => s.setStep);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -345,6 +348,10 @@ export default function PricelistPage() {
                         </span>
                         <Link
                           to={`/pesan?service=${service.id}`}
+                          onClick={() => {
+                            selectService(service);
+                            setStep(2);
+                          }}
                           className="btn-gradient-primary inline-flex items-center gap-1.5 py-2 px-5 rounded-2xl text-xs uppercase tracking-wider font-bold shadow-md shadow-primary/20"
                         >
                           {language === 'en' ? 'Order Now' : 'Pesan Sekarang'} <Icon name="arrow-right" size={13} />

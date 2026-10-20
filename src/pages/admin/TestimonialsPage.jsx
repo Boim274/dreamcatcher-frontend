@@ -400,7 +400,11 @@ export default function TestimonialsPage() {
                             </div>
                             <div>
                               <span className="font-semibold text-white block">{item.customer_name}</span>
-                              <span className="text-gray text-[11px] font-mono">Urutan #{item.sort_order}</span>
+                              {item.created_at && (
+                                <span className="text-gray text-[11px] font-mono">
+                                  {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -647,30 +651,16 @@ export default function TestimonialsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div>
-                    <label className="text-[11px] font-semibold text-gray uppercase tracking-wider block mb-1.5">
-                      Urutan Tampil
-                    </label>
+                <div className="pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
-                      type="number"
-                      value={form.sort_order}
-                      onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })}
-                      className="input-dark w-full"
-                      min="0"
+                      type="checkbox"
+                      checked={form.is_active}
+                      onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                      className="w-4 h-4 rounded text-primary focus:ring-primary bg-ink border-border"
                     />
-                  </div>
-                  <div className="pt-5">
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={form.is_active}
-                        onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                        className="w-4 h-4 rounded text-primary focus:ring-primary bg-ink border-border"
-                      />
-                      <span className="text-sm font-semibold text-white">Tampilkan di Web</span>
-                    </label>
-                  </div>
+                    <span className="text-sm font-semibold text-white">Tampilkan di Web</span>
+                  </label>
                 </div>
 
                 {/* Modal Actions */}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useOrderStore } from '../store/orderStore';
 import api from '../services/api';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
@@ -12,10 +13,26 @@ import { useLanguageStore } from '../store/languageStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatRupiah, getMinPrice } from '../utils/formatRupiah';
 import { WA_URL } from '../constants/whatsapp';
+import { getServiceImage } from './LandingPage';
 
 export default function CatalogPage() {
   const { t, td, language } = useLanguageStore();
   const isEn = language === 'en';
+  const navigate = useNavigate();
+  const selectService = useOrderStore((s) => s.selectService);
+  const setStep = useOrderStore((s) => s.setStep);
+
+  const handleSelectService = (service) => {
+    selectService(service);
+    const sName = (service.name || '').toLowerCase();
+    const isKaos = sName.includes('kaos');
+    if (isKaos) {
+      navigate('/layanan/kaos');
+      return;
+    }
+    setStep(2);
+    navigate(`/pesan?service=${service.id}`);
+  };
 
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -134,62 +151,83 @@ export default function CatalogPage() {
 
                 return (
                   <ScrollReveal key={service.id} direction="up" delay={index * 100}>
-                    <div className="glass-card-hover rounded-3xl p-6 sm:p-8 relative overflow-hidden group border border-white/10 bg-white/[0.02] flex flex-col justify-between h-full">
-                      {/* Index Watermark */}
-                      <div className="font-heading text-8xl absolute top-2 right-4 text-white/[0.03] select-none pointer-events-none group-hover:text-primary/[0.08] transition-colors">
-                        {String(index + 1).padStart(2, '0')}
+                    <div 
+                      onClick={() => handleSelectService(service)}
+                      className="glass-card-hover rounded-3xl overflow-hidden relative group border border-white/10 bg-white/[0.02] flex flex-col justify-between h-full cursor-pointer"
+                    >
+                      {/* Image Banner */}
+                      <div className="relative w-full h-48 overflow-hidden bg-black/40">
+                        <img
+                          src={getServiceImage(service)}
+                          alt={service.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#150d1a] via-[#150d1a]/25 to-transparent pointer-events-none" />
+
+                        {/* Floating Service Icon */}
+                        <div className="absolute top-4 left-4 w-12 h-12 rounded-2xl bg-black/60 border border-white/20 backdrop-blur-md flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-md">
+                          <ServiceIcon name={service.name} size={24} />
+                        </div>
+
+                        {/* Index Number */}
+                        <div className="absolute top-4 right-4 px-3 py-1 rounded-xl bg-black/60 border border-white/15 backdrop-blur-md">
+                          <span className="font-mono text-sm font-bold text-white/70 group-hover:text-primary transition-colors">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="relative z-10">
-                        <div className="flex items-start gap-5 sm:gap-6 mb-5">
-                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/25 to-purple-500/20 border border-primary/30 flex items-center justify-center shrink-0 shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
-                            <ServiceIcon name={service.name} size={30} className="text-primary" />
+                      <div className="p-6 sm:p-7 relative z-10 flex flex-col justify-between flex-1">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60">
+                              {service.pricing_type === 'tiered' ? (isEn ? 'Wholesale Price' : 'Harga Bertingkat') : (isEn ? 'Fixed Price' : 'Harga Tetap')}
+                            </span>
                           </div>
+                          <h2 className="font-heading text-2xl sm:text-3xl text-white tracking-wide group-hover:text-primary transition-colors mb-2">
+                            {td(service.name)}
+                          </h2>
 
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60">
-                                {service.pricing_type === 'tiered' ? (isEn ? 'Wholesale Price' : 'Harga Bertingkat') : (isEn ? 'Fixed Price' : 'Harga Tetap')}
-                              </span>
+                          <p className="text-white/60 text-xs sm:text-sm leading-relaxed mb-6">
+                            {td(service.description)}
+                          </p>
+                        </div>
+
+                        <div>
+                          <div className="grid grid-cols-2 gap-3 mb-5 p-4 rounded-2xl bg-black/40 border border-white/5">
+                            <div>
+                              <p className="text-white/40 text-[10px] tracking-wider uppercase font-semibold">{t('catalog.priceStarts', 'Harga Mulai')}</p>
+                              <p className="font-bold text-lg sm:text-xl text-gradient-primary mt-0.5">
+                                {service.pricing_type === 'tiered'
+                                  ? formatRupiah(getMinPrice(service))
+                                  : formatRupiah(service.price_per_unit || service.base_price)}
+                              </p>
                             </div>
-                            <h2 className="font-heading text-2xl sm:text-3xl text-white tracking-wide group-hover:text-primary transition-colors">
-                              {td(service.name)}
-                            </h2>
+                            <div>
+                              <p className="text-white/40 text-[10px] tracking-wider uppercase font-semibold">{isEn ? 'Minimum Order' : 'Minimal Order'}</p>
+                              <p className="font-bold text-lg sm:text-xl text-white mt-0.5">{service.minimum_order} {unit}</p>
+                            </div>
+                          </div>
+
+                          {/* Footer CTA */}
+                          <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-3">
+                            <span className="text-xs text-white/50 flex items-center gap-1.5 shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" /> {isEn ? 'Reprint Guarantee' : 'Garansi Cetak Ulang'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectService(service);
+                              }}
+                              className="btn-gradient-primary inline-flex items-center gap-2 py-2.5 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold shadow-lg shadow-primary/25 cursor-pointer shrink-0"
+                            >
+                              {t('catalog.orderNow', 'Pesan Sekarang')}
+                              <Icon name="arrow-right" size={15} />
+                            </button>
                           </div>
                         </div>
-
-                        <p className="text-white/60 text-xs sm:text-sm leading-relaxed mb-6">
-                          {td(service.description)}
-                        </p>
-
-                        <div className="grid grid-cols-2 gap-3 mb-6 p-4 rounded-2xl bg-black/40 border border-white/5">
-                          <div>
-                            <p className="text-white/40 text-[10px] tracking-wider uppercase font-semibold">{t('catalog.priceStarts', 'Harga Mulai')}</p>
-                            <p className="font-bold text-lg sm:text-xl text-gradient-primary mt-0.5">
-                              {service.pricing_type === 'tiered'
-                                ? formatRupiah(getMinPrice(service))
-                                : formatRupiah(service.price_per_unit || service.base_price)}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-white/40 text-[10px] tracking-wider uppercase font-semibold">{isEn ? 'Minimum Order' : 'Minimal Order'}</p>
-                            <p className="font-bold text-lg sm:text-xl text-white mt-0.5">{service.minimum_order} {unit}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Footer CTA */}
-                      <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-3 relative z-10">
-                        <span className="text-xs text-white/50 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> {isEn ? 'Reprint Guarantee' : 'Garansi Cetak Ulang'}
-                        </span>
-                        <Link
-                          to={`/pesan?service=${service.id}`}
-                          className="btn-gradient-primary inline-flex items-center gap-2 py-2.5 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold shadow-lg shadow-primary/25"
-                        >
-                          {t('catalog.orderNow', 'Pesan Sekarang')}
-                          <Icon name="arrow-right" size={15} />
-                        </Link>
                       </div>
                     </div>
                   </ScrollReveal>
