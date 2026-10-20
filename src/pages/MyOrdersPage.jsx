@@ -1081,7 +1081,7 @@ export default function MyOrdersPage() {
   const { language } = useLanguageStore();
   const { theme } = useThemeStore();
   const isLight = theme === 'light';
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { user, isAuthenticated } = useAuthStore();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1094,7 +1094,11 @@ export default function MyOrdersPage() {
   }, [language]);
 
   const fetchOrders = useCallback(async () => {
-    if (!isAuthenticated) { setLoading(false); return; }
+    if (!isAuthenticated || !user) {
+      setOrders([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -1105,10 +1109,12 @@ export default function MyOrdersPage() {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, language]);
+  }, [isAuthenticated, user?.id, language]);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+  useEffect(() => {
+    setOrders([]);
+    fetchOrders();
+  }, [fetchOrders]);
 
   const filteredOrders = useMemo(() => {
     let result = orders;
@@ -1258,13 +1264,17 @@ export default function MyOrdersPage() {
               <div className="w-20 h-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
                 <Package className="w-10 h-10 text-primary" />
               </div>
-              <h3 className="font-heading text-2xl text-white tracking-wide mb-2">{language === 'en' ? 'No Orders Yet' : 'Belum Ada Pesanan'}</h3>
-              <p className="text-white/60 mb-6 text-xs sm:text-sm">{language === 'en' ? 'Start ordering high quality custom printing right now' : 'Mulai order custom sablon berkualitas sekarang juga'}</p>
+              <h3 className="font-heading text-2xl text-white tracking-wide mb-2">
+                {language === 'en' ? "You don't have any orders yet." : 'Kamu belum memiliki pesanan.'}
+              </h3>
+              <p className="text-white/60 mb-6 text-xs sm:text-sm">
+                {language === 'en' ? 'Yuk, start ordering now!' : 'Yuk, mulai pesan sekarang!'}
+              </p>
               <Link
                 to="/pesan"
                 className="btn-gradient-primary inline-flex items-center justify-center gap-2 py-3.5 px-8 rounded-2xl text-xs uppercase tracking-wider font-bold"
               >
-                <Icon name="plus" size={16} /> {language === 'en' ? 'Create New Order' : 'Buat Pesanan Baru'}
+                <Icon name="plus" size={16} /> {language === 'en' ? 'Start Order Now' : 'Mulai Pesan Sekarang'}
               </Link>
             </div>
           </ScrollReveal>

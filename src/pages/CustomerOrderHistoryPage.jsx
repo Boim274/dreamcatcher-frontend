@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { orderService } from '../services/orderService';
 import { useLanguageStore } from '../store/languageStore';
 import { useThemeStore } from '../store/themeStore';
+import { useAuthStore } from '../store/authStore';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import ScrollToTop from '../components/common/ScrollToTop';
@@ -466,6 +467,7 @@ function Skeleton() {
 
 export default function CustomerOrderHistoryPage() {
   const { language } = useLanguageStore();
+  const { user, isAuthenticated } = useAuthStore();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -475,6 +477,11 @@ export default function CustomerOrderHistoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchOrders = useCallback(async (signal, pageNum = 1) => {
+    if (!isAuthenticated || !user) {
+      setOrders([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       setError(false);
@@ -500,11 +507,11 @@ export default function CustomerOrderHistoryPage() {
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, isAuthenticated, user?.id]);
 
   useEffect(() => {
+    setOrders([]);
     const controller = new AbortController();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOrders(controller.signal, 1);
     return () => controller.abort();
   }, [fetchOrders]);
@@ -608,18 +615,18 @@ export default function CustomerOrderHistoryPage() {
                   <Package className="w-10 h-10 text-primary" />
                 </div>
                 <h3 className="font-heading text-2xl text-white tracking-wide mb-2">
-                  {language === 'en' ? 'No Order History Yet' : 'Belum Ada Histori'}
+                  {language === 'en' ? "You don't have any orders yet." : 'Kamu belum memiliki pesanan.'}
                 </h3>
                 <p className="text-white/60 mb-6 text-xs sm:text-sm">
                   {language === 'en'
-                    ? 'Completed or cancelled orders will be recorded here automatically'
-                    : 'Pesanan yang selesai atau dibatalkan akan otomatis tercatat di sini'}
+                    ? 'Yuk, start ordering now!'
+                    : 'Yuk, mulai pesan sekarang!'}
                 </p>
                 <Link
                   to="/pesan"
                   className="btn-gradient-primary inline-flex items-center justify-center gap-2 py-3.5 px-8 rounded-2xl text-xs uppercase tracking-wider font-bold"
                 >
-                  <Plus size={16} /> {language === 'en' ? 'Create New Order' : 'Buat Pesanan Baru'}
+                  <Plus size={16} /> {language === 'en' ? 'Start Order Now' : 'Mulai Pesan Sekarang'}
                 </Link>
               </div>
             </ScrollReveal>

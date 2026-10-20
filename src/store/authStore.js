@@ -52,6 +52,20 @@ export const useAuthStore = create((set) => ({
       set({ user: null, isAuthenticated: false, isInitialized: true, isLoading: false });
     } catch {
       set({ user: null, isAuthenticated: false, isInitialized: true, isLoading: false });
+    } finally {
+      // Clear all active user session caches and stores
+      try {
+        const { useOrderStore } = await import('./orderStore');
+        useOrderStore.getState().resetAll();
+      } catch {}
+      try {
+        const { useCartStore } = await import('./cartStore');
+        useCartStore.setState({ items: [] });
+      } catch {}
+      try {
+        const { useCustomerNotifStore } = await import('./customerNotifStore');
+        useCustomerNotifStore.setState({ notifications: [], unreadCount: 0, activePopups: [], activeOrders: [] });
+      } catch {}
     }
   },
 

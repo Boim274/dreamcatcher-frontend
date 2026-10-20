@@ -4,6 +4,7 @@ import { useAuthStore } from './store/authStore';
 import { useAuthModalStore } from './store/authModalStore';
 import { useCartStore } from './store/cartStore';
 import { useOrderStore } from './store/orderStore';
+import { useCustomerNotifStore } from './store/customerNotifStore';
 import { authService } from './services/authService';
 import feather from 'feather-icons';
 
@@ -123,6 +124,11 @@ function AppContent() {
       if (state.user?.id !== prev.user?.id) {
         syncCart();
         syncOrder();
+        if (state.user) {
+          useCustomerNotifStore.getState().fetchNotifications(state.user);
+        } else {
+          useCustomerNotifStore.setState({ notifications: [], unreadCount: 0, activePopups: [], activeOrders: [] });
+        }
       }
     });
     return unsubscribe;

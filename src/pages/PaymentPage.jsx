@@ -58,8 +58,12 @@ export default function PaymentPage() {
     fetchOrder();
   }, [orderCode]);
 
+  const [fetchError, setFetchError] = useState(null);
+
   const fetchOrder = async () => {
     try {
+      setLoading(true);
+      setFetchError(null);
       const response = await orderService.getByCode(orderCode);
       setOrder(response.order);
       if (response.order?.id) {
@@ -67,6 +71,22 @@ export default function PaymentPage() {
       }
     } catch (error) {
       console.error('Failed to fetch order:', error);
+      if (error.response?.status === 403) {
+        setFetchError({
+          status: 403,
+          title: isEn ? 'Access Denied' : 'Akses Ditolak',
+          message: isEn
+            ? 'You do not have permission to access this order.'
+            : 'Anda tidak memiliki hak akses untuk melihat atau mengelola pesanan milik customer lain.',
+        });
+      } else {
+        setFetchError({
+          status: 404,
+          title: isEn ? 'Order Not Found' : 'Pesanan Tidak Ditemukan',
+          message: isEn ? 'Invalid or expired order code.' : 'Kode pesanan tidak ditemukan atau tidak valid.',
+        });
+      }
+      setOrder(null);
     } finally {
       setLoading(false);
     }
@@ -187,10 +207,14 @@ export default function PaymentPage() {
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="glass-card max-w-md w-full p-8 rounded-3xl border border-white/10 text-center">
             <AlertCircle className="w-16 h-16 text-rose-500 mx-auto mb-4 animate-pulse" />
-            <h2 className="font-heading text-2xl text-white tracking-wide mb-2">{isEn ? 'Order Not Found' : 'Pesanan Tidak Ditemukan'}</h2>
-            <p className="text-white/60 text-sm mb-6">{isEn ? 'Invalid or expired order code' : 'Kode pesanan tidak valid atau sudah expired'}</p>
-            <Link to="/pesan" className="btn-gradient-primary inline-flex items-center gap-2 py-3.5 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold">
-              {isEn ? 'Create New Order' : 'Buat Pesanan Baru'}
+            <h2 className="font-heading text-2xl text-white tracking-wide mb-2">
+              {fetchError?.title || (isEn ? 'Order Not Found' : 'Pesanan Tidak Ditemukan')}
+            </h2>
+            <p className="text-white/60 text-sm mb-6">
+              {fetchError?.message || (isEn ? 'Invalid or expired order code' : 'Kode pesanan tidak valid atau sudah expired')}
+            </p>
+            <Link to="/pesanan-saya" className="btn-gradient-primary inline-flex items-center gap-2 py-3.5 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold">
+              {isEn ? 'Back to My Orders' : 'Kembali ke Pesanan Saya'}
             </Link>
           </div>
         </div>
