@@ -20,7 +20,7 @@ export const ADULT_SIZES = [
   { size: 'S', label: 'S', name: 'Small', desc: 'LD: 94 cm · P: 68 cm', surcharge: 0 },
   { size: 'M', label: 'M', name: 'Medium', desc: 'LD: 98 cm · P: 70 cm', surcharge: 0 },
   { size: 'L', label: 'L', name: 'Large', desc: 'LD: 104 cm · P: 72 cm', surcharge: 0 },
-  { size: 'XL', label: 'XL', name: 'Extra Large', desc: 'LD: 110 cm · P: 74 cm', surcharge: 5000 },
+  { size: 'XL', label: 'XL', name: 'Extra Large', desc: 'LD: 110 cm · P: 74 cm', surcharge: 0 },
   { size: 'XXL', label: 'XXL', name: 'Double XL', desc: 'LD: 116 cm · P: 76 cm', surcharge: 10000 },
   { size: '3XL', label: '3XL', name: 'Triple XL', desc: 'LD: 122 cm · P: 78 cm', surcharge: 15000 },
 ];
@@ -134,7 +134,7 @@ export default function Step3Quantity() {
   const renderSizeRow = (item) => {
     const size = item.size;
     const qty = sizeQuantities[size] || 0;
-    const surcharge = parseInt(sizePricing[size]) || item.surcharge || 0;
+    const surcharge = sizePricing[size] !== undefined ? parseInt(sizePricing[size]) : (item.surcharge || 0);
     const unitPrice = getSizePrice(size) || (basePrice + surcharge);
     const subtotal = unitPrice * qty;
 

@@ -217,7 +217,7 @@ export default function ServicesPage() {
           colors: opts.colors?.length ? opts.colors : PRESET_SWATCHES.map((s) => s.name),
           sablon_types: opts.sablon_types?.length ? opts.sablon_types : ['Plastisol', 'DTF'],
           sizes: opts.sizes?.length ? opts.sizes : ['S', 'M', 'L', 'XL', 'XXL'],
-          size_pricing: opts.size_pricing || { S: 0, M: 0, L: 0, XL: 5000, XXL: 10000 },
+          size_pricing: opts.size_pricing || { S: 0, M: 0, L: 0, XL: 0, XXL: 10000 },
           max_print_areas: opts.max_print_areas || 2,
           area_surcharge: opts.area_surcharge || 15000,
           print_positions: opts.print_positions?.length ? opts.print_positions : DEFAULT_PRINT_POSITIONS,
