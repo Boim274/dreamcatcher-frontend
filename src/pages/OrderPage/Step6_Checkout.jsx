@@ -10,16 +10,21 @@ import { formatRupiah } from '../../utils/formatRupiah';
 import Icon from '../../components/ui/Icon';
 import CustomerProfileModal from '../../components/common/CustomerProfileModal';
 import PhoneCountryInput from '../../components/common/PhoneCountryInput';
+import OrderReceipt from '../../components/common/OrderReceipt';
+import { getCleanConfigItems, formatConfigSummary } from '../../utils/orderReceiptHelper';
+import { Printer, Eye, Receipt, Layers } from 'lucide-react';
 
 export default function Step6Checkout() {
   const navigate = useNavigate();
   const { t, td, language } = useLanguageStore();
-  const { selectedService, config, sizeQuantities, design, printAreas, customerData, setCustomerData, getSizePrice, getSubtotal, getShippingCost, getTotalPrice, getDpAmount, getAreaSurcharge, prevStep, resetAll } = useOrderStore();
+  const orderStore = useOrderStore();
+  const { selectedService, config, sizeQuantities, design, printAreas, customerData, setCustomerData, getSizePrice, getSubtotal, getShippingCost, getTotalPrice, getDpAmount, getAreaSurcharge, prevStep, resetAll } = orderStore;
   const { user, isAuthenticated } = useAuthStore();
   const toast = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
 
   const [form, setForm] = useState({
     name: customerData.name || (isAuthenticated ? user?.name : '') || '',
@@ -44,9 +49,11 @@ export default function Step6Checkout() {
     }
   }, [user]);
 
+  const subtotal = getSubtotal();
+  const shipping = getShippingCost();
   const total = getTotalPrice();
   const dp = getDpAmount();
-  const breakdown = useOrderStore.getState().getPriceBreakdown();
+  const breakdown = orderStore.getPriceBreakdown ? orderStore.getPriceBreakdown() : useOrderStore.getState().getPriceBreakdown();
   const areaSurcharge = getAreaSurcharge();
 
   const validate = () => {
@@ -93,10 +100,7 @@ export default function Step6Checkout() {
     });
 
     try {
-      const configSummary = Object.entries(config)
-        .filter(([key, val]) => val && key !== 'size')
-        .map(([, val]) => val)
-        .join(' / ');
+      const configSummary = formatConfigSummary(config, language, td);
 
       const items = [];
       const itemProductName = config.shirtModel
@@ -230,10 +234,8 @@ export default function Step6Checkout() {
   const { theme } = useThemeStore();
   const isLight = theme === 'light';
 
-  const configSummary = Object.entries(config)
-    .filter(([key, val]) => val && key !== 'size')
-    .map(([, val]) => td(val))
-    .join(' / ');
+  const cleanSpecs = getCleanConfigItems(config, language, td);
+  const totalQty = orderStore.getTotalQuantity ? orderStore.getTotalQuantity() : Object.values(sizeQuantities || {}).reduce((a, b) => a + b, 0);
 
   return (
     <div className={`rounded-3xl border p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden transition-colors ${
@@ -258,65 +260,136 @@ export default function Step6Checkout() {
         </div>
         <div className="text-right">
           <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>{language === 'en' ? '50% Down Payment:' : 'Total DP 50%:'}</span>
-          <p className="text-sm font-bold text-primary">{formatRupiah(dp)}</p>
+          <p className="text-sm font-bold text-primary font-mono">{formatRupiah(dp)}</p>
         </div>
       </div>
 
-      {/* Mini Summary Accordion / Card */}
-      <div className={`rounded-2xl border p-5 mb-6 ${
-        isLight ? 'border-slate-200 bg-slate-50' : 'border-white/10 bg-white/[0.02]'
+      {/* Shopping Receipt Summary Card */}
+      <div className={`rounded-2xl border mb-6 overflow-hidden transition-all ${
+        isLight
+          ? 'border-slate-200 bg-[#fffdfa] shadow-lg text-slate-800'
+          : 'border-white/10 bg-[#16101e] shadow-xl text-zinc-100'
       }`}>
-        <p className="text-primary text-[11px] tracking-[1.5px] uppercase mb-3 font-bold">
-          {language === 'en' ? 'Final Summary' : 'Ringkasan Akhir'}
-        </p>
-        <div className="flex justify-between text-xs pb-2 border-b border-white/5">
-          <span className="text-gray-400 font-medium">{td(selectedService?.name)}</span>
-          {configSummary && <span className="text-gray-200 font-medium text-right max-w-[65%]">{configSummary}</span>}
-        </div>
-
-        {config.shirtModel && (
-          <div className="flex justify-between text-xs pb-2 border-b border-white/5">
-            <span className="text-gray-400 font-medium">{language === 'en' ? 'Shirt Model:' : 'Model Kaos:'}</span>
-            <span className="text-primary font-bold">{config.shirtModel}</span>
-          </div>
-        )}
-
-        {config.material && (
-          <div className="flex justify-between text-xs pb-2 border-b border-white/5">
-            <span className="text-gray-400 font-medium">{language === 'en' ? 'Fabric:' : 'Bahan Kain:'}</span>
-            <span className="text-white font-medium">{config.material}</span>
-          </div>
-        )}
-
-        {/* Print Areas */}
-        {printAreas.length > 0 && (
-          <div className="my-2.5 space-y-1">
-            {printAreas.map((area, idx) => (
-              <div key={idx} className="text-xs text-gray-300 flex items-center gap-2">
-                <span className="text-primary font-bold text-[11px] bg-primary/10 px-1.5 py-0.5 rounded">
-                  {language === 'en' ? `Area ${idx + 1}:` : `Area ${idx + 1}:`}
-                </span>
-                <span>{td(area.position)} ({area.printSize})</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Per-size breakdown */}
-        <div className="space-y-1.5 my-2.5">
-          {breakdown.map(({ size, qty, unitPrice, subtotal }) => (
-            <div key={size} className="flex justify-between text-xs">
-              <span className="text-gray-400">{size}: {qty} pcs × {formatRupiah(unitPrice)}</span>
-              <span className="text-white font-semibold">{formatRupiah(subtotal)}</span>
+        {/* Receipt Header Banner */}
+        <div className="p-4 sm:p-5 border-b border-dashed border-current/20 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary shrink-0">
+              <Receipt size={18} />
             </div>
-          ))}
+            <div>
+              <p className="text-[10px] uppercase font-bold tracking-widest text-primary">
+                {language === 'en' ? 'Shopping Receipt Summary' : 'Struk Ringkasan Belanja'}
+              </p>
+              <h4 className="font-heading text-lg sm:text-xl tracking-wide uppercase leading-tight">
+                {td(selectedService?.name)} {config.shirtModel ? `• ${config.shirtModel}` : ''}
+              </h4>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowReceiptModal(true)}
+            className="px-3.5 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/25 text-primary text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+          >
+            <Eye size={13} />
+            <span>{language === 'en' ? 'View Full Receipt' : 'Lihat Struk Lengkap'}</span>
+          </button>
         </div>
 
-        <div className="flex justify-between items-center text-sm font-bold pt-3 border-t border-white/10">
-          <span className="text-white">{language === 'en' ? 'Total Bill' : 'Total Tagihan'}</span>
-          <span className="text-white font-heading text-xl tracking-wide">{formatRupiah(total)}</span>
+        {/* Receipt Body */}
+        <div className="p-4 sm:p-5 space-y-4">
+          {/* Specifications Chips */}
+          {cleanSpecs.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pb-2 border-b border-current/10">
+              {cleanSpecs.map((spec, i) => (
+                <span
+                  key={i}
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-current/5 border border-current/10 opacity-80"
+                >
+                  <strong className="opacity-60">{spec.label}:</strong> {spec.value}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Print Areas */}
+          {printAreas.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-[11px] font-bold opacity-60 uppercase">{language === 'en' ? 'Print Area:' : 'Area Sablon:'}</span>
+              {printAreas.map((area, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[11px] font-semibold"
+                >
+                  <span>Area {idx + 1}: {td(area.position)} ({area.printSize})</span>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Per-size Breakdown Rows */}
+          <div className="border-t border-dashed border-current/20 pt-2 font-mono text-xs">
+            <div className="grid grid-cols-12 opacity-60 text-[10px] font-bold uppercase pb-1 border-b border-current/10">
+              <span className="col-span-3">{language === 'en' ? 'Size' : 'Ukuran'}</span>
+              <span className="col-span-3 text-center">Qty</span>
+              <span className="col-span-3 text-right">{language === 'en' ? 'Price' : 'Harga'}</span>
+              <span className="col-span-3 text-right">Subtotal</span>
+            </div>
+            <div className="divide-y divide-current/5 py-1">
+              {breakdown.map(({ size, qty, unitPrice, subtotal: sizeSubtotal }) => (
+                <div key={size} className="grid grid-cols-12 py-1 items-center">
+                  <span className="col-span-3 font-bold">{size}</span>
+                  <span className="col-span-3 text-center opacity-80">{qty} pcs</span>
+                  <span className="col-span-3 text-right opacity-80 text-[11px]">{formatRupiah(unitPrice)}</span>
+                  <span className="col-span-3 text-right font-semibold">{formatRupiah(sizeSubtotal)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Totals & DP */}
+          <div className="pt-2 border-t-2 border-dashed border-current/20 space-y-1.5 font-mono text-xs">
+            <div className="flex justify-between opacity-80">
+              <span>{language === 'en' ? `Subtotal (${totalQty} pcs):` : `Subtotal Produk (${totalQty} pcs):`}</span>
+              <span>{formatRupiah(subtotal)}</span>
+            </div>
+            {areaSurcharge > 0 && (
+              <div className="flex justify-between text-primary font-semibold">
+                <span>{language === 'en' ? 'Area 2 Surcharge:' : 'Surcharge Area Sablon 2:'}</span>
+                <span>+{formatRupiah(areaSurcharge * totalQty)}</span>
+              </div>
+            )}
+            <div className="flex justify-between opacity-80">
+              <span>{language === 'en' ? 'Shipping:' : 'Pengiriman:'}</span>
+              <span className="font-semibold">
+                {form.deliveryMethod === 'pickup'
+                  ? (language === 'en' ? 'Store Pickup (Rp 0)' : 'Ambil di Toko (Rp 0)')
+                  : (shipping > 0 ? formatRupiah(shipping) : (language === 'en' ? 'Calculated on invoice' : 'Kurir ke alamat'))}
+              </span>
+            </div>
+
+            <div className="pt-2 mt-2 border-t-2 border-current/25 flex justify-between items-center">
+              <div>
+                <span className="text-[10px] uppercase font-bold tracking-wider opacity-60 block">
+                  {language === 'en' ? 'Total Bill' : 'Total Tagihan'}
+                </span>
+                <span className="font-heading text-2xl tracking-wide text-primary">
+                  {formatRupiah(total)}
+                </span>
+              </div>
+              <div className="text-right p-2.5 rounded-xl bg-primary/10 border border-primary/25">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-primary block">
+                  {language === 'en' ? '50% Down Payment (DP):' : 'DP Minimum (50%):'}
+                </span>
+                <span className="font-mono font-bold text-sm text-primary">
+                  {formatRupiah(dp)}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
 
       {/* Profile Info & Contact */}
       <div className="space-y-5 mb-6">
@@ -570,6 +643,17 @@ export default function Step6Checkout() {
 
       {/* Profile Modal */}
       <CustomerProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+
+      {/* Full Shopping Receipt Modal */}
+      {showReceiptModal && (
+        <OrderReceipt
+          mode="modal"
+          isEstimate={true}
+          orderDraft={orderStore}
+          language={language}
+          onClose={() => setShowReceiptModal(false)}
+        />
+      )}
     </div>
   );
 }

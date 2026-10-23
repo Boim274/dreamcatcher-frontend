@@ -29,11 +29,14 @@ import {
   ShoppingBag,
   RefreshCw,
   AlertTriangle,
+  Receipt,
+  Printer,
 } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 import { getImageUrl } from '../../utils/getImageUrl';
 import OptimizedImage from '../../components/ui/OptimizedImage';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
+import OrderReceipt from '../../components/common/OrderReceipt';
 
 const statusConfig = {
   pending: { label: 'Pesanan Diterima', color: 'gray' },
@@ -131,6 +134,8 @@ export default function OrderDetailPage() {
   const [lightboxImage, setLightboxImage] = useState(null);
   const [confirmStatus, setConfirmStatus] = useState({ show: false, status: null, label: '' });
   const [confirmCancelAction, setConfirmCancelAction] = useState({ show: false, action: null });
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [activeViewMode, setActiveViewMode] = useState('table'); // 'table' | 'receipt'
 
   useEffect(() => {
     const controller = new AbortController();
@@ -290,7 +295,16 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowReceiptModal(true)}
+              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-primary to-[#ff60a8] hover:brightness-110 active:scale-95 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-primary/30 transition-all cursor-pointer border-none"
+              title="Lihat & Cetak Struk Belanja"
+            >
+              <Receipt size={16} />
+              <span>Lihat Struk Belanja</span>
+            </button>
             <StatusBadge status={order.status} />
             <button
               onClick={() => fetchOrder()}
@@ -509,18 +523,52 @@ export default function OrderDetailPage() {
 
         {/* Order Items Table & Design Previews */}
         <div className="bg-[#180f1e]/90 backdrop-blur-xl border border-white/10 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
-          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <div className="flex flex-wrap items-center justify-between border-b border-white/10 pb-3 gap-3">
             <div className="flex items-center gap-2">
               <ShoppingBag size={18} className="text-primary" />
               <h2 className="font-heading text-lg sm:text-xl text-white tracking-wide">
                 Rincian Item & Desain Sablon
               </h2>
             </div>
-            <span className="text-zinc-400 text-xs font-mono">
-              {order.items?.length || 0} Jenis Item
-            </span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center p-1 rounded-xl bg-black/40 border border-white/10 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setActiveViewMode('table')}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                    activeViewMode === 'table' ? 'bg-primary text-white shadow' : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  Tabel Item
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveViewMode('receipt')}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeViewMode === 'receipt' ? 'bg-primary text-white shadow' : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <Receipt size={13} />
+                  <span>Struk Belanja</span>
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReceiptModal(true)}
+                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                title="Buka Struk Lengkap & Cetak"
+              >
+                <Printer size={13} className="text-primary" />
+                <span className="hidden sm:inline">Cetak Struk</span>
+              </button>
+            </div>
           </div>
 
+          {activeViewMode === 'receipt' ? (
+            <div className="py-2">
+              <OrderReceipt order={order} mode="card" showActions={true} />
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-black/50 border-b border-white/10 text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-heading">
@@ -690,6 +738,7 @@ export default function OrderDetailPage() {
               </tfoot>
             </table>
           </div>
+          )}
         </div>
 
         {/* Payment History & Proof Card */}
@@ -810,6 +859,16 @@ export default function OrderDetailPage() {
           variant={confirmCancelAction.action === 'approve' ? 'danger' : 'primary'}
           loading={updating}
         />
+
+        {/* Modal Struk Belanja Lengkap */}
+        {showReceiptModal && (
+          <OrderReceipt
+            mode="modal"
+            order={order}
+            showActions={true}
+            onClose={() => setShowReceiptModal(false)}
+          />
+        )}
       </div>
     </ErrorBoundary>
   );

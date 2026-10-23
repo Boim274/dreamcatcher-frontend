@@ -2153,6 +2153,64 @@ html.light ::-webkit-scrollbar-thumb:hover,
   background: #94a3b8;
 }
 
+/* ===================== PRINT STYLES (RECEIPT & SALES REPORT) ===================== */
+@media print {
+  /* Hide all background and UI elements */
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  /* Expose only the printable elements */
+  .printable-receipt-wrapper,
+  .printable-receipt-wrapper *,
+  .printable-report-wrapper,
+  .printable-report-wrapper * {
+    visibility: visible;
+  }
+
+  .printable-receipt-wrapper {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 6mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  .printable-report-wrapper {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 210mm !important; /* A4 width */
+    margin: 0 auto !important;
+    padding: 8mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+
 
 
 

@@ -23,10 +23,13 @@ import {
   Award,
   ChevronRight,
   Filter,
+  Printer,
+  FileText,
 } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 import { useToast } from '../../components/ui/Toast';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
+import PrintableSalesReport from '../../components/admin/PrintableSalesReport';
 
 const statusMeta = [
   { key: 'pending', label: 'Pesanan Diterima', color: 'bg-zinc-500', text: 'text-zinc-400', border: 'border-zinc-500/30' },
@@ -51,6 +54,7 @@ export default function ReportsPage() {
   const [filterNonce, setFilterNonce] = useState(0);
   const [chartViewMode, setChartViewMode] = useState('revenue'); // 'revenue' | 'orders'
   const [tableTab, setTableTab] = useState('daily'); // 'daily' | 'orders'
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
   const fetchReports = async (signal) => {
     setLoading(true);
@@ -119,55 +123,129 @@ export default function ReportsPage() {
   }, [filterNonce]);
 
   const handleExportCSV = useCallback(() => {
-    if (!stats?.chart_data?.labels?.length) {
+    if (!stats?.chart_data?.labels?.length && !stats?.orders_list?.length) {
       toast.warning('Tidak ada data laporan untuk diekspor.');
       return;
     }
 
-    const labels = stats.chart_data.labels || [];
-    const orderCounts = stats.chart_data.datasets?.[0]?.data || [];
-    const completedCounts = stats.chart_data.datasets?.[1]?.data || [];
-    const dailyRevenues = stats.chart_data.daily_revenues || stats.chart_data.datasets?.[2]?.data || [];
+    const labels = stats?.chart_data?.labels || [];
+    const orderCounts = stats?.chart_data?.datasets?.[0]?.data || [];
+    const completedCounts = stats?.chart_data?.datasets?.[1]?.data || [];
+    const dailyRevenues = stats?.chart_data?.daily_revenues || stats?.chart_data?.datasets?.[2]?.data || [];
 
-    const header = ['Tanggal', 'Jumlah Pesanan', 'Pesanan Selesai', 'Pendapatan Riil (Rp)'].join(',');
-    const rows = labels.map((label, i) => {
+    const totalOrdersCount = orderCounts.reduce((a, b) => a + b, 0);
+    const totalCompletedCount = completedCounts.reduce((a, b) => a + b, 0);
+    const totalRevenueSum = dailyRevenues.reduce((a, b) => a + b, 0);
+    const aovVal = totalCompletedCount > 0 ? Math.round(totalRevenueSum / totalCompletedCount) : 0;
+    const completionRateVal = totalOrdersCount > 0 ? Math.round((totalCompletedCount / totalOrdersCount) * 100) : 0;
+
+    const todayStr = new Date().toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const escapeCell = (val) => {
+      if (val === null || val === undefined) return '""';
+      const s = String(val).replace(/"/g, '""');
+      return `"${s}"`;
+    };
+
+    const csvLines = [];
+
+    // 1. Business & Report Header
+    csvLines.push(['DREAMCATCHER CUSTOM APPAREL & SCREEN PRINTING STUDIO'].map(escapeCell).join(','));
+    csvLines.push(['LAPORAN PENJUALAN & ANALITIK KEUANGAN EKSEKUTIF'].map(escapeCell).join(','));
+    csvLines.push([`Periode: ${dateFrom ? `${dateFrom} s/d ${dateTo || 'Sekarang'}` : 'Semua Data / Default (Bulan Ini)'}`].map(escapeCell).join(','));
+    csvLines.push([`Waktu Unduh: ${todayStr} WIB`].map(escapeCell).join(','));
+    csvLines.push(['Otorisasi: Admin Studio Dreamcatcher (Verified Finance)'].map(escapeCell).join(','));
+    csvLines.push('');
+
+    // 2. Executive KPI Summary
+    csvLines.push(['=== RINGKASAN EKSEKUTIF / KPI ==='].map(escapeCell).join(','));
+    csvLines.push(['Indikator Kinerja', 'Nilai Angka (IDR / Qty)', 'Format Representasi', 'Keterangan'].map(escapeCell).join(','));
+    csvLines.push(['Total Pendapatan Riil', totalRevenueSum, formatRupiah(totalRevenueSum), 'Hanya dari pesanan berstatus Selesai'].map(escapeCell).join(','));
+    csvLines.push(['Total Volume Transaksi', totalOrdersCount, `${totalOrdersCount} Pesanan`, 'Total pesanan tercatat di periode terpilih'].map(escapeCell).join(','));
+    csvLines.push(['Pesanan Berhasil / Selesai', totalCompletedCount, `${totalCompletedCount} Pesanan`, `Tingkat keberhasilan: ${completionRateVal}%`].map(escapeCell).join(','));
+    csvLines.push(['Rata-rata Order (AOV)', aovVal, formatRupiah(aovVal), 'Rata-rata nilai belanja per pesanan selesai'].map(escapeCell).join(','));
+    csvLines.push('');
+
+    // 3. Daily Breakdown Table
+    csvLines.push(['=== REKAPITULASI PENJUALAN HARIAN ==='].map(escapeCell).join(','));
+    csvLines.push(['No.', 'Tanggal', 'Jumlah Pesanan', 'Pesanan Selesai', 'Pendapatan Riil (IDR)', 'Pendapatan Riil (Format)'].map(escapeCell).join(','));
+    labels.forEach((label, i) => {
       const orders = orderCounts[i] || 0;
       const completed = completedCounts[i] || 0;
       const revenue = dailyRevenues[i] || 0;
-      return [
-        `"${label}"`,
+      csvLines.push([
+        i + 1,
+        escapeCell(label),
         orders,
         completed,
-        `"${formatRupiah(revenue)}"`,
-      ].join(',');
+        revenue,
+        escapeCell(formatRupiah(revenue)),
+      ].join(','));
     });
+    csvLines.push([
+      'TOTAL',
+      escapeCell('TOTAL PERIODE'),
+      totalOrdersCount,
+      totalCompletedCount,
+      totalRevenueSum,
+      escapeCell(formatRupiah(totalRevenueSum)),
+    ].join(','));
+    csvLines.push('');
 
-    const totalOrders = orderCounts.reduce((a, b) => a + b, 0);
-    const totalCompleted = completedCounts.reduce((a, b) => a + b, 0);
-    const totalRevenue = dailyRevenues.reduce((a, b) => a + b, 0);
-    rows.push(['"TOTAL"', totalOrders, totalCompleted, `"${formatRupiah(totalRevenue)}"`].join(','));
+    // 4. Detailed Orders List
+    if (stats?.orders_list?.length) {
+      csvLines.push(['=== RINCIAN TRANSAKSI PESANAN INDIVIDUAL ==='].map(escapeCell).join(','));
+      csvLines.push([
+        'No.',
+        'Kode Pesanan',
+        'Tanggal Dibuat',
+        'Nama Pelanggan',
+        'Email',
+        'No. Telepon / WA',
+        'Rincian Item / Sablon',
+        'Metode Pengiriman',
+        'Status Pesanan',
+        'Status Bayar',
+        'Subtotal (IDR)',
+        'Ongkir (IDR)',
+        'Total Tagihan (IDR)',
+        'Total Tagihan (Format)',
+      ].map(escapeCell).join(','));
 
-    // Append detailed orders list if available
-    if (stats.orders_list?.length) {
-      rows.push('');
-      rows.push(['RINCIAN PESANAN INDIVIDUAL'].join(','));
-      rows.push(['Kode Pesanan', 'Nama Customer', 'Email', 'No. HP', 'Metode', 'Status', 'Status Bayar', 'Total Tagihan', 'Waktu Dibuat'].join(','));
-      stats.orders_list.forEach((o) => {
-        rows.push([
-          `"${o.order_code}"`,
-          `"${o.customer_name}"`,
-          `"${o.customer_email}"`,
-          `"${o.phone || '-'}"`,
-          `"${o.delivery_method}"`,
-          `"${o.status}"`,
-          `"${o.payment_status || '-'}"`,
-          `"${formatRupiah(o.total_price)}"`,
-          `"${o.created_at}"`,
+      stats.orders_list.forEach((o, idx) => {
+        const itemDetail = o.items_summary || (o.items?.map(it => `${it.product_name || 'Kaos'} (${it.quantity || 1} pcs)`).join('; ') || '-');
+        const deliveryLabel = o.delivery_method === 'pickup' ? 'Ambil di Toko' : 'Kurir / Ekspedisi';
+        const formattedDate = o.created_at ? new Date(o.created_at).toLocaleDateString('id-ID') : '-';
+        const subtotal = o.subtotal ?? (Number(o.total_price || 0) - Number(o.shipping_cost || 0));
+        const shipping = Number(o.shipping_cost || 0);
+        const totalPrice = Number(o.total_price || 0);
+
+        csvLines.push([
+          idx + 1,
+          escapeCell(o.order_code),
+          escapeCell(formattedDate),
+          escapeCell(o.customer_name),
+          escapeCell(o.customer_email),
+          escapeCell(o.phone || '-'),
+          escapeCell(itemDetail),
+          escapeCell(deliveryLabel),
+          escapeCell(o.status),
+          escapeCell(o.payment_status || '-'),
+          subtotal,
+          shipping,
+          totalPrice,
+          escapeCell(formatRupiah(totalPrice)),
         ].join(','));
       });
     }
 
-    const csvContent = '\uFEFF' + [header, ...rows].join('\n');
+    const csvContent = '\uFEFF' + csvLines.join('\r\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -176,7 +254,7 @@ export default function ReportsPage() {
     link.download = `laporan-penjualan-dreamcatcher-${dateFrom || 'awal'}-sd-${dateTo || today}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-    toast.success('Laporan penjualan berhasil diekspor ke format CSV!');
+    toast.success('Laporan penjualan profesional berhasil diekspor ke CSV/Excel!');
   }, [stats, dateFrom, dateTo, toast]);
 
   const getChartTitle = () => {
@@ -223,7 +301,7 @@ export default function ReportsPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               onClick={() => {
                 setLoading(true);
@@ -235,12 +313,22 @@ export default function ReportsPage() {
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             </button>
             <button
+              onClick={() => setShowPrintModal(true)}
+              disabled={loading || !hasChartData}
+              className="px-3.5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 active:scale-95 text-zinc-200 hover:text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Buka Pratinjau Formal untuk Cetak / Simpan PDF"
+            >
+              <Printer size={15} className="text-primary" />
+              <span>Cetak / PDF Laporan</span>
+            </button>
+            <button
               onClick={handleExportCSV}
               disabled={loading || !hasChartData}
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-[#ff60a8] hover:brightness-110 active:scale-95 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-primary/30 transition-all cursor-pointer border-none disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Unduh data dalam format CSV untuk Excel / Spreadsheet"
             >
-              <Download size={16} />
-              <span>Export CSV Lengkap</span>
+              <Download size={15} />
+              <span>Export CSV / Excel</span>
             </button>
           </div>
         </div>
@@ -746,6 +834,18 @@ export default function ReportsPage() {
           )}
         </div>
       </div>
+
+      {/* Printable / PDF Sales Report Modal */}
+      {showPrintModal && (
+        <PrintableSalesReport
+          stats={stats}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          chartTitle={getChartTitle()}
+          onClose={() => setShowPrintModal(false)}
+          onExportCSV={handleExportCSV}
+        />
+      )}
     </ErrorBoundary>
   );
 }

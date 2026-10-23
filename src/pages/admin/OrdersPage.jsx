@@ -16,11 +16,14 @@ import {
   Calendar,
   Filter,
   Package,
+  Receipt,
+  Printer,
 } from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 import { getImageUrl } from '../../utils/getImageUrl';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
 import OptimizedImage from '../../components/ui/OptimizedImage';
+import OrderReceipt from '../../components/common/OrderReceipt';
 
 const paymentStatusBadge = {
   pending: 'waiting_payment',
@@ -80,6 +83,7 @@ export default function OrdersPage() {
   const [error, setError] = useState(false);
   const [pagination, setPagination] = useState(null);
   const [copiedCode, setCopiedCode] = useState(null);
+  const [selectedReceiptOrder, setSelectedReceiptOrder] = useState(null);
 
   const [filters, setFilters] = useState({
     status: initialStatus,
@@ -471,13 +475,24 @@ export default function OrdersPage() {
 
                         {/* Aksi */}
                         <td className="px-5 py-4 text-right whitespace-nowrap">
-                          <Link
-                            to={`/admin/pesanan/${order.id}`}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-white transition-all text-xs font-semibold no-underline"
-                          >
-                            <Eye size={13} />
-                            <span>Detail</span>
-                          </Link>
+                          <div className="inline-flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedReceiptOrder(order)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 transition-all text-xs font-semibold cursor-pointer"
+                              title="Lihat & Cetak Struk Belanja"
+                            >
+                              <Receipt size={13} className="text-primary" />
+                              <span>Struk</span>
+                            </button>
+                            <Link
+                              to={`/admin/pesanan/${order.id}`}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-white transition-all text-xs font-semibold no-underline"
+                            >
+                              <Eye size={13} />
+                              <span>Detail</span>
+                            </Link>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -517,6 +532,16 @@ export default function OrdersPage() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Modal Struk Belanja Langsung dari Daftar Pesanan */}
+        {selectedReceiptOrder && (
+          <OrderReceipt
+            mode="modal"
+            order={selectedReceiptOrder}
+            showActions={true}
+            onClose={() => setSelectedReceiptOrder(null)}
+          />
         )}
       </div>
     </ErrorBoundary>

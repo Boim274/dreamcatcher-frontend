@@ -5,13 +5,14 @@ import { orderService } from '../services/orderService';
 import {
   CreditCard, Upload, CheckCircle, AlertCircle, Phone, MapPin,
   Wallet, ArrowRight, Copy, Clock, Banknote, QrCode, Building2,
-  CircleDollarSign, FileText, BadgeCheck, XCircle
+  CircleDollarSign, FileText, BadgeCheck, XCircle, Receipt
 } from 'lucide-react';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { StatusBadge } from '../components/common/StatusBadge';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { formatRupiah } from '../utils/formatRupiah';
+import OrderReceipt from '../components/common/OrderReceipt';
 
 import { useLanguageStore } from '../store/languageStore';
 import { useThemeStore } from '../store/themeStore';
@@ -35,16 +36,70 @@ export default function PaymentPage() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [copiedAccount, setCopiedAccount] = useState(null);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
 
   const PAYMENT_TYPES = [
     { id: 'dp', label: isEn ? 'Pay DP (50%)' : 'Bayar DP (50%)', desc: isEn ? 'Pay 50% deposit, settle remaining when production finishes' : 'Bayar uang muka 50%, sisa dibayar setelah produksi selesai', icon: Wallet },
     { id: 'full', label: isEn ? 'Pay Full' : 'Bayar Full / Lunas', desc: isEn ? 'Pay in full now, immediate processing' : 'Bayar penuh sekarang, langsung diproses', icon: Banknote },
   ];
 
-  const BANK_ACCOUNTS = [
-    { bank: 'BCA', name: 'Dreamcatcher.id', number: '1234567890' },
-    { bank: 'Mandiri', name: 'Dreamcatcher.id', number: '9876543210' },
-  ];
+function BankIcon({ bank }) {
+  const isBca = (bank || '').toLowerCase().includes('bca');
+  const isSeabank = (bank || '').toLowerCase().includes('sea');
+
+  if (isBca) {
+    return (
+      <div className="w-12 h-12 rounded-2xl bg-[#005baa] p-2 flex flex-col items-center justify-center shrink-0 shadow-md shadow-blue-900/30 border border-white/20">
+        <svg viewBox="0 0 48 48" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M24 6L39 24L24 42L9 24L24 6Z" fill="white" fillOpacity="0.2"/>
+          <path d="M24 11L35 24L24 37L13 24L24 11Z" fill="white"/>
+          <path d="M24 17L30 24L24 31L18 24L24 17Z" fill="#005baa"/>
+          <rect x="21" y="21" width="6" height="6" rx="1" fill="white"/>
+        </svg>
+      </div>
+    );
+  }
+
+  if (isSeabank) {
+    return (
+      <div className="w-12 h-12 rounded-2xl bg-[#ff5c00] p-2 flex flex-col items-center justify-center shrink-0 shadow-md shadow-orange-900/30 border border-white/20">
+        <svg viewBox="0 0 48 48" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M32 15C30 13 27 12 23.5 12C17 12 13 15.5 13 20.5C13 28 34 22 34 30C34 35.5 29 38 23 38C17 38 13.5 35 12 32"
+            stroke="white"
+            strokeWidth="4.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle cx="33" cy="14" r="3" fill="#ffea79"/>
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center text-primary shrink-0">
+      <Building2 size={24} />
+    </div>
+  );
+}
+
+const BANK_ACCOUNTS = [
+  {
+    id: 'bca',
+    bank: 'BANK BCA',
+    name: 'IHSAN PUTRA RAMADHAN',
+    number: '5222383498',
+    badgeBg: 'bg-[#005baa]',
+  },
+  {
+    id: 'seabank',
+    bank: 'SEABANK',
+    name: 'IHSAN PUTRA RAMADHAN',
+    number: '901828242948',
+    badgeBg: 'bg-[#ff5c00]',
+  },
+];
 
   const PAYMENT_STATUS_MAP = {
     pending: { label: isEn ? 'Waiting for Verification' : 'Menunggu Verifikasi', color: 'text-amber-400', bg: 'bg-amber-500/10 border border-amber-500/30', icon: Clock },
@@ -253,8 +308,17 @@ export default function PaymentPage() {
                 ? 'Complete your order payment by transferring to our official Dreamcatcher bank accounts below.'
                 : 'Selesaikan pembayaran pesanan Anda dengan transfer ke rekening resmi Dreamcatcher di bawah.'}
             </p>
-            <div className="mt-3">
+            <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
               <StatusBadge status={order.status} />
+              <button
+                type="button"
+                onClick={() => setShowReceiptModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/30 text-xs text-primary font-bold transition-all cursor-pointer shadow-sm"
+                title="Lihat & Cetak Struk Belanja"
+              >
+                <Receipt size={13} />
+                <span>{isEn ? 'View Shopping Receipt' : 'Lihat Struk Belanja'}</span>
+              </button>
             </div>
           </div>
 
@@ -449,20 +513,34 @@ export default function PaymentPage() {
               </h3>
               <div className="space-y-3">
                 {BANK_ACCOUNTS.map((acc) => (
-                  <div key={acc.number} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl border transition-all gap-4 ${
-                    isLight ? 'bg-slate-50 border-slate-200 hover:border-primary/40' : 'bg-white/[0.02] border-white/10 hover:border-primary/30'
-                  }`}>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-lg bg-primary/20 text-primary text-xs font-bold uppercase">{acc.bank}</span>
-                        <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-white/50'}`}>a.n. {acc.name}</span>
+                  <div
+                    key={acc.number}
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl border transition-all gap-4 ${
+                      isLight
+                        ? 'bg-slate-50 border-slate-200 hover:border-primary/40 shadow-sm'
+                        : 'bg-white/[0.02] border-white/10 hover:border-primary/30'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
+                      <BankIcon bank={acc.bank} />
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`px-2.5 py-0.5 rounded-lg text-white text-[11px] font-bold uppercase tracking-wide shadow-sm ${acc.badgeBg}`}>
+                            {acc.bank}
+                          </span>
+                          <span className={`text-xs font-semibold ${isLight ? 'text-slate-600' : 'text-zinc-300'}`}>
+                            a.n. <strong className={isLight ? 'text-slate-900' : 'text-white'}>{acc.name}</strong>
+                          </span>
+                        </div>
+                        <p className={`text-2xl sm:text-3xl font-bold font-mono tracking-wider mt-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          {acc.number}
+                        </p>
                       </div>
-                      <p className={`text-2xl font-bold font-mono tracking-wider mt-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>{acc.number}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => copyToClipboard(acc.number)}
-                      className={`btn-glass inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                      className={`btn-glass inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
                         copiedAccount === acc.number
                           ? '!bg-emerald-500 !text-white !border-emerald-500'
                           : ''
@@ -697,6 +775,15 @@ export default function PaymentPage() {
             </div>
           </div>
 
+          {/* Modal Struk Belanja Lengkap */}
+          {showReceiptModal && (
+            <OrderReceipt
+              mode="modal"
+              order={order}
+              showActions={true}
+              onClose={() => setShowReceiptModal(false)}
+            />
+          )}
         </div>
       </main>
 
