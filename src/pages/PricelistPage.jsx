@@ -8,7 +8,7 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import ScrollReveal from '../components/ui/ScrollReveal';
 import ServiceIcon from '../components/ui/ServiceIcons';
 import Icon from '../components/ui/Icon';
-import { formatRupiah, getMinPrice } from '../utils/formatRupiah';
+import { formatRupiah, getMinPrice, getSatuanPrice } from '../utils/formatRupiah';
 import { WA_URL } from '../constants/whatsapp';
 import { useLanguageStore } from '../store/languageStore';
 import { useThemeStore } from '../store/themeStore';
@@ -67,43 +67,157 @@ export default function PricelistPage() {
       return true;
     });
 
+  const renderShirtModels = (service) => {
+    const models = service.options_config?.shirt_models;
+    if (!models || !Array.isArray(models) || models.length === 0) return null;
+
+    return (
+      <div className="mt-4 pt-4 border-t border-white/10">
+        <p className="text-primary text-xs tracking-wider uppercase mb-2 font-bold flex items-center gap-1.5">
+          <Icon name="layers" size={13} className="text-primary" />
+          <span>{language === 'en' ? 'Apparel Model Options' : 'Pilihan Model Pakaian'}</span>
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {models.map((m) => {
+            const surcharge = Number(m.surcharge || 0);
+            return (
+              <div
+                key={m.id}
+                className="bg-black/30 border border-white/10 rounded-2xl p-2.5 flex items-center justify-between gap-2"
+              >
+                <div className="min-w-0">
+                  <p className="text-white text-xs font-bold truncate">
+                    {language === 'en' && m.name_en ? m.name_en : m.name}
+                  </p>
+                  <p className="text-[10px] text-white/50 truncate">
+                    {m.id === 'long_sleeve' ? (language === 'en' ? 'Elastic ribbed cuff' : 'Rib manset elastis') : (language === 'en' ? 'Distro standard combed' : 'Katun combed distro')}
+                  </p>
+                </div>
+                <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold shrink-0 border ${
+                  surcharge > 0
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                }`}>
+                  {surcharge > 0 ? `+${formatRupiah(surcharge)}` : (language === 'en' ? 'Standard' : 'Standar')}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderPrintAreaOptions = (service) => {
+    const maxAreas = service.options_config?.max_print_areas;
+    const areaSurcharge = service.options_config?.area_surcharge;
+    const printSizes = service.options_config?.print_sizes;
+
+    if (!maxAreas && !areaSurcharge && (!printSizes || printSizes.length === 0)) return null;
+
+    return (
+      <div className="mt-4 pt-4 border-t border-white/10">
+        <p className="text-primary text-xs tracking-wider uppercase mb-2 font-bold flex items-center gap-1.5">
+          <Icon name="maximize-2" size={13} className="text-primary" />
+          <span>{language === 'en' ? 'Print Area & Dimensions' : 'Area & Dimensi Cetak'}</span>
+        </p>
+        <div className="bg-black/30 border border-white/10 rounded-2xl p-3 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span className="text-white/60">
+              {language === 'en' ? 'Print Area Limits' : 'Kapasitas Area Sablon'}:
+            </span>
+            <span className="text-white font-semibold flex items-center gap-1.5">
+              <span className="text-primary font-bold">Maks. {maxAreas || 2} Area</span>
+              {areaSurcharge ? (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-white/70">
+                  (Area ke-2: +{formatRupiah(areaSurcharge)})
+                </span>
+              ) : null}
+            </span>
+          </div>
+
+          {printSizes && printSizes.length > 0 && (
+            <div className="pt-2 border-t border-white/5">
+              <span className="text-white/40 text-[10px] uppercase tracking-wider block mb-1.5">
+                {language === 'en' ? 'Available Print Sizes' : 'Pilihan Ukuran Cetak'}:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {printSizes.map((pz, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 text-white/80 text-[11px] font-mono"
+                  >
+                    {typeof pz === 'object' ? pz.label : pz}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderOptions = (service) => {
     const options = service.options_config || {};
-    const hasSizePricing = options.size_pricing && Object.keys(options.size_pricing).length > 0;
-    const entries = Object.entries(options).filter(([k]) => {
-      if (['size_pricing', 'sablon_types', 'max_print_areas', 'area_surcharge'].includes(k)) return false;
-      if (k === 'sizes' && hasSizePricing) return false;
-      return true;
-    });
+    const excludedKeys = [
+      'size_pricing',
+      'sablon_types',
+      'max_print_areas',
+      'area_surcharge',
+      'shirt_models',
+      'print_sizes',
+      'print_positions',
+      'sizes',
+      'purchase_methods',
+    ];
+
+    // Sablon Kaos does not use general 'positions' (it uses print_positions)
+    const isSablon = (service.name || '').toLowerCase().includes('sablon');
+    if (isSablon) {
+      excludedKeys.push('positions');
+    }
+
+    const entries = Object.entries(options).filter(([k]) => !excludedKeys.includes(k));
     if (entries.length === 0) return null;
 
     return (
       <div className="mt-4 pt-4 border-t border-white/10">
-        <p className="text-primary text-xs tracking-wider uppercase mb-2.5 font-bold">{language === 'en' ? 'Available Options' : 'Opsi Tersedia'}</p>
-        <div className="space-y-2.5">
-          {entries.slice(0, 3).map(([key, items]) => {
+        <p className="text-primary text-xs tracking-wider uppercase mb-2.5 font-bold flex items-center gap-1.5">
+          <Icon name="check-circle" size={13} className="text-primary" />
+          <span>{language === 'en' ? 'Specs & Variations' : 'Spesifikasi & Pilihan Opsi'}</span>
+        </p>
+        <div className="space-y-3">
+          {entries.map(([key, items]) => {
             const label = optionLabels[key] || key.replace(/_/g, ' ');
             return (
               <div key={key}>
-                <p className="text-white/40 text-[10px] tracking-wider uppercase mb-1 font-semibold">{label}</p>
+                <p className="text-white/40 text-[10px] tracking-wider uppercase mb-1.5 font-semibold">{label}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {key === 'colors' && Array.isArray(items) ? (
-                    items.slice(0, 6).map((color) => (
-                      <span key={color} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/[0.03] border border-white/10 rounded-xl text-xs text-white/80">
-                        <span className="w-2.5 h-2.5 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: colorMap[color] || '#888' }} />
-                        {td(color)}
+                    items.slice(0, 8).map((color) => (
+                      <span key={color} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 rounded-xl text-xs text-white/90">
+                        <span className="w-2.5 h-2.5 rounded-full border border-white/30 shadow-sm shrink-0" style={{ backgroundColor: colorMap[color] || '#888' }} />
+                        <span>{td(color)}</span>
+                      </span>
+                    ))
+                  ) : key === 'materials' && Array.isArray(items) ? (
+                    items.map((mat, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-500/10 border border-purple-500/25 text-purple-300 text-xs font-medium rounded-xl">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                        <span>{td(mat)}</span>
                       </span>
                     ))
                   ) : Array.isArray(items) ? (
-                    items.slice(0, 6).map((item, idx) => {
+                    items.map((item, idx) => {
                       const isObj = typeof item === 'object' && item !== null;
                       const v = isObj ? item.label : item;
                       return (
-                        <span key={idx} className="px-2.5 py-1 bg-primary/10 border border-primary/20 text-primary text-xs font-medium rounded-xl">{td(v)}</span>
+                        <span key={idx} className="px-2.5 py-1 bg-white/5 border border-white/10 text-white/80 text-xs font-medium rounded-xl">{td(v)}</span>
                       );
                     })
                   ) : typeof items === 'object' ? (
-                    Object.entries(items).slice(0, 6).map(([k, v]) => (
+                    Object.entries(items).map(([k, v]) => (
                       <span key={k} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 border border-primary/20 text-primary text-xs font-medium rounded-xl">
                         {td(k)} <span className="text-white/40 text-[10px]">+{formatRupiah(v)}</span>
                       </span>
@@ -113,9 +227,6 @@ export default function PricelistPage() {
               </div>
             );
           })}
-          {entries.some(([, items]) => Array.isArray(items) && items.length > 6) && (
-            <p className="text-white/40 text-[11px]">{language === 'en' ? '+ more options' : '+ opsi lainnya'}</p>
-          )}
         </div>
       </div>
     );
@@ -129,10 +240,33 @@ export default function PricelistPage() {
     if (service.pricing_type === 'flat') {
       return (
         <div className="mt-4 pt-4 border-t border-white/10">
-          <p className="text-primary text-xs tracking-wider uppercase mb-2.5 font-bold">{language === 'en' ? 'Service Price' : 'Harga Layanan'}</p>
-          <div className="flex items-center justify-between bg-black/40 rounded-2xl px-4 py-3 border border-white/5">
-            <span className="text-white/60 text-xs">{language === 'en' ? `Flat price per ${unit}` : `Harga tetap per ${unit}`}</span>
-            <span className="text-gradient-primary font-bold text-base">{formatRupiah(service.base_price || service.price_per_unit)}</span>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-primary text-xs tracking-wider uppercase font-bold flex items-center gap-1.5">
+              <Icon name="tag" size={13} className="text-primary" />
+              <span>{language === 'en' ? 'Pricing Structure' : 'Struktur Harga Layanan'}</span>
+            </p>
+            <span className="text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              {language === 'en' ? 'Fixed Flat Rate' : 'Harga Tetap Transparan'}
+            </span>
+          </div>
+
+          <div className="bg-black/40 rounded-2xl p-3.5 border border-white/10 flex items-center justify-between">
+            <div>
+              <p className="text-white font-bold text-sm">
+                {language === 'en' ? `Tariff per ${unit}` : `Tarif per ${unit}`}
+              </p>
+              <p className="text-white/50 text-[11px] mt-0.5">
+                {service.minimum_order > 1
+                  ? (language === 'en' ? `Minimum order ${service.minimum_order} ${unit}` : `Minimal pemesanan ${service.minimum_order} ${unit}`)
+                  : (language === 'en' ? 'No minimum order required' : 'Bisa pesan satuan / tanpa minimal order')}
+              </p>
+            </div>
+            <div className="text-right">
+              <span className="text-gradient-primary font-bold text-xl block leading-tight">
+                {formatRupiah(service.base_price || service.price_per_unit)}
+              </span>
+              <span className="text-white/40 text-[10px]">/ {unit}</span>
+            </div>
           </div>
         </div>
       );
@@ -144,23 +278,81 @@ export default function PricelistPage() {
 
     return (
       <div className="mt-4 pt-4 border-t border-white/10">
-        <p className="text-primary text-xs tracking-wider uppercase mb-2.5 font-bold">{language === 'en' ? 'Price per Print Type' : 'Harga per Jenis Sablon'}</p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex items-center justify-between mb-2.5">
+          <p className="text-primary text-xs tracking-wider uppercase font-bold flex items-center gap-1.5">
+            <Icon name="tag" size={13} className="text-primary" />
+            <span>{language === 'en' ? 'Price per Print Technique' : 'Harga Paket per Jenis Sablon'}</span>
+          </p>
+          <span className="text-white/40 text-[10px] font-mono">
+            {language === 'en' ? 'Kaos + Sablon included' : 'Sudah termasuk kaos & sablon'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {entries.map(([type, prices]) => {
-            const tiers = [];
-            if (prices.lusin_2_6) tiers.push({ label: language === 'en' ? '2-6 doz' : '2-6 lsn', price: prices.lusin_2_6 });
-            if (prices.lusin_1) tiers.push({ label: language === 'en' ? '1 doz' : '1 lsn', price: prices.lusin_1 });
-            if (prices.satuan) tiers.push({ label: language === 'en' ? 'single' : 'satuan', price: prices.satuan });
-            if (tiers.length === 0) return null;
+            const isPlastisol = type.toLowerCase() === 'plastisol';
+            const isDTF = type.toLowerCase() === 'dtf';
+
             return (
-              <div key={type} className="bg-black/40 border border-white/5 rounded-2xl p-3 space-y-1.5">
-                <p className="text-white font-bold text-xs uppercase tracking-wide">{td(type)}</p>
-                {tiers.map((t, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs">
-                    <span className="text-white/50 text-[11px]">{t.label}</span>
-                    <span className="text-primary font-bold">{formatRupiah(t.price)}</span>
+              <div
+                key={type}
+                className="bg-black/40 border border-white/10 rounded-2xl p-3.5 space-y-2.5 relative overflow-hidden"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-primary" />
+                    <span className="text-white font-bold text-xs uppercase tracking-wider font-heading">
+                      {td(type)}
+                    </span>
                   </div>
-                ))}
+                  <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                    isPlastisol
+                      ? 'bg-primary/15 text-primary border-primary/30'
+                      : 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30'
+                  }`}>
+                    {isPlastisol ? 'Distro Standard' : 'Full Color HD'}
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  {prices.lusin_2_6 && (
+                    <div className="flex items-center justify-between text-xs py-1 px-2 rounded-xl bg-primary/10 border border-primary/20">
+                      <div className="flex items-center gap-1">
+                        <span className="text-white/90 font-medium text-[11px]">
+                          {language === 'en' ? 'Wholesale (2-6 doz / 24+ pcs)' : 'Grosir (2–6 lsn / 24+ pcs)'}
+                        </span>
+                        <span className="text-[9px] bg-primary text-white font-bold px-1.5 rounded">
+                          {language === 'en' ? 'Best' : 'Hemat'}
+                        </span>
+                      </div>
+                      <span className="text-white font-bold font-mono">
+                        {formatRupiah(prices.lusin_2_6)}
+                      </span>
+                    </div>
+                  )}
+
+                  {prices.lusin_1 && (
+                    <div className="flex items-center justify-between text-xs py-1 px-2 rounded-xl bg-white/[0.03] border border-white/5">
+                      <span className="text-white/70 text-[11px]">
+                        {language === 'en' ? '1 Dozen (12-23 pcs)' : '1 Lusin (12–23 pcs)'}
+                      </span>
+                      <span className="text-white font-bold font-mono">
+                        {formatRupiah(prices.lusin_1)}
+                      </span>
+                    </div>
+                  )}
+
+                  {prices.satuan && (
+                    <div className="flex items-center justify-between text-xs py-1 px-2 rounded-xl bg-white/[0.03] border border-white/5">
+                      <span className="text-white/70 text-[11px]">
+                        {language === 'en' ? 'Retail / Single (1-11 pcs)' : 'Satuan (1–11 pcs)'}
+                      </span>
+                      <span className="text-white font-bold font-mono">
+                        {formatRupiah(prices.satuan)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -171,27 +363,54 @@ export default function PricelistPage() {
 
   const renderSizeChips = (service) => {
     const sizePricing = service.options_config?.size_pricing;
-    if (!sizePricing || Object.keys(sizePricing).length === 0) return null;
-
-    const minPrice = getMinPrice(service);
-    const basePrice = minPrice || parseFloat(service.base_price) || 0;
-    const sizes = service.options_config?.sizes || Object.keys(sizePricing);
+    const sizes = service.options_config?.sizes || (sizePricing ? Object.keys(sizePricing) : []);
+    if (!sizes || sizes.length === 0) return null;
 
     return (
       <div className="mt-4 pt-4 border-t border-white/10">
-        <p className="text-primary text-xs tracking-wider uppercase mb-2.5 font-bold">{language === 'en' ? 'Price per Size' : 'Harga per Ukuran'}</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-primary text-xs tracking-wider uppercase font-bold flex items-center gap-1.5">
+            <Icon name="scissors" size={13} className="text-primary" />
+            <span>{language === 'en' ? 'Size Availability & Surcharge' : 'Ukuran Kaos & Penyesuaian Harga'}</span>
+          </p>
+          <span className="text-[10px] text-white/40">
+            {language === 'en' ? 'S - XL Standard' : 'S s/d XL Standar'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {sizes.map((size) => {
-            const surcharge = parseInt(sizePricing[size]) || 0;
-            const total = basePrice + surcharge;
+            const surcharge = sizePricing && sizePricing[size] !== undefined ? parseInt(sizePricing[size]) : 0;
+            const isStandard = surcharge === 0;
+
             return (
-              <div key={size} className="bg-black/40 border border-white/5 rounded-2xl px-3 py-1.5 flex items-center gap-2">
-                <span className="bg-primary/20 text-primary font-bold text-xs px-2 py-0.5 rounded-lg border border-primary/30">{td(size)}</span>
-                <span className="text-white font-semibold text-xs">{formatRupiah(total)}</span>
+              <div
+                key={size}
+                className={`rounded-2xl p-2.5 text-center border transition-all ${
+                  isStandard
+                    ? 'bg-black/30 border-white/10'
+                    : 'bg-amber-500/10 border-amber-500/30 shadow-sm shadow-amber-500/10'
+                }`}
+              >
+                <span className="font-heading font-bold text-sm block text-white">
+                  {size}
+                </span>
+                <span className={`text-[10px] font-bold block mt-0.5 ${
+                  isStandard ? 'text-emerald-400' : 'text-amber-400'
+                }`}>
+                  {isStandard
+                    ? (language === 'en' ? 'Standard' : 'Standar')
+                    : `+${formatRupiah(surcharge)}`}
+                </span>
               </div>
             );
           })}
         </div>
+        <p className="text-white/40 text-[10px] mt-1.5">
+          {language === 'en'
+            ? '*Sizes S to XL are standard price. XXL & XXXL require extra fabric surcharge.'
+            : '*Ukuran S hingga XL harga standar. Ukuran XXL & XXXL dikenakan penyesuaian bahan.'}
+        </p>
       </div>
     );
   };
@@ -305,15 +524,24 @@ export default function PricelistPage() {
                               </h2>
                               <div className="text-right shrink-0">
                                 {service.pricing_type === 'tiered' && minPrice ? (
-                                  <>
-                                    <p className="font-bold text-base sm:text-lg text-gradient-primary leading-tight">{language === 'en' ? 'From ' : 'Mulai '}{startingPrice}</p>
-                                    <p className="text-white/40 text-[10px]">/ {unit} ({language === 'en' ? 'wholesale' : 'grosir'})</p>
-                                  </>
+                                  <div>
+                                    <p className="font-bold text-base sm:text-lg text-gradient-primary leading-tight">
+                                      {language === 'en' ? 'From ' : 'Mulai '}{startingPrice}
+                                    </p>
+                                    <p className="text-white/40 text-[10px]">
+                                      / {unit} ({language === 'en' ? 'wholesale 2-6 doz' : 'grosir 2–6 lsn'})
+                                    </p>
+                                    {getSatuanPrice(service) > minPrice && (
+                                      <p className="text-white/60 text-[9px] font-mono mt-0.5">
+                                        {language === 'en' ? 'Retail: ' : 'Satuan: '}{formatRupiah(getSatuanPrice(service))}
+                                      </p>
+                                    )}
+                                  </div>
                                 ) : (
-                                  <>
+                                  <div>
                                     <p className="font-bold text-base sm:text-lg text-gradient-primary leading-tight">{startingPrice}</p>
                                     <p className="text-white/40 text-[10px]">/ {unit}</p>
-                                  </>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -327,16 +555,18 @@ export default function PricelistPage() {
                               <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider ${
                                 service.pricing_type === 'tiered' ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-white/10 text-white/70 border border-white/15'
                               }`}>
-                                {service.pricing_type === 'tiered' ? (language === 'en' ? 'Tiered Wholesale' : 'Grosir Tiered') : 'Flat Price'}
+                                {service.pricing_type === 'tiered' ? (language === 'en' ? 'Tiered Wholesale' : 'Grosir Bertingkat') : 'Flat Price'}
                               </span>
                             </div>
                           </div>
                         </div>
 
                         {/* Content area */}
-                        <div className="mt-2">
+                        <div className="mt-2 space-y-1">
                           {renderPricingChips(service)}
+                          {renderShirtModels(service)}
                           {renderSizeChips(service)}
+                          {renderPrintAreaOptions(service)}
                           {renderOptions(service)}
                         </div>
                       </div>

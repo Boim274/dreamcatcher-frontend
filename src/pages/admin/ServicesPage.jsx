@@ -221,9 +221,12 @@ export default function ServicesPage() {
           max_print_areas: opts.max_print_areas || 2,
           area_surcharge: opts.area_surcharge || 15000,
           print_positions: opts.print_positions?.length ? opts.print_positions : DEFAULT_PRINT_POSITIONS,
-          print_sizes: opts.print_sizes?.length ? opts.print_sizes : DEFAULT_PRINT_SIZES,
-          materials: opts.materials?.length ? opts.materials : (currentTab === 'banner' ? ['Flexi Chinch', 'Vinyl', 'Fabric'] : ['Vinyl Glossy', 'Vinyl Matte', 'Transparan', 'Hologram']),
-          positions: opts.positions?.length ? opts.positions : ['Dada Kiri', 'Dada Kanan', 'Punggung', 'Lengan Kiri', 'Lengan Kanan', 'Topi Depan'],
+          materials: opts.materials?.length 
+            ? opts.materials 
+            : (currentTab === 'sablon' ? ['Cotton Combed 30s', 'Cotton Combed 24s', 'Cotton Bamboo'] : currentTab === 'banner' ? ['Flexi China', 'Flexi Korea', 'Albatros', 'Vinyl', 'Fabric'] : ['Vinyl Glossy', 'Vinyl Matte', 'Transparan', 'Hologram']),
+          ...(currentTab === 'bordir' || opts.positions ? {
+            positions: opts.positions?.length ? opts.positions : ['Dada Kiri', 'Dada Kanan', 'Punggung', 'Lengan Kiri', 'Lengan Kanan', 'Topi Depan']
+          } : {}),
           ...opts,
         },
       });

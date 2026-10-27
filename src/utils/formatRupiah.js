@@ -17,8 +17,25 @@ export function getMinPrice(service) {
     if (type.lusin_1 && Number(type.lusin_1) > 0 && Number(type.lusin_1) < min) min = Number(type.lusin_1);
     if (type.satuan && Number(type.satuan) > 0 && Number(type.satuan) < min) min = Number(type.satuan);
   }
-  if (base > 0 && (min === Infinity || base < min)) {
-    return base;
+  if (min !== Infinity) {
+    return min;
   }
-  return min === Infinity ? base : min;
+  return base;
+}
+
+export function getSatuanPrice(service) {
+  if (!service) return 0;
+  if (service.pricing_type !== 'tiered') {
+    return parseFloat(service.base_price || service.price_per_unit) || 0;
+  }
+  const config = service.pricing_config || {};
+  let minSatuan = Infinity;
+  for (const type of Object.values(config)) {
+    if (!type || typeof type !== 'object') continue;
+    if (type.satuan && Number(type.satuan) > 0 && Number(type.satuan) < minSatuan) {
+      minSatuan = Number(type.satuan);
+    }
+  }
+  if (minSatuan !== Infinity) return minSatuan;
+  return getMinPrice(service);
 }
