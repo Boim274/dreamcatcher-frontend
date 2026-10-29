@@ -90,7 +90,7 @@ export default function PricelistPage() {
                     {language === 'en' && m.name_en ? m.name_en : m.name}
                   </p>
                   <p className="text-[10px] text-white/50 truncate">
-                    {m.id === 'long_sleeve' ? (language === 'en' ? 'Elastic ribbed cuff' : 'Rib manset elastis') : (language === 'en' ? 'Distro standard combed' : 'Katun combed distro')}
+                    {m.id === 'long_sleeve' ? (language === 'en' ? 'Comfortable long sleeve' : 'Lengan panjang nyaman') : (language === 'en' ? 'Distro standard combed' : 'Katun combed distro')}
                   </p>
                 </div>
                 <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold shrink-0 border ${
@@ -408,8 +408,8 @@ export default function PricelistPage() {
         </div>
         <p className="text-white/40 text-[10px] mt-1.5">
           {language === 'en'
-            ? '*Sizes S to XL are standard price. XXL & XXXL require extra fabric surcharge.'
-            : '*Ukuran S hingga XL harga standar. Ukuran XXL & XXXL dikenakan penyesuaian bahan.'}
+            ? '*Sizes S to XL standard price. Surcharge: XXL (+Rp 5,000), 3XL (+Rp 10,000), 4XL (+Rp 20,000).'
+            : '*Ukuran S hingga XL harga standar. Charge ukuran: XXL (+Rp 5.000), 3XL (+Rp 10.000), 4XL (+Rp 20.000).'}
         </p>
       </div>
     );

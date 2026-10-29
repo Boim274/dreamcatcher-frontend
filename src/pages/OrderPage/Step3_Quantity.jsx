@@ -21,8 +21,9 @@ export const ADULT_SIZES = [
   { size: 'M', label: 'M', name: 'Medium', desc: 'LD: 98 cm · P: 70 cm', surcharge: 0 },
   { size: 'L', label: 'L', name: 'Large', desc: 'LD: 104 cm · P: 72 cm', surcharge: 0 },
   { size: 'XL', label: 'XL', name: 'Extra Large', desc: 'LD: 110 cm · P: 74 cm', surcharge: 0 },
-  { size: 'XXL', label: 'XXL', name: 'Double XL', desc: 'LD: 116 cm · P: 76 cm', surcharge: 10000 },
-  { size: '3XL', label: '3XL', name: 'Triple XL', desc: 'LD: 122 cm · P: 78 cm', surcharge: 15000 },
+  { size: 'XXL', label: 'XXL', name: 'Double XL', desc: 'LD: 116 cm · P: 76 cm', surcharge: 5000 },
+  { size: '3XL', label: '3XL', name: 'Triple XL', desc: 'LD: 122 cm · P: 78 cm', surcharge: 10000 },
+  { size: '4XL', label: '4XL', name: 'Quadruple XL', desc: 'LD: 128 cm · P: 80 cm', surcharge: 20000 },
 ];
 
 export const KIDS_SIZES = [
@@ -82,7 +83,7 @@ export default function Step3Quantity() {
   };
 
   const options = parseConfig(selectedService.options_config);
-  const rawSizes = options.sizes?.length ? options.sizes : ['S', 'M', 'L', 'XL', 'XXL'];
+  const rawSizes = options.sizes?.length ? options.sizes : ['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
   const sizePricing = options.size_pricing || {};
   const totalQty = getTotalQuantity();
   const basePrice = getBasePrice();
@@ -141,7 +142,7 @@ export default function Step3Quantity() {
     return (
       <div
         key={size}
-        className={`grid grid-cols-[auto_1fr_auto_auto] gap-3 items-center px-4 sm:px-6 py-3.5 border-b border-white/5 last:border-b-0 transition-colors ${
+        className={`grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto] gap-2 sm:gap-3 items-center px-3 sm:px-6 py-3 sm:py-3.5 border-b border-white/5 last:border-b-0 transition-colors ${
           qty > 0
             ? isLight
               ? 'bg-primary/5'
@@ -152,8 +153,8 @@ export default function Step3Quantity() {
         }`}
       >
         {/* Size Badge */}
-        <div className="w-24 sm:w-36 flex items-center gap-2">
-          <span className={`inline-flex items-center justify-center font-bold text-xs sm:text-sm px-2.5 py-1 rounded-xl shrink-0 ${
+        <div className="w-11 sm:w-36 flex items-center gap-2 shrink-0">
+          <span className={`inline-flex items-center justify-center font-bold text-xs sm:text-sm w-9 h-9 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1 rounded-xl shrink-0 ${
             qty > 0
               ? 'bg-primary text-white shadow-sm'
               : isLight
@@ -172,30 +173,35 @@ export default function Step3Quantity() {
         </div>
 
         {/* Price & Dimensions */}
-        <div className="text-xs sm:text-sm">
+        <div className="text-xs sm:text-sm min-w-0 pr-1">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            <span className={`font-semibold text-xs sm:text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>
               {formatRupiah(unitPrice)}
             </span>
             {surcharge > 0 && (
-              <span className="text-primary text-[10px] sm:text-[11px] font-semibold">
+              <span className="text-primary text-[10px] sm:text-[11px] font-semibold whitespace-nowrap">
                 (+{formatRupiah(surcharge)})
               </span>
             )}
           </div>
           {item.desc && (
-            <p className={`text-[10px] mt-0.5 truncate ${isLight ? 'text-slate-400' : 'text-gray-400'}`}>
+            <p className={`text-[10px] sm:text-[11px] mt-0.5 truncate ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
               {item.desc}
+            </p>
+          )}
+          {qty > 0 && (
+            <p className="text-[10px] font-bold text-primary mt-0.5 sm:hidden">
+              Subtotal: {formatRupiah(subtotal)}
             </p>
           )}
         </div>
 
         {/* Quantity Controls */}
-        <div className="flex items-center gap-1.5 w-28 sm:w-32 justify-center">
+        <div className="flex items-center gap-1 sm:gap-1.5 justify-end sm:justify-center shrink-0 w-28 sm:w-32">
           <button
             type="button"
             onClick={() => setSizeQuantity(size, Math.max(0, qty - 1))}
-            className={`w-8 h-8 flex items-center justify-center border rounded-xl transition-colors cursor-pointer ${
+            className={`w-8 h-8 sm:w-9 sm:h-9 min-w-[32px] min-h-[32px] active:scale-95 flex items-center justify-center border rounded-lg sm:rounded-xl transition-all cursor-pointer shrink-0 ${
               isLight
                 ? 'border-slate-200 hover:border-primary hover:bg-primary/10 text-slate-700'
                 : 'border-white/10 hover:border-primary hover:bg-primary/20 text-white'
@@ -208,7 +214,7 @@ export default function Step3Quantity() {
             type="number"
             value={qty}
             onChange={(e) => setSizeQuantity(size, Math.max(0, parseInt(e.target.value) || 0))}
-            className={`w-12 sm:w-14 text-center text-xs sm:text-sm font-bold rounded-xl py-1 focus:border-primary focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+            className={`w-10 sm:w-14 text-center text-xs sm:text-sm font-bold rounded-lg sm:rounded-xl py-1.5 focus:border-primary focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shrink-0 ${
               isLight
                 ? 'bg-white border border-slate-200 text-slate-800'
                 : 'bg-white/5 border border-white/10 text-white'
@@ -218,7 +224,7 @@ export default function Step3Quantity() {
           <button
             type="button"
             onClick={() => setSizeQuantity(size, qty + 1)}
-            className={`w-8 h-8 flex items-center justify-center border rounded-xl transition-colors cursor-pointer ${
+            className={`w-8 h-8 sm:w-9 sm:h-9 min-w-[32px] min-h-[32px] active:scale-95 flex items-center justify-center border rounded-lg sm:rounded-xl transition-all cursor-pointer shrink-0 ${
               isLight
                 ? 'border-slate-200 hover:border-primary hover:bg-primary/10 text-slate-700'
                 : 'border-white/10 hover:border-primary hover:bg-primary/20 text-white'
@@ -229,8 +235,8 @@ export default function Step3Quantity() {
           </button>
         </div>
 
-        {/* Subtotal */}
-        <span className={`text-xs sm:text-sm font-semibold w-24 sm:w-28 text-right ${
+        {/* Subtotal on desktop */}
+        <span className={`text-xs sm:text-sm font-semibold w-24 sm:w-28 text-right hidden sm:block ${
           qty > 0 ? 'text-primary' : 'text-gray-500'
         }`}>
           {qty > 0 ? formatRupiah(subtotal) : '-'}
@@ -240,7 +246,7 @@ export default function Step3Quantity() {
   };
 
   return (
-    <div className={`rounded-3xl border p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden transition-colors ${
+    <div className={`rounded-2xl sm:rounded-3xl border p-4 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden transition-colors ${
       isLight ? 'bg-white border-slate-200 shadow-slate-900/5 text-slate-800' : 'border-white/10 bg-white/[0.03] text-white'
     }`}>
       {/* Ambient background glow */}
@@ -339,7 +345,7 @@ export default function Step3Quantity() {
         <div className="mb-5">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
             {/* Tabs */}
-            <div className={`flex items-center gap-1 p-1 rounded-2xl border ${
+            <div className={`flex items-center gap-1 p-1 rounded-2xl border overflow-x-auto max-w-full ${
               isLight ? 'bg-slate-100 border-slate-200' : 'bg-white/[0.03] border-white/10'
             }`}>
               <button
@@ -435,8 +441,8 @@ export default function Step3Quantity() {
       )}
 
       {/* Size Guide Link & Section Title */}
-      <div className="flex items-center justify-between mb-4">
-        <label className="text-primary text-[12px] font-bold tracking-[1.5px] uppercase">
+      <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
+        <label className="text-primary text-[11px] sm:text-[12px] font-bold tracking-[1.5px] uppercase">
           {isLusinan
             ? (language === 'en' ? 'Distribution per Size' : 'Distribusi per Ukuran')
             : (language === 'en' ? 'Select Size & Quantity' : 'Pilih Ukuran & Jumlah')}
@@ -444,7 +450,7 @@ export default function Step3Quantity() {
         <Link
           to="/size-chart"
           target="_blank"
-          className="text-primary text-xs font-semibold hover:underline flex items-center gap-1.5 bg-primary/10 border border-primary/20 px-3 py-1 rounded-full transition-colors hover:bg-primary/20"
+          className="text-primary text-[11px] sm:text-xs font-semibold hover:underline flex items-center gap-1.5 bg-primary/10 border border-primary/20 px-2.5 sm:px-3 py-1 rounded-full transition-colors hover:bg-primary/20 shrink-0"
         >
           <Icon name="info" size={13} /> {language === 'en' ? 'Size Guide' : 'Panduan Ukuran'}
         </Link>
@@ -455,19 +461,19 @@ export default function Step3Quantity() {
         isLight ? 'border-slate-200 bg-white' : 'border-white/10 bg-white/[0.01]'
       }`}>
         {/* Table Header */}
-        <div className={`grid grid-cols-[auto_1fr_auto_auto] gap-3 px-4 sm:px-6 py-3.5 border-b ${
+        <div className={`grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto] gap-2 sm:gap-3 px-3 sm:px-6 py-3 sm:py-3.5 border-b ${
           isLight ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-white/10 bg-white/[0.04] text-gray-300'
         }`}>
-          <span className="text-xs font-bold tracking-wider uppercase w-24 sm:w-36">
+          <span className="text-[11px] sm:text-xs font-bold tracking-wider uppercase w-11 sm:w-36 shrink-0">
             {language === 'en' ? 'Size' : 'Ukuran'}
           </span>
-          <span className="text-xs font-bold tracking-wider uppercase">
+          <span className="text-[11px] sm:text-xs font-bold tracking-wider uppercase min-w-0">
             {language === 'en' ? 'Price / Pcs' : 'Harga / Pcs'}
           </span>
-          <span className="text-xs font-bold tracking-wider uppercase w-28 sm:w-32 text-center">
+          <span className="text-[11px] sm:text-xs font-bold tracking-wider uppercase w-28 sm:w-32 text-center shrink-0">
             {language === 'en' ? 'Quantity' : 'Jumlah'}
           </span>
-          <span className="text-xs font-bold tracking-wider uppercase w-24 sm:w-28 text-right">
+          <span className="text-xs font-bold tracking-wider uppercase w-24 sm:w-28 text-right hidden sm:block">
             {language === 'en' ? 'Subtotal' : 'Subtotal'}
           </span>
         </div>
@@ -485,7 +491,7 @@ export default function Step3Quantity() {
         {/* Kaos: All Sizes Tab */}
         {isKaos && activeTab === 'all' && (
           <div>
-            <div className={`px-4 sm:px-6 py-2 border-b text-[11px] font-bold uppercase tracking-wider flex items-center gap-2 ${
+            <div className={`px-3 sm:px-6 py-2 border-b text-[11px] font-bold uppercase tracking-wider flex items-center gap-2 ${
               isLight ? 'bg-slate-100/70 text-slate-800 border-slate-200' : 'bg-white/[0.03] text-primary border-white/10'
             }`}>
               <Icon name="user" size={13} className="shrink-0 text-primary" />
@@ -493,7 +499,7 @@ export default function Step3Quantity() {
             </div>
             {ADULT_SIZES.map(renderSizeRow)}
 
-            <div className={`px-4 sm:px-6 py-2 border-b border-t text-[11px] font-bold uppercase tracking-wider flex items-center gap-2 ${
+            <div className={`px-3 sm:px-6 py-2 border-b border-t text-[11px] font-bold uppercase tracking-wider flex items-center gap-2 ${
               isLight ? 'bg-slate-100/70 text-slate-800 border-slate-200' : 'bg-white/[0.03] text-primary border-white/10'
             }`}>
               <Icon name="smile" size={13} className="shrink-0 text-primary" />
@@ -652,22 +658,23 @@ export default function Step3Quantity() {
       )}
 
       {/* Navigation Buttons */}
-      <div className={`flex gap-4 mt-8 pt-6 border-t ${
+      <div className={`flex items-center gap-2.5 sm:gap-4 mt-8 pt-5 sm:pt-6 border-t ${
         isLight ? 'border-slate-200' : 'border-white/10'
       }`}>
         <button
           type="button"
           onClick={prevStep}
-          className="btn-glass flex items-center gap-2 py-3 px-6 rounded-2xl text-xs uppercase tracking-wider font-semibold text-gray-300 hover:text-white cursor-pointer"
+          className="btn-glass flex items-center justify-center gap-1.5 py-3 px-4 sm:px-6 min-h-[44px] rounded-xl sm:rounded-2xl text-xs uppercase tracking-wider font-semibold text-gray-300 hover:text-white shrink-0 cursor-pointer"
         >
-          <Icon name="arrow-left" size={18} /> {language === 'en' ? 'Back' : 'Kembali'}
+          <Icon name="arrow-left" size={16} /> <span>{language === 'en' ? 'Back' : 'Kembali'}</span>
         </button>
         <button
           type="button"
           onClick={handleNext}
-          className="btn-gradient-primary flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold shadow-lg shadow-primary/25 cursor-pointer"
+          className="btn-gradient-primary flex-1 flex items-center justify-center gap-2 py-3 px-4 sm:px-6 min-h-[44px] rounded-xl sm:rounded-2xl text-xs uppercase tracking-wider font-bold shadow-lg shadow-primary/25 cursor-pointer text-center"
         >
-          {language === 'en' ? 'Continue to Upload Design' : 'Lanjut ke Upload Desain'} <Icon name="arrow-right" size={18} />
+          <span>{language === 'en' ? 'Continue' : 'Lanjut'}</span>
+          <Icon name="arrow-right" size={16} className="shrink-0" />
         </button>
       </div>
     </div>

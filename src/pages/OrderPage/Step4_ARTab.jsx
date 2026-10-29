@@ -108,8 +108,8 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
   const [screenshotTaken, setScreenshotTaken] = useState(false);
   const [debugLandmarks, setDebugLandmarks] = useState(false);
   const [detected, setDetected] = useState(false);
-  const [leftOpen, setLeftOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(true);
+  const [leftOpen, setLeftOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
+  const [rightOpen, setRightOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1280 : false));
   const [panelsOpen, setPanelsOpen] = useState(true);
   const [viewMode, setViewMode] = useState('front');
   const [fullscreen, setFullscreen] = useState(false);
@@ -515,7 +515,7 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
         {panelsOpen && (
           <div className="flex-1 relative">
             {leftOpen ? (
-              <div className={`pointer-events-auto absolute left-3 top-1 bottom-2 w-[19rem] max-w-[85vw] overflow-y-auto p-3.5 space-y-4 ${PANEL_CLS}`}>
+              <div className={`pointer-events-auto absolute left-3 top-1 bottom-2 w-[calc(100%-24px)] max-w-[280px] sm:w-[19rem] overflow-y-auto p-3.5 space-y-4 ${PANEL_CLS}`}>
                 <PanelHeader title={language === 'en' ? 'Design & Color' : 'Desain & Warna'} onCollapse={() => setLeftOpen(false)} language={language} />
                 <div className="space-y-2">
                   <SectionLabel title={language === 'en' ? 'Design' : 'Desain'} hint={language === 'en' ? 'The design you selected in Design tab is auto-placed on the shirt.' : 'Desain yang kamu pilih di tab Desain dipasang otomatis ke kaos.'} />
@@ -540,7 +540,7 @@ export default function Step4ARTab({ design, shirtColor, setShirtColor, printAre
             )}
 
             {rightOpen ? (
-              <div className={`pointer-events-auto absolute right-3 top-3 bottom-1 w-[19rem] max-w-[85vw] overflow-y-auto p-3.5 space-y-4 ${PANEL_CLS}`}>
+              <div className={`pointer-events-auto absolute right-3 top-3 bottom-1 w-[calc(100%-24px)] max-w-[280px] sm:w-[19rem] overflow-y-auto p-3.5 space-y-4 ${PANEL_CLS}`}>
                 <div className="space-y-2.5">
                   <SectionLabel title={language === 'en' ? 'Print Area' : 'Area Cetak'} hint={language === 'en' ? 'Print position & size configured in Design tab.' : 'Posisi & ukuran sablon yang kamu atur di tab Desain.'} />
                   {renderAreaReadout()}

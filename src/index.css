@@ -19,7 +19,7 @@
   --color-gray-dark: #a0a0a0;
   --color-border: #333333;
 
-  --font-heading: "Bebas Neue", cursive;
+  --font-heading: "Bebas Neue", "Poppins", sans-serif;
   --font-body: "Poppins", sans-serif;
   --font-sans: "Poppins", sans-serif;
   --font-tag: "Permanent Marker", cursive;
@@ -51,7 +51,8 @@
     word-spacing: 2.5px;
   }
 
-  .font-heading {
+  .font-heading, [class*="font-heading"] {
+    font-family: var(--font-heading) !important;
     letter-spacing: 1.5px;
     word-spacing: 2px;
   }

@@ -27,7 +27,7 @@ export default function StepIndicator() {
 
   return (
     <div
-      className={`rounded-3xl border p-4 sm:p-6 backdrop-blur-xl transition-all duration-200 ${
+      className={`rounded-2xl sm:rounded-3xl border p-3.5 sm:p-6 backdrop-blur-xl transition-all duration-200 ${
         isLight
           ? 'bg-white border-slate-200/90 shadow-md shadow-slate-900/5'
           : 'bg-white/[0.03] border-white/10 shadow-2xl'
@@ -112,26 +112,27 @@ export default function StepIndicator() {
       </div>
 
       {/* Mobile Stepper */}
-      <div className="sm:hidden space-y-3">
+      <div className="sm:hidden space-y-2.5">
         <div className="flex items-center justify-between">
-          <span className={`font-heading text-xl tracking-wide ${isLight ? 'text-slate-900' : 'text-white'}`}>
+          <span className={`font-heading text-lg tracking-wide ${isLight ? 'text-slate-900' : 'text-white'}`}>
             {isEn ? `STEP ${currentStep} OF ${steps.length}` : `LANGKAH ${currentStep} DARI ${steps.length}`}
           </span>
-          <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
+          <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
             isLight ? 'bg-primary/10 text-primary border-primary/20' : 'bg-primary/15 text-primary border-primary/30'
           }`}>
             {steps[currentStep - 1]?.label}
           </span>
         </div>
 
-        <div className={`w-full h-2 rounded-full overflow-hidden ${isLight ? 'bg-slate-200' : 'bg-white/10'}`}>
+        <div className={`w-full h-1.5 rounded-full overflow-hidden ${isLight ? 'bg-slate-200' : 'bg-white/10'}`}>
           <div
             className="h-full bg-gradient-to-r from-primary to-[#ff60a8] rounded-full transition-all duration-500 ease-out shadow-sm"
             style={{ width: `${(currentStep / steps.length) * 100}%` }}
           />
         </div>
 
-        <div className="flex items-center justify-between pt-1">
+        {/* Touch-Friendly Step Buttons with numbers on mobile */}
+        <div className="flex items-center justify-between pt-0.5 -mx-1">
           {steps.map((step) => {
             const isCompleted = currentStep > step.num;
             const isCurrent = currentStep === step.num;
@@ -142,16 +143,26 @@ export default function StepIndicator() {
                 type="button"
                 onClick={() => handleStepClick(step.num)}
                 disabled={!isClickable}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  isCompleted
-                    ? 'bg-emerald-500 shadow-sm shadow-emerald-500/40'
-                    : isCurrent
-                    ? 'bg-primary scale-125 shadow-sm shadow-primary/50'
-                    : isLight ? 'bg-slate-300' : 'bg-white/15'
-                } ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
+                className={`min-w-[40px] min-h-[40px] flex items-center justify-center p-1 rounded-xl transition-all ${
+                  isClickable ? 'cursor-pointer active:scale-90' : 'cursor-default'
+                }`}
                 aria-label={isEn ? `Step ${step.num}: ${step.label}` : `Langkah ${step.num}: ${step.label}`}
                 aria-current={isCurrent ? 'step' : undefined}
-              />
+              >
+                <div
+                  className={`flex items-center justify-center rounded-full transition-all duration-300 ${
+                    isCompleted
+                      ? 'w-6 h-6 bg-emerald-500 text-white shadow-sm shadow-emerald-500/40 text-[10px] font-bold'
+                      : isCurrent
+                      ? 'w-7 h-7 bg-primary text-white shadow-md shadow-primary/40 text-xs font-bold scale-105'
+                      : isLight
+                      ? 'w-5 h-5 bg-slate-200 text-slate-500 text-[10px]'
+                      : 'w-5 h-5 bg-white/10 text-zinc-400 text-[10px]'
+                  }`}
+                >
+                  {isCompleted ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : step.num}
+                </div>
+              </button>
             );
           })}
         </div>

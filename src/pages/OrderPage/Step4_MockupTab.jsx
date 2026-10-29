@@ -97,8 +97,8 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
   const [layers, setLayers] = useState([]);
   const [selectedAreaIndex, setSelectedAreaIndex] = useState(0);
   const [zoom, setZoom] = useState(1);
-  const [leftOpen, setLeftOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(true);
+  const [leftOpen, setLeftOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
+  const [rightOpen, setRightOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1280 : false));
   const [removeBg, setRemoveBg] = useState(false);
   const viewContainerRef = useRef(null);
   const spinYRef = useRef(0);
@@ -309,14 +309,14 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
       {/* Stage: 3D viewport fills it, panels float on top */}
       <div className="relative flex-1 overflow-hidden rounded-xl bg-ink border border-border">
         {/* LEFT: floating collapsible panel */}
-        <div className={`absolute left-3 top-3 bottom-3 z-30 rounded-xl border border-ink bg-ink/95 backdrop-blur shadow-xl transition-all duration-200 ${leftOpen ? 'w-[262px] flex flex-col' : 'w-9'}`}>
+        <div className={`absolute left-3 top-3 bottom-3 z-30 rounded-xl border border-ink bg-ink/95 backdrop-blur shadow-xl transition-all duration-200 ${leftOpen ? 'w-[calc(100%-24px)] max-w-[280px] sm:w-[262px] flex flex-col' : 'w-9'}`}>
           {leftOpen ? (
             <>
               <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
                 <span className="text-fire text-[11px] font-medium tracking-[1px] uppercase">
                   {language === 'en' ? 'Tools' : 'Alat'} {areas.length > 1 && `- Area ${selectedAreaIndex + 1}`}
                 </span>
-                <button type="button" onClick={() => setLeftOpen(false)} className="flex items-center gap-1 text-gray hover:text-white text-[11px] transition-colors">
+                <button type="button" onClick={() => setLeftOpen(false)} className="flex items-center gap-1 text-gray hover:text-white text-[11px] transition-colors p-1">
                   <Icon name="chevron-right" size={12} /> {language === 'en' ? 'Hide' : 'Sembunyikan'}
                 </button>
               </div>
@@ -521,18 +521,18 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
 
           {/* Instruction tooltip */}
           {hasDesigns && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 pointer-events-none text-gray text-[11px] bg-black/50 border border-white/10 rounded-lg px-3 py-1.5 whitespace-nowrap" style={{ zIndex: 20 }}>
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 pointer-events-none text-gray text-[10px] sm:text-[11px] bg-black/60 border border-white/10 rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 max-w-[85%] text-center truncate sm:whitespace-nowrap" style={{ zIndex: 20 }}>
               {language === 'en' ? 'Click design to move · drag empty space to rotate shirt' : 'Klik desain untuk geser · geser kosong untuk putar kaos'}
             </div>
           )}
 
           {/* View presets */}
-          <div className="absolute top-11 left-1/2 -translate-x-1/2 flex items-center gap-1.5" style={{ zIndex: 20 }}>
+          <div className="absolute top-11 left-1/2 -translate-x-1/2 flex items-center gap-1.5 max-w-[90%] overflow-x-auto py-1 scrollbar-none" style={{ zIndex: 20 }}>
             {getViewPresets(language).map((p) => (
               <button
                 key={p.label}
                 onClick={() => { spinYRef.current = p.angle; }}
-                className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium bg-black/60 border border-white/10 text-gray hover:text-white hover:border-fire/50 transition-all whitespace-nowrap"
+                className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium bg-black/60 border border-white/10 text-gray hover:text-white hover:border-fire/50 transition-all whitespace-nowrap min-h-[32px]"
               >
                 {p.label}
               </button>
@@ -540,24 +540,24 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
           </div>
 
           {/* Zoom controls */}
-          <div className="absolute top-3 right-20 flex flex-col items-center gap-1.5" style={{ zIndex: 20 }}>
+          <div className="absolute top-3 right-12 sm:right-20 flex flex-col items-center gap-1.5" style={{ zIndex: 20 }}>
             <button
               onClick={() => setZoomClamped(zoomRef.current * 1.15)}
-              className="w-9 h-9 flex items-center justify-center rounded-lg bg-black/60 border border-white/10 text-gray hover:text-white hover:border-fire/50 transition-all text-[16px] leading-none"
+              className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-black/60 border border-white/10 text-gray hover:text-white hover:border-fire/50 transition-all text-[16px] leading-none cursor-pointer"
               title={language === 'en' ? 'Zoom in' : 'Perbesar'}
             >
               +
             </button>
             <button
               onClick={() => setZoomClamped(zoomRef.current * 0.87)}
-              className="w-9 h-9 flex items-center justify-center rounded-lg bg-black/60 border border-white/10 text-gray hover:text-white hover:border-fire/50 transition-all text-[16px] leading-none"
+              className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-black/60 border border-white/10 text-gray hover:text-white hover:border-fire/50 transition-all text-[16px] leading-none cursor-pointer"
               title={language === 'en' ? 'Zoom out' : 'Perkecil'}
             >
               &minus;
             </button>
             <button
               onClick={() => setZoomClamped(1)}
-              className="w-9 h-9 flex items-center justify-center rounded-lg bg-black/60 border border-white/10 text-[10px] font-medium text-gray hover:text-white hover:border-fire/50 transition-all"
+              className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-black/60 border border-white/10 text-[10px] font-medium text-gray hover:text-white hover:border-fire/50 transition-all cursor-pointer"
               title={language === 'en' ? 'Reset zoom' : 'Reset zoom'}
             >
               {Math.round(zoom * 100)}%
@@ -566,22 +566,22 @@ export default function Step4MockupTab({ printAreas, shirtColor, setShirtColor }
 
           {/* Empty state */}
           {!hasDesigns && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none p-4 text-center">
               <Icon name="image" size={40} className="text-gray/50" />
-              <p className="text-gray text-[13px]">{language === 'en' ? 'Choose design from AI Generate or History tab' : 'Pilih desain dari tab AI Generate atau History'}</p>
+              <p className="text-gray text-xs sm:text-[13px]">{language === 'en' ? 'Choose design from AI Generate or History tab' : 'Pilih desain dari tab AI Generate atau History'}</p>
             </div>
           )}
         </div>
 
         {/* RIGHT: floating collapsible panel */}
-        <div className={`absolute right-3 top-3 bottom-3 z-30 rounded-xl border border-ink bg-ink/95 backdrop-blur shadow-xl transition-all duration-200 ${rightOpen ? 'w-[260px] flex flex-col' : 'w-9'}`}>
+        <div className={`absolute right-3 top-3 bottom-3 z-30 rounded-xl border border-ink bg-ink/95 backdrop-blur shadow-xl transition-all duration-200 ${rightOpen ? 'w-[calc(100%-24px)] max-w-[280px] sm:w-[260px] flex flex-col' : 'w-9'}`}>
           {rightOpen ? (
             <>
               <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
                 <span className="text-fire text-[11px] font-medium tracking-[1px] uppercase">
                   {language === 'en' ? 'Summary' : 'Ringkasan'}
                 </span>
-                <button type="button" onClick={() => setRightOpen(false)} className="flex items-center gap-1 text-gray hover:text-white text-[11px] transition-colors">
+                <button type="button" onClick={() => setRightOpen(false)} className="flex items-center gap-1 text-gray hover:text-white text-[11px] transition-colors p-1">
                   {language === 'en' ? 'Hide' : 'Sembunyikan'} <Icon name="chevron-left" size={12} />
                 </button>
               </div>

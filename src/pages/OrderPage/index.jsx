@@ -130,9 +130,9 @@ export default function OrderPage() {
 
       <Navbar />
 
-      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full relative z-10">
-        <div className="text-center mb-8 sm:mb-10">
-          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-bold tracking-[2px] uppercase mb-3 ${
+      <main className="flex-1 max-w-4xl mx-auto px-3.5 sm:px-6 py-5 sm:py-12 w-full relative z-10">
+        <div className="text-center mb-6 sm:mb-10">
+          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] sm:text-[11px] font-bold tracking-[2px] uppercase mb-2.5 sm:mb-3 ${
             isLight
               ? 'border-primary/25 bg-primary/10 text-primary'
               : 'border-primary/30 bg-primary/10 text-primary'
@@ -140,12 +140,12 @@ export default function OrderPage() {
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             Custom Order System
           </div>
-          <h1 className={`font-heading text-3xl sm:text-4xl lg:text-5xl tracking-wide ${
+          <h1 className={`font-heading text-2xl sm:text-4xl lg:text-5xl tracking-wide ${
             isLight ? 'text-slate-900' : 'text-white'
           }`}>
             {isEn ? 'ORDER' : 'PESAN'} <span className="text-gradient">{isEn ? 'SERVICE' : 'LAYANAN'}</span>
           </h1>
-          <p className={`text-xs sm:text-sm mt-2 max-w-md mx-auto leading-relaxed ${
+          <p className={`text-xs sm:text-sm mt-1.5 sm:mt-2 max-w-md mx-auto leading-relaxed px-2 ${
             isLight ? 'text-slate-600' : 'text-gray-400'
           }`}>
             {isEn
@@ -157,14 +157,14 @@ export default function OrderPage() {
         <StepIndicator />
 
         {isResolvingService ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-3">
+          <div className="py-16 sm:py-20 flex flex-col items-center justify-center gap-3">
             <LoadingSpinner size="lg" />
             <p className="text-xs text-zinc-400">
               {isEn ? 'Preparing service configuration...' : 'Memuat konfigurasi layanan...'}
             </p>
           </div>
         ) : (
-          <div className="mt-8 animate-fade-in" key={currentStep}>
+          <div className="mt-5 sm:mt-8 animate-fade-in" key={currentStep}>
             {renderStep()}
           </div>
         )}

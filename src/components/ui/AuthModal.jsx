@@ -10,7 +10,6 @@ import {
   Lock,
   User,
   Phone,
-  Sparkles,
   ShieldCheck,
   ArrowRight,
   AlertCircle,
@@ -18,7 +17,6 @@ import {
 } from 'lucide-react';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import PhoneCountryInput from '../common/PhoneCountryInput';
-import GoogleAuthButton from '../common/GoogleAuthButton';
 import { useToast } from './Toast';
 import { useThemeStore } from '../../store/themeStore';
 
@@ -26,7 +24,7 @@ export default function AuthModal() {
   const { theme } = useThemeStore();
   const isLight = theme === 'light';
 
-  const { login, register, updateProfile } = useAuthStore();
+  const { login, register } = useAuthStore();
   const { isOpen, activeTab, setTab, closeModal } = useAuthModalStore();
   const { language } = useLanguageStore();
   const isEn = language === 'en';
@@ -40,12 +38,6 @@ export default function AuthModal() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
-
-  // State untuk Google user yang belum punya nomor telepon
-  const [googleNeedPhone, setGoogleNeedPhone] = useState(false);
-  const [googlePhone, setGooglePhone] = useState('+62');
-  const [googleUser, setGoogleUser] = useState(null);
-  const [savingPhone, setSavingPhone] = useState(false);
 
   const toast = useToast();
 
@@ -72,9 +64,6 @@ export default function AuthModal() {
       setRegisterForm({ name: '', email: '', phone: '+62', password: '', password_confirmation: '' });
       setShowPassword(false);
       setShowConfirmPassword(false);
-      setGoogleNeedPhone(false);
-      setGoogleUser(null);
-      setGooglePhone('+62');
     }
   }, [isOpen]);
 
@@ -131,48 +120,6 @@ export default function AuthModal() {
     }
   };
 
-  const handleGoogleSuccess = (user, result) => {
-    setError(null);
-    if (result?.needs_phone) {
-      setGoogleUser(user);
-      setGoogleNeedPhone(true);
-    } else {
-      closeModal();
-      toast.success(isEn ? ('Signed in successfully! Welcome, ' + (user?.name || '')) : ('Berhasil masuk! Selamat datang, ' + (user?.name || '')));
-    }
-  };
-
-  const handleSaveGooglePhone = async (e) => {
-    e.preventDefault();
-    const phone = (googlePhone || '').trim().replace(/[\s-]/g, '');
-    if (!phone || phone === '+62') {
-      toast.error(isEn ? 'Please enter your WhatsApp number.' : 'Silakan isi nomor WhatsApp Anda.');
-      return;
-    }
-    if (!/^\+?[0-9]{8,20}$/.test(phone)) {
-      toast.error(isEn ? 'Invalid WhatsApp number format (8 - 20 digits).' : 'Format nomor WhatsApp tidak valid (8 - 20 digit).');
-      return;
-    }
-
-    setSavingPhone(true);
-    try {
-      await updateProfile({ phone });
-      setGoogleNeedPhone(false);
-      closeModal();
-      toast.success(isEn ? ('WhatsApp number saved! Welcome, ' + (googleUser?.name || '')) : ('Nomor WhatsApp berhasil disimpan! Selamat datang, ' + (googleUser?.name || '')));
-    } catch (err) {
-      toast.error(err.response?.data?.message || (isEn ? 'Failed to save WhatsApp number.' : 'Gagal menyimpan nomor WhatsApp.'));
-    } finally {
-      setSavingPhone(false);
-    }
-  };
-
-  const handleSkipGooglePhone = () => {
-    setGoogleNeedPhone(false);
-    closeModal();
-    toast.success(isEn ? ('Welcome, ' + (googleUser?.name || '')) : ('Selamat datang, ' + (googleUser?.name || '')));
-  };
-
   const handleLoginChange = (field, value) => {
     setLoginForm({ ...loginForm, [field]: value });
   };
@@ -210,83 +157,9 @@ export default function AuthModal() {
           <X className="w-4 h-4" />
         </button>
 
-        {/* Layar Pelengkap Nomor WhatsApp untuk User Google Baru */}
-        {googleNeedPhone ? (
-          <div className="relative z-10 text-center py-2">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary/20 to-purple-500/20 border border-primary/30 flex items-center justify-center text-primary mb-4 mx-auto shadow-[0_0_30px_rgba(236,74,150,0.25)]">
-              <Phone className="w-7 h-7 text-primary" />
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-[11px] font-semibold tracking-wider uppercase mb-2">
-              <Sparkles className="w-3 h-3 text-primary animate-pulse" />
-              <span>{isEn ? 'One Last Step' : 'Satu Langkah Terakhir'}</span>
-            </div>
-
-            <h2 className={`font-heading text-3xl sm:text-4xl mb-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              {isEn ? 'COMPLETE WHATSAPP' : 'LENGKAPI WHATSAPP'}
-            </h2>
-            <p className={`text-xs sm:text-sm leading-relaxed mb-6 max-w-sm mx-auto ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
-              {isEn ? (
-                <>Hello <strong className={isLight ? 'text-slate-900' : 'text-white'}>{googleUser?.name}</strong>, please enter your WhatsApp number so we can send updates on your order production & delivery.</>
-              ) : (
-                <>Halo <strong className={isLight ? 'text-slate-900' : 'text-white'}>{googleUser?.name}</strong>, cantumkan nomor WhatsApp Anda agar kami dapat mengirimkan update produksi & pengiriman pesanan Anda.</>
-              )}
-            </p>
-
-            <form onSubmit={handleSaveGooglePhone} className="space-y-4 text-left">
-              <div>
-                <label className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider mb-1.5 ${
-                  isLight ? 'text-slate-700' : 'text-zinc-300'
-                }`}>
-                  <Phone className="w-3.5 h-3.5 text-primary" /> {isEn ? 'WhatsApp Number' : 'Nomor WhatsApp'}
-                </label>
-                <PhoneCountryInput
-                  value={googlePhone}
-                  onChange={setGooglePhone}
-                  placeholder="81234567890"
-                  id="google-phone-input"
-                  required
-                />
-                <p className={`text-[11px] mt-1.5 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
-                  {isEn
-                    ? 'Select country code (+62 for Indonesia or international).'
-                    : 'Pilih bendera/kode negara Anda (+62 Indonesia atau negara asing).'}
-                </p>
-              </div>
-
-              <div className="pt-2 flex flex-col gap-2.5">
-                <button
-                  type="submit"
-                  disabled={savingPhone}
-                  className="w-full py-3.5 px-6 rounded-xl font-heading text-lg tracking-wider text-white bg-gradient-to-r from-primary via-[#ff58a0] to-primary hover:brightness-110 active:scale-[0.99] shadow-[0_8px_25px_rgba(236,74,150,0.35)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  {savingPhone ? <LoadingSpinner size="sm" /> : (
-                    <>
-                      <span>{isEn ? 'SAVE & CONTINUE' : 'SIMPAN & LANJUTKAN'}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSkipGooglePhone}
-                  className={`w-full py-2 text-xs transition-colors cursor-pointer ${
-                    isLight ? 'text-slate-500 hover:text-slate-800' : 'text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  {isEn ? 'Skip for now' : 'Lewati untuk sekarang'}
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : (
-          <div className="relative z-10">
+        <div className="relative z-10">
             {/* Header Brand & Badging */}
             <div className="mb-4">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-[11px] font-semibold tracking-wider uppercase mb-2">
-                <Sparkles className="w-3 h-3 text-primary animate-pulse" />
-                <span>Dreamcatcher AI Studio</span>
-              </div>
               <h2 className={`font-heading text-4xl sm:text-[42px] tracking-wide leading-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {activeTab === 'login'
                   ? (isEn ? 'LOGIN TO ACCOUNT' : 'MASUK KE AKUN')
@@ -411,21 +284,6 @@ export default function AuthModal() {
                     )}
                   </button>
                 </form>
-
-                {/* Pemisah Google */}
-                <div className="my-5 flex items-center gap-3">
-                  <div className={`h-[1px] flex-1 ${isLight ? 'bg-slate-200' : 'bg-gradient-to-r from-transparent via-white/15 to-transparent'}`} />
-                  <span className={`text-[11px] uppercase tracking-widest font-semibold ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
-                    {isEn ? 'or continue with' : 'atau masuk dengan'}
-                  </span>
-                  <div className={`h-[1px] flex-1 ${isLight ? 'bg-slate-200' : 'bg-gradient-to-r from-transparent via-white/15 to-transparent'}`} />
-                </div>
-
-                <GoogleAuthButton
-                  mode="login"
-                  onSuccess={handleGoogleSuccess}
-                  onError={(err) => setError(err)}
-                />
 
                 {/* Footer Switcher */}
                 <div className={`text-center mt-6 pt-4 border-t text-xs ${isLight ? 'border-slate-200 text-slate-600' : 'border-white/5 text-zinc-400'}`}>
@@ -609,21 +467,6 @@ export default function AuthModal() {
                   </button>
                 </form>
 
-                {/* Pemisah Google */}
-                <div className="my-5 flex items-center gap-3">
-                  <div className={`h-[1px] flex-1 ${isLight ? 'bg-slate-200' : 'bg-gradient-to-r from-transparent via-white/15 to-transparent'}`} />
-                  <span className={`text-[11px] uppercase tracking-widest font-semibold ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
-                    {isEn ? 'or register with' : 'atau daftar dengan'}
-                  </span>
-                  <div className={`h-[1px] flex-1 ${isLight ? 'bg-slate-200' : 'bg-gradient-to-r from-transparent via-white/15 to-transparent'}`} />
-                </div>
-
-                <GoogleAuthButton
-                  mode="register"
-                  onSuccess={handleGoogleSuccess}
-                  onError={(err) => setError(err)}
-                />
-
                 {/* Footer Switcher */}
                 <div className={`text-center mt-6 pt-4 border-t text-xs ${isLight ? 'border-slate-200 text-slate-600' : 'border-white/5 text-zinc-400'}`}>
                   {isEn ? 'Already have an account?' : 'Sudah punya akun?'}{' '}
@@ -642,7 +485,6 @@ export default function AuthModal() {
               </div>
             )}
           </div>
-        )}
       </div>
     </div>
   );

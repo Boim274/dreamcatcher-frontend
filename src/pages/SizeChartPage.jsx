@@ -25,6 +25,7 @@ const getSizeCategories = (language = 'id') => [
       { size: 'XL', chest: '110', length: '74', shoulder: '50', sleeve: '23' },
       { size: 'XXL', chest: '116', length: '76', shoulder: '52', sleeve: '24' },
       { size: '3XL', chest: '122', length: '78', shoulder: '54', sleeve: '25' },
+      { size: '4XL', chest: '128', length: '80', shoulder: '56', sleeve: '26' },
     ],
   },
   {
@@ -120,10 +121,11 @@ export default function SizeChartPage() {
     else if (w <= 73 && h <= 176) base = 'L';
     else if (w <= 85 && h <= 182) base = 'XL';
     else if (w <= 98) base = 'XXL';
-    else base = '3XL';
+    else if (w <= 110) base = '3XL';
+    else base = '4XL';
 
     // Adjust based on fit preference
-    const sizes = ['S', 'M', 'L', 'XL', 'XXL', '3XL'];
+    const sizes = ['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
     let idx = sizes.indexOf(base);
     if (fitPreference === 'loose' && idx < sizes.length - 1) {
       idx += 1;

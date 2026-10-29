@@ -6,7 +6,7 @@ import { aiChatService } from '../../services/aiChatService';
 import { conversationService } from '../../services/conversationService';
 import Icon from '../../components/ui/Icon';
 import { useToast } from '../../components/ui/Toast';
-import { Loader2, Zap, Image, Camera, Clock, ChevronDown, ChevronUp, UploadCloud, Check, Sparkles } from 'lucide-react';
+import { Loader2, Zap, Image, Camera, Clock, ChevronDown, ChevronUp, UploadCloud, Check, Sparkles, Info, ZoomIn, FileImage, Palette } from 'lucide-react';
 import { getImageUrl } from '../../utils/getImageUrl';
 import { getUserSession } from '../../utils/userSession';
 import DesignUpload from '../../components/design-studio/DesignUpload';
@@ -22,7 +22,7 @@ const getTabs = (language) => [
     label: language === 'en' ? 'Upload Design' : 'Upload Desain',
     icon: UploadCloud,
     desc: language === 'en' ? 'Upload ready artwork' : 'Upload file desain',
-    fullDesc: language === 'en' ? 'Upload ready-to-print artwork (PNG, JPG)' : 'Upload desain kaos siap cetak (PNG, JPG)'
+    fullDesc: language === 'en' ? 'Upload ready-to-print artwork (PNG, JPG, WebP, HEIC)' : 'Upload desain kaos siap cetak (PNG, JPG, WebP, HEIC)'
   },
   {
     id: 'ai',
@@ -307,7 +307,7 @@ export default function Step4Design() {
       );
       setMessages((prev) => [...prev, { role: 'assistant', text: ask.reply, time: Date.now() }]);
     } catch (err) {
-      toast.error(err.response?.data?.message || (language === 'en' ? 'Failed to upload design. Make sure PNG/JPG format max 5MB.' : 'Gagal mengupload desain. Pastikan format PNG/JPG maks 5MB.'));
+      toast.error(err.response?.data?.message || (language === 'en' ? 'Failed to upload design. Make sure PNG, JPG, WebP, or HEIC format max 10MB.' : 'Gagal mengupload desain. Pastikan format PNG, JPG, WebP, atau HEIC maks 10MB.'));
     } finally {
       isUploadingRef.current = false;
       setChatLoading(false);
@@ -549,17 +549,17 @@ export default function Step4Design() {
   const allAreasFilled = completedAreas === totalAreas;
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+    <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] p-4 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
       {/* Ambient background glow */}
       <div className="absolute -top-24 -right-24 w-60 h-60 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Step Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b border-white/10">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-5 sm:mb-6 pb-3.5 sm:pb-4 border-b border-white/10">
         <div>
           <span className="text-[10px] font-bold tracking-[2px] uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
             {language === 'en' ? 'Step 4 of 6' : 'Langkah 4 dari 6'}
           </span>
-          <h2 className="font-heading text-2xl sm:text-3xl text-white tracking-[1.5px] mt-2">
+          <h2 className="font-heading text-xl sm:text-3xl text-white tracking-[1.5px] mt-1.5 sm:mt-2">
             {language === 'en' ? 'DESIGN & MOCKUP' : 'DESAIN & MOCKUP'}
           </h2>
         </div>
@@ -574,7 +574,7 @@ export default function Step4Design() {
       </div>
 
       {/* Method Tabs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-5 sm:mb-6">
         {getTabs(language).map((tab) => {
           const IconComp = tab.icon;
           const isActive = activeTab === tab.id;
@@ -583,22 +583,22 @@ export default function Step4Design() {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl font-medium transition-all duration-300 text-left border cursor-pointer ${
+              className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl font-medium transition-all duration-300 text-left border cursor-pointer ${
                 isActive
                   ? 'btn-gradient-primary border-primary/40 shadow-lg shadow-primary/25 scale-[1.01]'
                   : 'border-white/10 bg-white/[0.02] text-gray-300 hover:border-white/20 hover:bg-white/[0.05] hover:text-white'
               }`}
             >
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 ${
                   isActive ? 'bg-white/20 shadow-inner' : 'bg-white/5 border border-white/10'
                 }`}
               >
-                <IconComp className="w-5 h-5 text-white" />
+                <IconComp className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-white truncate">{tab.label}</p>
-                <p className={`text-[11px] leading-tight mt-0.5 line-clamp-2 ${isActive ? 'text-white/80' : 'text-gray-400'}`}>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-bold text-white truncate">{tab.label}</p>
+                <p className={`text-[10px] sm:text-[11px] leading-tight mt-0.5 line-clamp-1 sm:line-clamp-2 ${isActive ? 'text-white/80' : 'text-gray-400'}`}>
                   {tab.fullDesc}
                 </p>
               </div>
@@ -724,6 +724,62 @@ export default function Step4Design() {
                 </div>
               );
             })}
+          </div>
+
+          {/* Design Guidelines Hint Card */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-sm">
+            <div className="flex items-center gap-2 mb-3 text-primary">
+              <Info size={16} />
+              <h5 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+                {language === 'en' ? 'Artwork Guidelines for Best Quality' : 'Petunjuk File Desain Siap Cetak'}
+              </h5>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-zinc-300">
+              <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex flex-col gap-1.5">
+                <span className="font-semibold text-emerald-400 inline-flex items-center gap-1.5">
+                  <Sparkles size={14} className="text-emerald-400 shrink-0" />
+                  {language === 'en' ? 'Transparent PNG' : 'Latar Transparan'}
+                </span>
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                  {language === 'en'
+                    ? 'Recommended PNG with transparent background so no white box prints on shirt.'
+                    : 'Disarankan PNG tanpa background agar tidak ikut tercetak kotak putih di kaos.'}
+                </p>
+              </div>
+              <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex flex-col gap-1.5">
+                <span className="font-semibold text-blue-400 inline-flex items-center gap-1.5">
+                  <ZoomIn size={14} className="text-blue-400 shrink-0" />
+                  {language === 'en' ? 'High Resolution' : 'Resolusi Tajam'}
+                </span>
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                  {language === 'en'
+                    ? 'Use sharp images (min. 1000px or 300 DPI). Avoid blurry WhatsApp screenshots.'
+                    : 'Gunakan gambar tajam (min. 1000px atau 300 DPI). Hindari screenshot buram.'}
+                </p>
+              </div>
+              <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex flex-col gap-1.5">
+                <span className="font-semibold text-purple-400 inline-flex items-center gap-1.5">
+                  <FileImage size={14} className="text-purple-400 shrink-0" />
+                  {language === 'en' ? 'Supported Formats' : 'Format & Ukuran'}
+                </span>
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                  {language === 'en'
+                    ? 'PNG, JPG, WebP, & Apple HEIC supported. Max size 10MB per design.'
+                    : 'Mendukung PNG, JPG, WebP, dan foto Apple HEIC. Ukuran maksimal 10MB.'}
+                </p>
+              </div>
+              <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex flex-col gap-1.5">
+                <span className="font-semibold text-amber-400 inline-flex items-center gap-1.5">
+                  <Palette size={14} className="text-amber-400 shrink-0" />
+                  {language === 'en' ? 'Print Method' : 'Kesesuaian Sablon'}
+                </span>
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                  {isFullColorSablon
+                    ? (language === 'en' ? 'DTF/DTG supports unlimited colors, photo gradients, and shading.' : 'DTF/DTG mendukung full color, gradasi foto, dan warna bebas.')
+                    : (language === 'en' ? 'Manual screen print recommends solid flat colors (max 4 colors).' : 'Sablon manual disarankan warna solid tanpa gradasi halus (maks. 4 warna).')}
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* AI Switch Banner */}
@@ -1144,28 +1200,29 @@ export default function Step4Design() {
       )}
 
       {/* Navigation */}
-      <div className="flex gap-4 mt-8 pt-6 border-t border-white/10">
+      <div className="flex items-center gap-2.5 sm:gap-4 mt-8 pt-5 sm:pt-6 border-t border-white/10">
         <button
           type="button"
           onClick={prevStep}
-          className="btn-glass flex items-center gap-2 py-3 px-6 rounded-2xl text-xs uppercase tracking-wider font-semibold text-gray-300 hover:text-white"
+          className="btn-glass flex items-center justify-center gap-1.5 py-3 px-4 sm:px-6 min-h-[44px] rounded-xl sm:rounded-2xl text-xs uppercase tracking-wider font-semibold text-gray-300 hover:text-white shrink-0 cursor-pointer"
         >
-          <Icon name="arrow-left" size={18} /> {language === 'en' ? 'Back' : 'Kembali'}
+          <Icon name="arrow-left" size={16} /> <span>{language === 'en' ? 'Back' : 'Kembali'}</span>
         </button>
         <button
           type="button"
           onClick={handleNext}
           disabled={uploadingAreaIndex !== null}
-          className="btn-gradient-primary flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-gradient-primary flex-1 flex items-center justify-center gap-2 py-3 px-4 sm:px-6 min-h-[44px] rounded-xl sm:rounded-2xl text-xs uppercase tracking-wider font-bold shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-center"
         >
           {uploadingAreaIndex !== null ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>{language === 'en' ? 'Uploading Design...' : 'Mengunggah Desain...'}</span>
+              <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+              <span className="truncate">{language === 'en' ? 'Uploading Design...' : 'Mengunggah Desain...'}</span>
             </>
           ) : (
             <>
-              {language === 'en' ? 'Continue to Price Review' : 'Lanjut ke Review Harga'} <Icon name="arrow-right" size={18} />
+              <span>{language === 'en' ? 'Continue' : 'Lanjut'}</span>
+              <Icon name="arrow-right" size={16} className="shrink-0" />
             </>
           )}
         </button>

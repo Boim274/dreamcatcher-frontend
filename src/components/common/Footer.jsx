@@ -87,7 +87,7 @@ export default function Footer() {
                 <div className="w-7 h-7 rounded-lg bg-primary/15 border border-primary/30 text-primary flex items-center justify-center shrink-0 shadow-sm shadow-primary/20">
                   <Icon name="mail" size={14} />
                 </div>
-                <span className="flex-1">hello@dreamcatcherprint.co.id</span>
+                <a href="mailto:ihsanptr123@gmail.com" className="flex-1 hover:text-white transition-colors">ihsanptr123@gmail.com</a>
               </li>
             </ul>
           </div>

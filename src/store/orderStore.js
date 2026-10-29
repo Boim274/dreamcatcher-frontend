@@ -223,7 +223,7 @@ export const useOrderStore = create(
         }
 
         const isLongSleeve = config.shirtModelId === 'long_sleeve' || (config.shirtModel || '').toLowerCase().includes('panjang');
-        const modelSurcharge = isLongSleeve ? (config.shirtModelSurcharge !== undefined ? config.shirtModelSurcharge : 5000) : 0;
+        const modelSurcharge = isLongSleeve ? (config.shirtModelSurcharge !== undefined ? config.shirtModelSurcharge : 7000) : 0;
 
         return base + modelSurcharge;
       },

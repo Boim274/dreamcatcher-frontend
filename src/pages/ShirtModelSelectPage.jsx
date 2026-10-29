@@ -25,7 +25,7 @@ const FALLBACK_MODELS = [
     description: 'Model kaos klasik lengan pendek standar distro. Terbuat dari katun combed 30s/24s premium yang adem, halus, nyaman, dan sangat ideal untuk segala teknik sablon presisi.',
     description_en: 'Classic short sleeve t-shirt distro standard. Made from premium combed 30s/24s cotton, breathable, ultra-comfortable, and perfect for all high-definition printing.',
     image: '/products/kaos-lengan-pendek.jpg',
-    base_price: 75000,
+    base_price: 60000,
     surcharge: 0,
     features: [
       'Bahan 100% Cotton Combed 24s/30s adem & lembut',
@@ -49,20 +49,20 @@ const FALLBACK_MODELS = [
     name_en: 'Long Sleeve T-Shirt',
     badge: 'Long Sleeve • Komunitas & Seragam',
     badge_en: 'Long Sleeve • Community & Uniform',
-    description: 'Model kaos lengan panjang dengan rib manset pergelangan tangan elastis. Memberikan kenyamanan ekstra, proteksi dari sinar matahari, serta tampilan berkelas dan serbaguna.',
-    description_en: 'Premium long sleeve t-shirt with elastic wrist cuffs. Provides extra comfort, sun protection, and a sophisticated look for uniforms and streetwear.',
+    description: 'Kaos lengan panjang yang nyaman digunakan untuk berbagai aktivitas, baik sehari-hari, bekerja, maupun kegiatan komunitas. Dibuat dengan bahan berkualitas yang lembut dan nyaman di kulit, serta jahitan rapi untuk memberikan hasil yang maksimal.',
+    description_en: 'Comfortable long sleeve t-shirt for daily activities, work, and community events. Crafted from soft, skin-friendly premium fabric with neat stitching for maximum quality.',
     image: '/products/kaos-lengan-panjang.jpg',
-    base_price: 80000,
-    surcharge: 5000,
+    base_price: 67000,
+    surcharge: 7000,
     features: [
       'Bahan 100% Cotton Combed 24s/30s kualitas grade A',
-      'Rib manset elastis premium di pergelangan tangan',
+      'Jahitan rapi standar distro & nyaman digunakan',
       'Hijab-friendly & perlindungan ekstra outdoor',
       'Sangat cocok untuk seragam kerja, komunitas & distro',
     ],
     features_en: [
       '100% Cotton Combed 24s/30s grade A quality',
-      'Premium elastic wrist rib cuffs',
+      'Distro standard neat stitching & comfortable fit',
       'Hijab-friendly & extra outdoor UV protection',
       'Ideal for work uniforms, touring & brand clothing',
     ],
@@ -228,7 +228,7 @@ export default function ShirtModelSelectPage() {
               <LoadingSpinner size="lg" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 max-w-4xl mx-auto">
               {shirtModels.map((model, index) => {
                 const isSelected = selectedModelId === model.id;
 
@@ -236,58 +236,58 @@ export default function ShirtModelSelectPage() {
                   <ScrollReveal key={model.id} direction="up" delay={index * 120}>
                     <div
                       onClick={() => setSelectedModelId(model.id)}
-                      className={`group relative rounded-3xl overflow-hidden border transition-all duration-300 flex flex-col justify-between cursor-pointer shadow-xl ${
+                      className={`group relative rounded-2xl overflow-hidden border transition-all duration-300 flex flex-col justify-between cursor-pointer shadow-lg ${
                         isSelected
-                          ? 'border-primary ring-2 ring-primary/40 bg-gradient-to-b from-primary/[0.08] via-white/[0.02] to-transparent scale-[1.01]'
+                          ? 'border-primary ring-2 ring-primary/40 bg-gradient-to-b from-primary/[0.08] via-white/[0.02] to-transparent'
                           : isLight
-                          ? 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-2xl'
+                          ? 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-xl'
                           : 'bg-white/[0.02] border-white/10 hover:border-white/20 hover:bg-white/[0.04]'
                       }`}
                     >
                       {/* Top Badge & Active Indicator */}
-                      <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
-                        <span className="px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border backdrop-blur-md bg-black/60 border-white/20 text-white shadow-md">
+                      <div className="absolute top-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-none">
+                        <span className="px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold tracking-wider uppercase border backdrop-blur-md bg-black/60 border-white/20 text-white shadow-md">
                           {isEn ? model.badge_en : model.badge}
                         </span>
 
                         <div
-                          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                          className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
                             isSelected
-                              ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-110'
+                              ? 'bg-primary text-white shadow-md shadow-primary/30 scale-105'
                               : 'bg-black/60 border border-white/20 text-transparent'
                           }`}
                         >
-                          <Check className="w-4 h-4 stroke-[3]" />
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
                         </div>
                       </div>
 
-                      {/* Image Showcase */}
-                      <div className="relative w-full aspect-square sm:aspect-[4/3] overflow-hidden bg-[#18111d] flex items-center justify-center">
+                      {/* Image Showcase (Compact Height) */}
+                      <div className="relative w-full h-48 sm:h-56 overflow-hidden bg-[#18111d] flex items-center justify-center">
                         <img
                           src={model.image}
                           alt={model.name}
                           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                           loading="lazy"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#150d1a] via-[#150d1a]/20 to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#150d1a] via-[#150d1a]/25 to-transparent pointer-events-none" />
 
                         {/* Model Tag Overlay */}
-                        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs">
-                          <span className="px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md border border-white/10 text-white/90 font-mono font-medium text-[11px]">
-                            {model.id === 'short_sleeve' ? 'Short Sleeve • Reguler' : 'Long Sleeve • Rib Manset'}
+                        <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-xs">
+                          <span className="px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md border border-white/10 text-white/90 font-mono font-medium text-[10px]">
+                            {model.id === 'short_sleeve' ? 'Short Sleeve • Reguler' : 'Long Sleeve • Reguler'}
                           </span>
-                          <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg backdrop-blur-md">
+                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md backdrop-blur-md">
                             100% Cotton
                           </span>
                         </div>
                       </div>
 
-                      {/* Content Section */}
-                      <div className="p-6 sm:p-7 flex flex-col justify-between flex-1">
+                      {/* Content Section (Compact Padding & Typography) */}
+                      <div className="p-4 sm:p-5 flex flex-col justify-between flex-1">
                         <div>
-                          <div className="flex items-baseline justify-between gap-2 mb-2">
+                          <div className="flex items-baseline justify-between gap-2 mb-1.5">
                             <h2
-                              className={`font-heading text-2xl sm:text-3xl tracking-wide group-hover:text-primary transition-colors ${
+                              className={`font-heading text-lg sm:text-xl tracking-wide group-hover:text-primary transition-colors ${
                                 isLight ? 'text-slate-900' : 'text-white'
                               }`}
                             >
@@ -296,7 +296,7 @@ export default function ShirtModelSelectPage() {
                           </div>
 
                           <p
-                            className={`text-xs sm:text-sm leading-relaxed mb-5 ${
+                            className={`text-[11px] sm:text-xs leading-relaxed mb-3.5 ${
                               isLight ? 'text-slate-600' : 'text-zinc-300/80'
                             }`}
                           >
@@ -305,15 +305,15 @@ export default function ShirtModelSelectPage() {
 
                           {/* Key Specs */}
                           <div
-                            className={`rounded-2xl p-4 mb-5 border space-y-2 ${
+                            className={`rounded-xl p-3 mb-3.5 border space-y-1.5 ${
                               isLight ? 'bg-slate-50 border-slate-200' : 'bg-black/40 border-white/5'
                             }`}
                           >
-                            <p className="text-[10px] font-bold tracking-[1.5px] uppercase text-primary mb-2">
+                            <p className="text-[9px] font-bold tracking-[1.5px] uppercase text-primary mb-1.5">
                               {isEn ? 'Key Specifications' : 'Spesifikasi Unggulan'}
                             </p>
                             {(isEn ? model.features_en : model.features).map((feat, i) => (
-                              <div key={i} className="flex items-start gap-2 text-xs">
+                              <div key={i} className="flex items-start gap-1.5 text-[11px]">
                                 <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
                                 <span className={isLight ? 'text-slate-700' : 'text-zinc-300'}>{feat}</span>
                               </div>
@@ -322,16 +322,16 @@ export default function ShirtModelSelectPage() {
                         </div>
 
                         {/* Price & CTA Action */}
-                        <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-3">
                           <div>
-                            <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 block">
+                            <span className="text-[9px] uppercase font-bold tracking-wider text-zinc-400 block">
                               {isEn ? 'Starting Price' : 'Harga Mulai'}
                             </span>
-                            <div className="flex items-baseline gap-1.5 mt-0.5">
-                              <span className="text-xl sm:text-2xl font-bold font-mono text-gradient-primary">
+                            <div className="flex items-baseline gap-1 mt-0.5">
+                              <span className="text-lg sm:text-xl font-bold font-mono text-gradient-primary">
                                 {formatRupiah(model.base_price)}
                               </span>
-                              <span className="text-[11px] text-zinc-400 font-normal">/ pcs</span>
+                              <span className="text-[10px] text-zinc-400 font-normal">/ pcs</span>
                             </div>
                           </div>
 
@@ -341,10 +341,10 @@ export default function ShirtModelSelectPage() {
                               e.stopPropagation();
                               handleChooseModel(model);
                             }}
-                            className="btn-gradient-primary py-3 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold shadow-lg shadow-primary/25 cursor-pointer flex items-center justify-center gap-2 group-hover:scale-105 active:scale-95 transition-all"
+                            className="btn-gradient-primary py-2.5 px-4 sm:px-5 rounded-xl text-xs uppercase tracking-wider font-bold shadow-md shadow-primary/25 cursor-pointer flex items-center justify-center gap-1.5 group-hover:scale-105 active:scale-95 transition-all"
                           >
                             <span>{isEn ? 'Select Model' : 'Pilih Model'}</span>
-                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                           </button>
                         </div>
                       </div>

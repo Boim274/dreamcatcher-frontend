@@ -35,7 +35,8 @@ const PRESET_GROUPS = [
       { name: 'L', dimensions: 'Lebar 44cm, Panjang 64cm' },
       { name: 'XL', dimensions: 'Lebar 46cm, Panjang 66cm' },
       { name: 'XXL', dimensions: 'Lebar 48cm, Panjang 68cm' },
-      { name: 'XXXL', dimensions: 'Lebar 50cm, Panjang 70cm' },
+      { name: '3XL', dimensions: 'Lebar 50cm, Panjang 70cm' },
+      { name: '4XL', dimensions: 'Lebar 52cm, Panjang 72cm' },
     ],
   },
   {

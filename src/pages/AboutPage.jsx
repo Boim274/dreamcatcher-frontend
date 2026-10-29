@@ -301,7 +301,7 @@ export default function AboutPage() {
                       </div>
                       <div>
                         <p className="text-white font-bold text-xs">{isEn ? 'Correspondence Email' : 'Email Korespondensi'}</p>
-                        <p className="text-gray-400 text-xs mt-0.5">hello@dreamcatcherprint.co.id</p>
+                        <a href="mailto:ihsanptr123@gmail.com" className="text-gray-400 hover:text-primary transition-colors text-xs mt-0.5 block">ihsanptr123@gmail.com</a>
                       </div>
                     </div>
 

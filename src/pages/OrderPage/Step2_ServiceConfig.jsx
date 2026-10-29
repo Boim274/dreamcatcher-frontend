@@ -424,7 +424,7 @@ export default function Step2ServiceConfig() {
     sablon_types: rawOptions.sablon_types?.length ? rawOptions.sablon_types : DEFAULT_SABLON_TYPES,
     print_positions: rawOptions.print_positions?.length ? rawOptions.print_positions : DEFAULT_PRINT_POSITIONS,
     print_sizes: rawOptions.print_sizes?.length ? rawOptions.print_sizes : DEFAULT_PRINT_SIZES,
-    sizes: rawOptions.sizes?.length ? rawOptions.sizes : ['S', 'M', 'L', 'XL', 'XXL'],
+    sizes: rawOptions.sizes?.length ? rawOptions.sizes : ['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'],
     materials: rawOptions.materials?.length ? rawOptions.materials : ['Flexi Chinch', 'Vinyl', 'Fabric'],
     positions: rawOptions.positions?.length ? rawOptions.positions : ['Dada Kiri', 'Dada Kanan', 'Punggung', 'Lengan Kiri', 'Lengan Kanan'],
   };
@@ -562,7 +562,7 @@ export default function Step2ServiceConfig() {
     {
       value: 'dewasa',
       label: language === 'en' ? 'Adult Only' : 'Ukuran Dewasa Saja',
-      subtitle: language === 'en' ? 'Standard sizes S, M, L, XL, XXL, 3XL' : 'Ukuran S, M, L, XL, XXL, 3XL',
+      subtitle: language === 'en' ? 'Standard sizes S, M, L, XL, XXL, 3XL, 4XL' : 'Ukuran S, M, L, XL, XXL, 3XL, 4XL',
       icon: 'user',
     },
     {
@@ -593,23 +593,23 @@ export default function Step2ServiceConfig() {
   ];
 
   return (
-    <div className={`rounded-3xl border p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative transition-colors ${
+    <div className={`rounded-2xl sm:rounded-3xl border p-4 sm:p-8 backdrop-blur-xl shadow-2xl relative transition-colors ${
       isLight ? 'bg-white border-slate-200 shadow-slate-900/5 text-slate-800' : 'border-white/10 bg-white/[0.03] text-white'
     }`}>
       {/* Ambient background glow */}
-      <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden rounded-2xl sm:rounded-3xl pointer-events-none">
         <div className="absolute -top-24 -right-24 w-60 h-60 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
       {/* Header */}
-      <div className={`flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b relative z-10 ${
+      <div className={`flex flex-wrap items-center justify-between gap-2 mb-5 sm:mb-6 pb-3.5 sm:pb-4 border-b relative z-10 ${
         isLight ? 'border-slate-100' : 'border-white/10'
       }`}>
         <div>
           <span className="text-[10px] font-bold tracking-[2px] uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
             {language === 'en' ? 'Step 2 of 6' : 'Langkah 2 dari 6'}
           </span>
-          <h2 className={`font-heading text-2xl sm:text-3xl tracking-[1.5px] mt-2 ${
+          <h2 className={`font-heading text-xl sm:text-3xl tracking-[1.5px] mt-1.5 sm:mt-2 ${
             isLight ? 'text-slate-900' : 'text-white'
           }`}>
             {language === 'en' ? 'SERVICE CONFIGURATION' : 'KONFIGURASI LAYANAN'}
@@ -711,7 +711,7 @@ export default function Step2ServiceConfig() {
                   shirtModelId: 'long_sleeve',
                   shirtModelProductId: 9,
                   shirtModelImage: '/products/kaos-lengan-panjang.jpg',
-                  shirtModelSurcharge: 5000,
+                  shirtModelSurcharge: 7000,
                 })}
                 className={`p-3.5 sm:p-4 rounded-2xl border text-left flex items-center gap-3.5 transition-all outline-none cursor-pointer group ${
                   config.shirtModelId === 'long_sleeve' || config.shirtModel === 'Kaos Lengan Panjang'
@@ -739,15 +739,12 @@ export default function Step2ServiceConfig() {
                     <span className={`font-bold text-xs sm:text-sm tracking-wide ${isLight ? 'text-slate-900' : 'text-white'}`}>
                       {language === 'en' ? 'Long Sleeve' : 'Kaos Lengan Panjang'}
                     </span>
-                    <span className="text-[9px] font-semibold px-2 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/20 text-purple-300">
-                      Rib Manset
-                    </span>
                   </div>
                   <p className="text-[11px] text-gray-400 line-clamp-2 leading-relaxed">
-                    {language === 'en' ? 'Elastic wrist cuffs, UV protection' : 'Rib manset elastis, nyaman & elegan'}
+                    {language === 'en' ? 'Comfortable & versatile long sleeve' : 'Nyaman & elegan untuk harian & komunitas'}
                   </p>
                   <span className="text-[10px] font-semibold text-primary mt-1 inline-block">
-                    + Rp 5.000 / pcs
+                    + Rp 7.000 / pcs
                   </span>
                 </div>
               </button>
@@ -1300,22 +1297,23 @@ export default function Step2ServiceConfig() {
       )}
 
       {/* Navigation Buttons */}
-      <div className={`flex gap-4 mt-10 pt-6 border-t relative z-10 ${
+      <div className={`flex items-center gap-2.5 sm:gap-4 mt-8 sm:mt-10 pt-5 sm:pt-6 border-t relative z-10 ${
         isLight ? 'border-slate-200' : 'border-white/10'
       }`}>
         <button
           type="button"
           onClick={prevStep}
-          className="btn-glass flex items-center gap-2 py-3 px-6 rounded-2xl text-xs uppercase tracking-wider font-semibold text-gray-300 hover:text-white"
+          className="btn-glass flex items-center justify-center gap-1.5 py-3 px-4 sm:px-6 min-h-[44px] rounded-xl sm:rounded-2xl text-xs uppercase tracking-wider font-semibold text-gray-300 hover:text-white shrink-0 cursor-pointer"
         >
-          <Icon name="arrow-left" size={18} /> {language === 'en' ? 'Back' : 'Kembali'}
+          <Icon name="arrow-left" size={16} /> <span>{language === 'en' ? 'Back' : 'Kembali'}</span>
         </button>
         <button
           type="button"
           onClick={handleNext}
-          className="btn-gradient-primary flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold shadow-lg shadow-primary/25 cursor-pointer"
+          className="btn-gradient-primary flex-1 flex items-center justify-center gap-2 py-3 px-4 sm:px-6 min-h-[44px] rounded-xl sm:rounded-2xl text-xs uppercase tracking-wider font-bold shadow-lg shadow-primary/25 cursor-pointer text-center"
         >
-          {language === 'en' ? 'Continue to Size & Quantity' : 'Lanjut ke Ukuran & Jumlah'} <Icon name="arrow-right" size={18} />
+          <span>{language === 'en' ? 'Continue' : 'Lanjut'}</span>
+          <Icon name="arrow-right" size={16} className="shrink-0" />
         </button>
       </div>
     </div>

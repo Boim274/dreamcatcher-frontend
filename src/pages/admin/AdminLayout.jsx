@@ -724,7 +724,7 @@ export default function AdminLayout() {
 
       {/* Main Content */}
       <main className={`${mainMargin} pt-16 min-h-screen transition-all duration-300 ${theme === 'light' ? 'bg-[#f8fafc] text-slate-800' : 'bg-[#0f0a13] text-white'}`}>
-        <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+        <div className="p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto">
           <Outlet />
         </div>
       </main>

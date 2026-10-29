@@ -43,42 +43,28 @@ export default function PaymentPage() {
     { id: 'full', label: isEn ? 'Pay Full' : 'Bayar Full / Lunas', desc: isEn ? 'Pay in full now, immediate processing' : 'Bayar penuh sekarang, langsung diproses', icon: Banknote },
   ];
 
-function BankIcon({ bank }) {
-  const isBca = (bank || '').toLowerCase().includes('bca');
-  const isSeabank = (bank || '').toLowerCase().includes('sea');
+function BankIcon({ bank, logo }) {
+  const isBca = (bank || '').toLowerCase().includes('bca') || (logo || '').includes('bca');
+  const isSeabank = (bank || '').toLowerCase().includes('sea') || (logo || '').includes('seabank');
 
   if (isBca) {
     return (
-      <div className="w-12 h-12 rounded-2xl bg-[#005baa] p-2 flex flex-col items-center justify-center shrink-0 shadow-md shadow-blue-900/30 border border-white/20">
-        <svg viewBox="0 0 48 48" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M24 6L39 24L24 42L9 24L24 6Z" fill="white" fillOpacity="0.2"/>
-          <path d="M24 11L35 24L24 37L13 24L24 11Z" fill="white"/>
-          <path d="M24 17L30 24L24 31L18 24L24 17Z" fill="#005baa"/>
-          <rect x="21" y="21" width="6" height="6" rx="1" fill="white"/>
-        </svg>
+      <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-white p-2 flex items-center justify-center shrink-0 shadow-md shadow-blue-900/10 border border-slate-200/80">
+        <img src="/banks/bca.png" alt="Bank BCA" className="w-full h-full object-contain" />
       </div>
     );
   }
 
   if (isSeabank) {
     return (
-      <div className="w-12 h-12 rounded-2xl bg-[#ff5c00] p-2 flex flex-col items-center justify-center shrink-0 shadow-md shadow-orange-900/30 border border-white/20">
-        <svg viewBox="0 0 48 48" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M32 15C30 13 27 12 23.5 12C17 12 13 15.5 13 20.5C13 28 34 22 34 30C34 35.5 29 38 23 38C17 38 13.5 35 12 32"
-            stroke="white"
-            strokeWidth="4.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <circle cx="33" cy="14" r="3" fill="#ffea79"/>
-        </svg>
+      <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-white p-1.5 flex items-center justify-center shrink-0 shadow-md shadow-orange-900/10 border border-slate-200/80">
+        <img src="/banks/seabank.png" alt="SeaBank" className="w-full h-full object-contain" />
       </div>
     );
   }
 
   return (
-    <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center text-primary shrink-0">
+    <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-primary/20 flex items-center justify-center text-primary shrink-0">
       <Building2 size={24} />
     </div>
   );
@@ -91,6 +77,7 @@ const BANK_ACCOUNTS = [
     name: 'IHSAN PUTRA RAMADHAN',
     number: '5222383498',
     badgeBg: 'bg-[#005baa]',
+    logo: '/banks/bca.png',
   },
   {
     id: 'seabank',
@@ -98,6 +85,7 @@ const BANK_ACCOUNTS = [
     name: 'IHSAN PUTRA RAMADHAN',
     number: '901828242948',
     badgeBg: 'bg-[#ff5c00]',
+    logo: '/banks/seabank.png',
   },
 ];
 
@@ -313,11 +301,11 @@ const BANK_ACCOUNTS = [
               <button
                 type="button"
                 onClick={() => setShowReceiptModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/30 text-xs text-primary font-bold transition-all cursor-pointer shadow-sm"
-                title="Lihat & Cetak Struk Belanja"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/15 hover:bg-primary/25 border border-primary/30 text-xs text-primary font-bold transition-all cursor-pointer shadow-sm active:scale-95 min-h-[34px]"
+                title={isEn ? 'View, Download & Share Receipt' : 'Lihat, Unduh & Bagikan Struk Belanja'}
               >
-                <Receipt size={13} />
-                <span>{isEn ? 'View Shopping Receipt' : 'Lihat Struk Belanja'}</span>
+                <Receipt size={14} />
+                <span>{isEn ? 'View & Download Receipt' : 'Lihat & Unduh Struk'}</span>
               </button>
             </div>
           </div>
@@ -522,7 +510,7 @@ const BANK_ACCOUNTS = [
                     }`}
                   >
                     <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
-                      <BankIcon bank={acc.bank} />
+                      <BankIcon bank={acc.bank} logo={acc.logo} />
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className={`px-2.5 py-0.5 rounded-lg text-white text-[11px] font-bold uppercase tracking-wide shadow-sm ${acc.badgeBg}`}>

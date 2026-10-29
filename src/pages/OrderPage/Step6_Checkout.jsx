@@ -238,21 +238,21 @@ export default function Step6Checkout() {
   const totalQty = orderStore.getTotalQuantity ? orderStore.getTotalQuantity() : Object.values(sizeQuantities || {}).reduce((a, b) => a + b, 0);
 
   return (
-    <div className={`rounded-3xl border p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden transition-colors ${
+    <div className={`rounded-2xl sm:rounded-3xl border p-4 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden transition-colors ${
       isLight ? 'bg-white border-slate-200 shadow-slate-900/5 text-slate-800' : 'border-white/10 bg-white/[0.03] text-white'
     }`}>
       {/* Ambient background glow */}
       <div className="absolute -top-24 -right-24 w-60 h-60 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Step Header */}
-      <div className={`flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b ${
+      <div className={`flex flex-wrap items-center justify-between gap-2 mb-5 sm:mb-6 pb-3.5 sm:pb-4 border-b ${
         isLight ? 'border-slate-100' : 'border-white/10'
       }`}>
         <div>
           <span className="text-[10px] font-bold tracking-[2px] uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
             {language === 'en' ? 'Step 6 of 6' : 'Langkah 6 dari 6'}
           </span>
-          <h2 className={`font-heading text-2xl sm:text-3xl tracking-[1.5px] mt-2 ${
+          <h2 className={`font-heading text-xl sm:text-3xl tracking-[1.5px] mt-1.5 sm:mt-2 ${
             isLight ? 'text-slate-900' : 'text-white'
           }`}>
             {language === 'en' ? 'CUSTOMER DETAILS & CHECKOUT' : 'DATA PEMESAN & CHECKOUT'}
@@ -368,7 +368,7 @@ export default function Step6Checkout() {
               </span>
             </div>
 
-            <div className="pt-2 mt-2 border-t-2 border-current/25 flex justify-between items-center">
+            <div className="pt-2 mt-2 border-t-2 border-current/25 flex flex-wrap justify-between items-center gap-2">
               <div>
                 <span className="text-[10px] uppercase font-bold tracking-wider opacity-60 block">
                   {language === 'en' ? 'Total Bill' : 'Total Tagihan'}
@@ -565,36 +565,37 @@ export default function Step6Checkout() {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-4 pt-6 border-t border-white/10">
+      <div className="flex items-center gap-2.5 sm:gap-4 pt-5 sm:pt-6 border-t border-white/10">
         <button
           type="button"
           onClick={prevStep}
           disabled={submitting}
-          className="btn-glass flex items-center gap-2 py-3 px-6 rounded-2xl text-xs uppercase tracking-wider font-semibold text-gray-300 hover:text-white disabled:opacity-50"
+          className="btn-glass flex items-center justify-center gap-1.5 py-3 px-4 sm:px-6 min-h-[46px] rounded-xl sm:rounded-2xl text-xs uppercase tracking-wider font-semibold text-gray-300 hover:text-white disabled:opacity-50 shrink-0 cursor-pointer"
         >
-          <Icon name="arrow-left" size={18} /> {language === 'en' ? 'Back' : 'Kembali'}
+          <Icon name="arrow-left" size={16} /> <span>{language === 'en' ? 'Back' : 'Kembali'}</span>
         </button>
         <button
           type="button"
           onClick={() => { if (validate()) setShowConfirm(true); }}
           disabled={submitting}
-          className="btn-gradient-primary flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold shadow-lg shadow-primary/25 disabled:opacity-50"
+          className="btn-gradient-primary flex-1 flex items-center justify-center gap-2 py-3 px-4 sm:px-6 min-h-[46px] rounded-xl sm:rounded-2xl text-xs uppercase tracking-wider font-bold shadow-lg shadow-primary/25 disabled:opacity-50 cursor-pointer text-center"
         >
-          <Icon name="send" size={18} /> {language === 'en' ? 'Submit & Proceed to Payment' : 'Submit & Lanjut Pembayaran'}
+          <Icon name="send" size={16} className="shrink-0" />
+          <span>{language === 'en' ? 'Proceed to Payment' : 'Lanjut Pembayaran'}</span>
         </button>
       </div>
 
       {/* Confirm Modal */}
       {showConfirm && (
-        <div className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-[#170e1c] border border-white/15 w-full max-w-md p-6 sm:p-8 rounded-3xl shadow-2xl animate-fade-in relative overflow-hidden">
+        <div className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-3.5 sm:p-4 backdrop-blur-sm">
+          <div className="bg-[#170e1c] border border-white/15 w-full max-w-sm sm:max-w-md p-5 sm:p-8 rounded-2xl sm:rounded-3xl shadow-2xl animate-fade-in relative overflow-hidden">
             <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-primary/20 text-primary rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/30 shadow-lg shadow-primary/20">
-                <Icon name="send" size={28} />
+            <div className="text-center mb-5 sm:mb-6">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-primary/20 text-primary rounded-2xl flex items-center justify-center mx-auto mb-3.5 sm:mb-4 border border-primary/30 shadow-lg shadow-primary/20">
+                <Icon name="send" size={24} />
               </div>
-              <h3 className="font-heading text-2xl text-white tracking-wide mb-2">
+              <h3 className="font-heading text-xl sm:text-2xl text-white tracking-wide mb-1.5 sm:mb-2">
                 {language === 'en' ? 'Confirm Order?' : 'Konfirmasi Pesanan?'}
               </h3>
               <p className="text-gray-300 text-xs">
@@ -602,12 +603,12 @@ export default function Step6Checkout() {
               </p>
 
               {/* Confirm summary details */}
-              <div className="mt-4 p-3.5 rounded-2xl bg-black/40 border border-white/10 text-left space-y-1.5">
+              <div className="mt-4 p-3.5 rounded-xl sm:rounded-2xl bg-black/40 border border-white/10 text-left space-y-1.5">
                 <p className="text-white text-xs font-bold">{form.name}</p>
-                <p className="text-gray-400 text-[11px]">{form.phone}{form.email ? ` · ${form.email}` : ''}</p>
+                <p className="text-gray-400 text-[11px] truncate">{form.phone}{form.email ? ` · ${form.email}` : ''}</p>
                 <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-white/5">
                   {breakdown.map(({ size, qty }) => (
-                    <span key={size} className="text-[10px] font-semibold bg-primary/15 text-primary px-2 py-0.5 rounded-lg border border-primary/20">
+                    <span key={size} className="text-[10px] font-semibold bg-primary/15 text-primary px-2 py-0.5 rounded-md border border-primary/20">
                       {size}: {qty} pcs
                     </span>
                   ))}
@@ -615,12 +616,12 @@ export default function Step6Checkout() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
                 disabled={submitting}
-                className="btn-glass flex-1 py-3 rounded-2xl text-xs font-semibold text-gray-300 hover:text-white"
+                className="btn-glass flex-1 py-3 min-h-[44px] rounded-xl sm:rounded-2xl text-xs font-semibold text-gray-300 hover:text-white cursor-pointer"
               >
                 {language === 'en' ? 'Review Again' : 'Periksa Lagi'}
               </button>
@@ -628,12 +629,12 @@ export default function Step6Checkout() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="btn-gradient-primary flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-bold shadow-lg shadow-primary/25 disabled:opacity-50"
+                className="btn-gradient-primary flex-1 flex items-center justify-center gap-1.5 py-3 min-h-[44px] rounded-xl sm:rounded-2xl text-xs font-bold shadow-lg shadow-primary/25 disabled:opacity-50 cursor-pointer"
               >
                 {submitting ? (
                   <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> {language === 'en' ? 'Submitting...' : 'Mengirim...'}</>
                 ) : (
-                  <><Icon name="send" size={16} /> {language === 'en' ? 'Yes, Place Order' : 'Ya, Buat Pesanan'}</>
+                  <><Icon name="send" size={15} /> {language === 'en' ? 'Yes, Place Order' : 'Ya, Buat Pesanan'}</>
                 )}
               </button>
             </div>

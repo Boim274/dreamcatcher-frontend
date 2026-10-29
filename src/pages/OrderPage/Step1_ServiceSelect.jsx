@@ -41,7 +41,7 @@ export default function Step1ServiceSelect() {
 
   return (
     <div
-      className={`rounded-3xl border p-6 sm:p-8 backdrop-blur-xl transition-all duration-300 shadow-xl ${
+      className={`rounded-2xl sm:rounded-3xl border p-4 sm:p-8 backdrop-blur-xl transition-all duration-300 shadow-xl ${
         isLight
           ? 'bg-white border-slate-200/90 shadow-slate-900/5 text-slate-900'
           : 'bg-white/[0.03] border-white/10 shadow-2xl text-white'
@@ -49,13 +49,13 @@ export default function Step1ServiceSelect() {
     >
       {/* Header Section */}
       <div
-        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-5 border-b ${
+        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6 pb-4 sm:pb-5 border-b ${
           isLight ? 'border-slate-100' : 'border-white/10'
         }`}
       >
         <div>
           <div
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2 border ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider mb-2 border ${
               isLight
                 ? 'bg-primary/10 text-primary border-primary/20'
                 : 'bg-primary/15 text-primary border-primary/30'
@@ -65,7 +65,7 @@ export default function Step1ServiceSelect() {
             <span>{isEn ? 'Step 1 of 6' : 'Langkah 1 dari 6'}</span>
           </div>
           <h2
-            className={`font-heading text-2xl sm:text-3xl lg:text-4xl font-bold tracking-wide sm:tracking-wider ${
+            className={`font-heading text-xl sm:text-3xl lg:text-4xl font-bold tracking-wide sm:tracking-wider ${
               isLight ? 'text-slate-900' : 'text-white'
             }`}
           >
@@ -84,7 +84,7 @@ export default function Step1ServiceSelect() {
 
         {activeServices.length > 0 && (
           <div
-            className={`self-start sm:self-auto px-3.5 py-1.5 rounded-xl border text-xs font-semibold shrink-0 ${
+            className={`self-start sm:self-auto px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl border text-[11px] sm:text-xs font-semibold shrink-0 ${
               isLight
                 ? 'bg-slate-50 border-slate-200 text-slate-600'
                 : 'bg-white/5 border-white/10 text-zinc-400'
@@ -143,7 +143,7 @@ export default function Step1ServiceSelect() {
         </div>
       ) : activeServices.length > 0 ? (
         /* Services Selection Grid */
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5 mb-6 sm:mb-8">
           {activeServices.map((service) => {
             const isActive = selectedService?.id === service.id;
             const sName = (service.name || '').toLowerCase();
@@ -167,7 +167,7 @@ export default function Step1ServiceSelect() {
                     selectService(service);
                   }
                 }}
-                className={`p-5 sm:p-6 rounded-2xl border-2 text-left transition-all duration-200 relative overflow-hidden cursor-pointer group flex flex-col justify-between select-none ${
+                className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 text-left transition-all duration-200 relative overflow-hidden cursor-pointer group flex flex-col justify-between select-none ${
                   isLight
                     ? isActive
                       ? 'border-primary bg-primary/[0.04] shadow-md shadow-primary/10 ring-2 ring-primary/20'
@@ -342,7 +342,7 @@ export default function Step1ServiceSelect() {
           type="button"
           onClick={handleNext}
           disabled={!selectedService}
-          className={`w-full sm:w-auto py-3.5 px-8 text-xs sm:text-sm font-bold tracking-wider rounded-xl transition-all flex items-center justify-center gap-2.5 shadow-md ${
+          className={`w-full sm:w-auto py-3 sm:py-3.5 px-6 sm:px-8 min-h-[46px] text-xs sm:text-sm font-bold tracking-wider rounded-xl transition-all flex items-center justify-center gap-2.5 shadow-md ${
             selectedService
               ? 'btn-gradient-primary hover:scale-[1.02] active:scale-95 shadow-primary/30 text-white cursor-pointer'
               : isLight
@@ -350,7 +350,7 @@ export default function Step1ServiceSelect() {
               : 'bg-white/5 text-zinc-500 border border-white/10 cursor-not-allowed shadow-none'
           }`}
         >
-          <span>{isEn ? 'Continue to Configuration' : 'Lanjut ke Konfigurasi'}</span>
+          <span>{isEn ? 'Continue' : 'Lanjut'}</span>
           <ArrowRight className="w-4 h-4 shrink-0" />
         </button>
       </div>

@@ -1,10 +1,17 @@
 import { useState, useRef } from 'react';
-import { Printer, Copy, Check, X, Sparkles, Scissors, QrCode, Tag, ArrowRight } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { toPng, toBlob } from 'html-to-image';
+import {
+  Printer, Copy, Check, X, Sparkles, Scissors, QrCode, Tag, ArrowRight,
+  Download, Share2, Receipt, Loader2
+} from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 import { getImageUrl } from '../../utils/getImageUrl';
 import { useToast } from '../ui/Toast';
 import { getCleanConfigItems, formatConfigSummary, generateReceiptPlainText } from '../../utils/orderReceiptHelper';
 import { useThemeStore } from '../../store/themeStore';
+
+import { RECEIPT_FONTS_BASE64 } from '../../utils/receiptFontsBase64';
 
 /**
  * Sawtooth serrated paper edge for receipt top/bottom
@@ -31,21 +38,21 @@ function SawtoothEdge({ position = 'bottom', className = '' }) {
  * Visual thermal barcode component
  */
 function ReceiptBarcode({ value = 'ORD-20261023' }) {
-  // Generate a realistic alternating barcode pattern
-  const bars = [2, 1, 3, 1, 2, 4, 1, 3, 2, 1, 4, 1, 2, 3, 1, 2, 1, 3, 4, 2, 1, 2, 3, 1, 4, 2, 1, 3, 2, 1, 4, 2, 1, 3, 1, 2, 4, 1];
+  // Realistic barcode pattern with balanced compact width
+  const bars = [2, 1, 3, 1, 2, 3, 1, 2, 2, 1, 3, 1, 2, 3, 1, 2, 1, 3, 2, 2, 1, 2, 3, 1, 2, 2, 1, 3, 2, 1, 3, 2, 1, 2];
 
   return (
-    <div className="flex flex-col items-center justify-center my-3 text-center">
-      <div className="flex items-center justify-center h-10 gap-[2px] opacity-85 px-4 overflow-hidden max-w-full">
+    <div className="flex flex-col items-center justify-center my-3 text-center w-full">
+      <div className="flex items-center justify-center h-8 gap-[1.5px] opacity-85 px-2 max-w-full overflow-hidden">
         {bars.map((w, idx) => (
           <div
             key={idx}
             className="bg-current shrink-0 h-full"
-            style={{ width: `${w * 1.5}px` }}
+            style={{ width: `${w * 1.3}px` }}
           />
         ))}
       </div>
-      <span className="font-mono text-[10px] tracking-[3px] uppercase mt-1 opacity-70">
+      <span className="text-[10px] tracking-[2px] uppercase mt-1 opacity-70 font-semibold font-sans">
         * {value} *
       </span>
     </div>
@@ -70,6 +77,8 @@ export default function OrderReceipt({
   const isLight = theme === 'light';
   const receiptRef = useRef(null);
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   // Normalize data whether it's coming from database `order` or draft `orderDraft`
   const isDraftMode = Boolean(!order && orderDraft);
@@ -144,8 +153,15 @@ export default function OrderReceipt({
     shipping = Number(order.shipping_cost || 0);
     total = Number(order.total_price || 0);
     paidAmount = Number(order.paid_amount || 0);
-    remaining = Number(order.remaining_amount || Math.max(0, total - paidAmount));
     dp = Math.round(total * 0.5);
+
+    if (paymentStatus === 'paid' || order?.status === 'completed') {
+      remaining = 0;
+    } else if (paidAmount > 0) {
+      remaining = Math.max(0, total - paidAmount);
+    } else {
+      remaining = Math.max(0, total - dp);
+    }
 
     totalQty = (order.items || []).reduce((acc, it) => acc + Number(it.quantity || 0), 0);
     breakdownRows = (order.items || []).map((it) => ({
@@ -201,6 +217,156 @@ export default function OrderReceipt({
     });
   };
 
+  // Download receipt as PNG image
+  const handleDownloadImage = async () => {
+    try {
+      if (!receiptRef.current) return;
+      setDownloading(true);
+
+      if (typeof document !== 'undefined' && document.fonts) {
+        await document.fonts.ready;
+      }
+
+      const node = receiptRef.current;
+      const width = Math.ceil(Math.max(node.scrollWidth, node.offsetWidth, node.clientWidth));
+      const height = Math.ceil(Math.max(node.scrollHeight, node.offsetHeight, node.clientHeight)) + 4;
+
+      const imageUri = await toPng(node, {
+        width,
+        height,
+        canvasWidth: width,
+        canvasHeight: height,
+        quality: 0.98,
+        pixelRatio: 2,
+        backgroundColor: isLight ? '#ffffff' : '#150f1d',
+        cacheBust: true,
+        fontEmbedCSS: RECEIPT_FONTS_BASE64,
+        style: {
+          width: `${width}px`,
+          height: `${height}px`,
+          maxWidth: 'none',
+          maxHeight: 'none',
+          margin: '0',
+        },
+      });
+
+      const link = document.createElement('a');
+      link.download = `Struk-${receiptNumber}.png`;
+      link.href = imageUri;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success(language === 'en' ? 'Receipt image downloaded!' : 'Gambar struk berhasil diunduh!');
+    } catch (err) {
+      console.error('Download image error:', err);
+      toast.error(language === 'en' ? 'Failed to download receipt image' : 'Gagal mengunduh gambar struk');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  // Share receipt image (via Web Share API or WhatsApp fallback)
+  const handleShare = async () => {
+    try {
+      if (!receiptRef.current) return;
+      setSharing(true);
+
+      if (typeof document !== 'undefined' && document.fonts) {
+        await document.fonts.ready;
+      }
+
+      const node = receiptRef.current;
+      const width = Math.ceil(Math.max(node.scrollWidth, node.offsetWidth, node.clientWidth));
+      const height = Math.ceil(Math.max(node.scrollHeight, node.offsetHeight, node.clientHeight)) + 4;
+
+      const blob = await toBlob(node, {
+        width,
+        height,
+        canvasWidth: width,
+        canvasHeight: height,
+        quality: 0.98,
+        pixelRatio: 2,
+        backgroundColor: isLight ? '#ffffff' : '#150f1d',
+        cacheBust: true,
+        fontEmbedCSS: RECEIPT_FONTS_BASE64,
+        style: {
+          width: `${width}px`,
+          height: `${height}px`,
+          maxWidth: 'none',
+          maxHeight: 'none',
+          margin: '0',
+        },
+      });
+      if (!blob) throw new Error('Blob generation failed');
+
+      const file = new File([blob], `Struk-${receiptNumber}.png`, { type: 'image/png' });
+
+      // Web Share API with file support (Android, iOS Safari, etc.)
+      if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `Struk Pesanan ${receiptNumber}`,
+          text: `Struk Pesanan Dreamcatcher Apparel - Kode: ${receiptNumber} (${customerName})`,
+          files: [file],
+        });
+        toast.success(language === 'en' ? 'Shared successfully!' : 'Berhasil dibagikan!');
+      } else {
+        // Fallback for desktop/browsers without file share: auto-download image & open WhatsApp
+        const imageUri = await toPng(node, {
+          width,
+          height,
+          canvasWidth: width,
+          canvasHeight: height,
+          quality: 0.98,
+          pixelRatio: 2,
+          backgroundColor: isLight ? '#ffffff' : '#150f1d',
+          cacheBust: true,
+          fontEmbedCSS: RECEIPT_FONTS_BASE64,
+          style: {
+            width: `${width}px`,
+            height: `${height}px`,
+            maxWidth: 'none',
+            maxHeight: 'none',
+            margin: '0',
+          },
+        });
+
+        const link = document.createElement('a');
+        link.download = `Struk-${receiptNumber}.png`;
+        link.href = imageUri;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        const waText = encodeURIComponent(
+          `*STRUK PESANAN DREAMCATCHER APPAREL*\n\n` +
+          `🧾 No. Struk: *${receiptNumber}*\n` +
+          `👤 Pemesan: *${customerName}*\n` +
+          `📦 Layanan: *${serviceName}* (${totalQty} pcs)\n` +
+          `💰 Total Tagihan: *${formatRupiah(total)}*\n` +
+          `💵 DP 50%: *${formatRupiah(dp)}*\n` +
+          `📅 Waktu: *${orderDate}*\n\n` +
+          `Gambar struk otomatis tersimpan di perangkat saya.`
+        );
+
+        const waUrl = customerPhone && customerPhone !== '-' 
+          ? `https://wa.me/?text=${waText}`
+          : `https://wa.me/6281234567890?text=${waText}`;
+
+        window.open(waUrl, '_blank');
+        toast.info(language === 'en'
+          ? 'Image saved! Please attach the saved image to WhatsApp chat.'
+          : 'Gambar struk tersimpan! Silakan lampirkan gambar ke chat WhatsApp yang terbuka.');
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Share error:', err);
+        toast.error(language === 'en' ? 'Failed to share receipt' : 'Gagal membagikan struk');
+      }
+    } finally {
+      setSharing(false);
+    }
+  };
+
   // Status Stamp styling
   const getStamp = () => {
     if (isEstimate || isDraftMode) {
@@ -243,7 +409,10 @@ export default function OrderReceipt({
         isLight
           ? 'bg-[#ffffff] text-slate-800 shadow-xl border border-slate-200'
           : 'bg-[#150f1d] text-zinc-100 shadow-2xl border border-white/10'
-      } rounded-2xl overflow-hidden mx-auto max-w-md w-full`}
+      } rounded-2xl overflow-hidden mx-auto w-full max-w-[420px]`}
+      style={{
+        fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      }}
     >
       {/* Sawtooth Top Edge */}
       <SawtoothEdge position="top" className={isLight ? 'text-slate-100' : 'text-[#0d0913]'} />
@@ -252,55 +421,81 @@ export default function OrderReceipt({
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
 
       {/* Main Receipt Body */}
-      <div className="p-5 sm:p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-4">
         {/* Store Header */}
-        <div className="text-center pb-3 border-b border-dashed border-current/20 relative">
-          {/* Stamp watermark */}
-          <div className="absolute right-0 top-0 pointer-events-none opacity-85">
+        <div className="text-center pb-3 border-b border-dashed border-current/20 flex flex-col items-center">
+          <div
+            className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary font-heading text-xl font-bold mb-1 shrink-0"
+            style={{ fontFamily: "'Bebas Neue', 'Poppins', sans-serif" }}
+          >
+            DC
+          </div>
+          <h3
+            className="font-heading text-xl sm:text-2xl tracking-wider uppercase text-current font-bold whitespace-nowrap text-center block"
+            style={{
+              fontFamily: "'Bebas Neue', 'Poppins', sans-serif",
+              lineHeight: '1.2',
+              marginTop: '1px',
+              marginBottom: '3px',
+            }}
+          >
+            DREAMCATCHER APPAREL
+          </h3>
+          <p
+            className="text-[10px] uppercase font-semibold tracking-wider opacity-75 text-center whitespace-nowrap block"
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              lineHeight: '1.3',
+              marginBottom: '2px',
+            }}
+          >
+            Custom Screen Printing & Apparel Studio
+          </p>
+          <p
+            className="text-[10px] opacity-60 text-center whitespace-nowrap block"
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              lineHeight: '1.3',
+              marginBottom: '6px',
+            }}
+          >
+            Jl. Percetakan Kreatif No. 12 · WA: 0812-3456-7890
+          </p>
+
+          {/* Centered Stamp Badge */}
+          <div className="flex justify-center mt-0.5">
             <span
-              className={`inline-block px-2.5 py-0.5 text-[10px] font-bold tracking-widest uppercase border-2 rounded-md rotate-[-8deg] shadow-sm ${stamp.color}`}
+              className={`inline-block px-3 py-0.5 text-[10px] font-bold tracking-widest uppercase border rounded-md shadow-sm ${stamp.color}`}
+              style={{ fontFamily: "'Poppins', sans-serif" }}
             >
               {stamp.text}
             </span>
           </div>
-
-          <div className="w-9 h-9 mx-auto mb-2 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary font-heading text-lg">
-            DC
-          </div>
-          <h3 className="font-heading text-xl sm:text-2xl tracking-[1.5px] uppercase leading-tight">
-            DREAMCATCHER APPAREL
-          </h3>
-          <p className="text-[10px] uppercase font-bold tracking-wider opacity-70 mt-0.5">
-            Custom Screen Printing & Apparel Studio
-          </p>
-          <p className="text-[10px] font-mono opacity-60 mt-0.5">
-            Jl. Percetakan Kreatif No. 12 · WA: 0812-3456-7890
-          </p>
         </div>
 
-        {/* Receipt Meta (No, Date, Cashier, Customer) */}
-        <div className="text-[11px] font-mono space-y-1.5 py-1 border-b border-dashed border-current/20">
-          <div className="flex justify-between items-center">
-            <span className="opacity-60">{language === 'en' ? 'Receipt No:' : 'No. Struk:'}</span>
-            <span className="font-bold text-primary font-mono tracking-wide">{receiptNumber}</span>
+        {/* Receipt Meta (No, Date, Customer) */}
+        <div className="text-[11px] space-y-1.5 py-1.5 border-b border-dashed border-current/20">
+          <div className="flex justify-between items-center gap-2">
+            <span className="opacity-60 shrink-0">{language === 'en' ? 'Receipt No:' : 'No. Struk:'}</span>
+            <span className="font-bold text-primary tracking-wide text-right truncate">{receiptNumber}</span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="opacity-60">{language === 'en' ? 'Date & Time:' : 'Waktu Transaksi:'}</span>
-            <span className="opacity-90">{orderDate}</span>
+          <div className="flex justify-between items-center gap-2">
+            <span className="opacity-60 shrink-0">{language === 'en' ? 'Date & Time:' : 'Waktu Transaksi:'}</span>
+            <span className="opacity-90 text-right">{orderDate}</span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="opacity-60">{language === 'en' ? 'Customer:' : 'Pelanggan:'}</span>
-            <span className="font-bold truncate max-w-[60%] text-right">{customerName}</span>
+          <div className="flex justify-between items-start gap-2">
+            <span className="opacity-60 shrink-0">{language === 'en' ? 'Customer:' : 'Pelanggan:'}</span>
+            <span className="font-semibold text-right break-words">{customerName}</span>
           </div>
           {customerPhone && customerPhone !== '-' && (
-            <div className="flex justify-between items-center">
-              <span className="opacity-60">{language === 'en' ? 'Phone:' : 'No. HP:'}</span>
-              <span>{customerPhone}</span>
+            <div className="flex justify-between items-center gap-2">
+              <span className="opacity-60 shrink-0">{language === 'en' ? 'Phone:' : 'No. HP:'}</span>
+              <span className="text-right">{customerPhone}</span>
             </div>
           )}
-          <div className="flex justify-between items-center">
-            <span className="opacity-60">{language === 'en' ? 'Delivery:' : 'Metode:'}</span>
-            <span className="font-semibold">{deliveryMethod}</span>
+          <div className="flex justify-between items-center gap-2">
+            <span className="opacity-60 shrink-0">{language === 'en' ? 'Delivery:' : 'Metode:'}</span>
+            <span className="font-semibold text-right">{deliveryMethod}</span>
           </div>
         </div>
 
@@ -317,7 +512,7 @@ export default function OrderReceipt({
                 </p>
               )}
             </div>
-            <span className="text-xs font-mono font-bold bg-current/5 px-2 py-0.5 rounded">
+            <span className="text-xs font-bold bg-current/5 px-2 py-0.5 rounded tabular-nums shrink-0">
               {totalQty} pcs
             </span>
           </div>
@@ -355,7 +550,7 @@ export default function OrderReceipt({
                       <p className="font-semibold truncate">
                         {area.position || area.print_area || `Area ${idx + 1}`}
                       </p>
-                      <p className="opacity-60 font-mono text-[9px]">
+                      <p className="opacity-60 text-[9px]">
                         {area.printSize || area.print_size || '-'}
                       </p>
                     </div>
@@ -366,22 +561,22 @@ export default function OrderReceipt({
           )}
         </div>
 
-        {/* Per-Size Breakdown Table (Thermal Receipt Style) */}
+        {/* Per-Size Breakdown Table (Clean Proportional Columns) */}
         <div className="border-t border-dashed border-current/25 pt-2">
-          <div className="grid grid-cols-12 text-[10px] font-mono font-bold opacity-60 uppercase pb-1 border-b border-current/15">
-            <span className="col-span-3">{language === 'en' ? 'Size' : 'Ukuran'}</span>
-            <span className="col-span-3 text-center">Qty</span>
-            <span className="col-span-3 text-right">{language === 'en' ? 'Price' : 'Harga'}</span>
-            <span className="col-span-3 text-right">Subtotal</span>
+          <div className="flex items-center text-[10px] font-bold opacity-60 uppercase pb-1 border-b border-current/15">
+            <span className="w-16 shrink-0">{language === 'en' ? 'Size' : 'Ukuran'}</span>
+            <span className="w-14 text-center shrink-0">Qty</span>
+            <span className="flex-1 text-right">{language === 'en' ? 'Price' : 'Harga'}</span>
+            <span className="flex-1 text-right">{language === 'en' ? 'Subtotal' : 'Subtotal'}</span>
           </div>
 
-          <div className="divide-y divide-current/5 text-[11px] font-mono py-1">
+          <div className="divide-y divide-current/5 text-[11px] py-1">
             {breakdownRows.map((row, idx) => (
-              <div key={idx} className="grid grid-cols-12 py-1.5 items-center">
-                <span className="col-span-3 font-bold">{row.size}</span>
-                <span className="col-span-3 text-center opacity-80">{row.qty} pcs</span>
-                <span className="col-span-3 text-right opacity-80 text-[10px]">{formatRupiah(row.unitPrice)}</span>
-                <span className="col-span-3 text-right font-semibold">{formatRupiah(row.subtotal)}</span>
+              <div key={idx} className="flex items-center py-1.5">
+                <span className="w-16 shrink-0 font-bold">{row.size}</span>
+                <span className="w-14 text-center shrink-0 opacity-80 tabular-nums">{row.qty} pcs</span>
+                <span className="flex-1 text-right opacity-80 text-[10px] tabular-nums">{formatRupiah(row.unitPrice)}</span>
+                <span className="flex-1 text-right font-bold tabular-nums">{formatRupiah(row.subtotal)}</span>
               </div>
             ))}
           </div>
@@ -389,36 +584,39 @@ export default function OrderReceipt({
 
         {/* Additional Charges / Surcharges if any */}
         {areaSurcharge > 0 && (
-          <div className="flex justify-between items-center text-[11px] font-mono py-1.5 px-2 rounded-lg bg-primary/10 border border-primary/20 text-primary font-semibold">
+          <div className="flex justify-between items-center text-[11px] py-1.5 px-2 rounded-lg bg-primary/10 border border-primary/20 text-primary font-semibold">
             <span>{language === 'en' ? 'Area 2 Surcharge:' : 'Surcharge Area Sablon 2:'}</span>
-            <span>+{formatRupiah(areaSurcharge)}</span>
+            <span className="tabular-nums">+{formatRupiah(areaSurcharge)}</span>
           </div>
         )}
 
         {/* Cost Calculation & Grand Total */}
-        <div className="border-t-2 border-dashed border-current/30 pt-3 space-y-1.5 font-mono text-xs">
-          <div className="flex justify-between opacity-80">
+        <div className="border-t-2 border-dashed border-current/30 pt-3 space-y-1.5 text-xs">
+          <div className="flex justify-between items-center opacity-80">
             <span>{language === 'en' ? `Subtotal (${totalQty} pcs):` : `Subtotal Produk (${totalQty} pcs):`}</span>
-            <span>{formatRupiah(subtotal)}</span>
+            <span className="font-semibold tabular-nums">{formatRupiah(subtotal)}</span>
           </div>
 
-          <div className="flex justify-between opacity-80">
+          <div className="flex justify-between items-center opacity-80">
             <span>{language === 'en' ? 'Shipping Cost:' : 'Ongkos Kirim:'}</span>
-            <span>{shipping > 0 ? formatRupiah(shipping) : (language === 'en' ? 'Calculated at checkout' : 'Dihitung saat checkout')}</span>
+            <span className="font-semibold">{shipping > 0 ? formatRupiah(shipping) : (language === 'en' ? 'Calculated at checkout' : 'Dihitung saat checkout')}</span>
           </div>
 
           {/* Grand Total Row */}
-          <div className="pt-2 mt-2 border-t-2 border-current/30 flex justify-between items-center">
+          <div className="pt-2 mt-2 border-t-2 border-current/30 flex justify-between items-baseline gap-2">
             <div>
               <span className="text-[10px] uppercase font-bold tracking-wider opacity-60 block">
                 {language === 'en' ? 'Grand Total' : 'Total Tagihan'}
               </span>
-              <span className="font-heading text-2xl sm:text-3xl tracking-wide text-primary">
+              <span
+                className="font-sans font-extrabold text-2xl sm:text-3xl text-primary whitespace-nowrap tracking-tight leading-none tabular-nums"
+                style={{ fontFamily: "'Poppins', sans-serif" }}
+              >
                 {formatRupiah(total)}
               </span>
             </div>
             <div className="text-right">
-              <span className="text-[10px] font-mono opacity-70">
+              <span className="text-[11px] opacity-70 whitespace-nowrap font-medium">
                 {totalQty} {language === 'en' ? 'items' : 'item pakaian'}
               </span>
             </div>
@@ -426,24 +624,24 @@ export default function OrderReceipt({
         </div>
 
         {/* Down Payment (DP 50%) Highlight Box */}
-        <div className="p-3.5 rounded-xl border border-primary/30 bg-primary/10 space-y-1 font-mono">
-          <div className="flex justify-between items-center text-xs">
+        <div className="p-3.5 rounded-xl border border-primary/30 bg-primary/10 space-y-1 text-xs">
+          <div className="flex justify-between items-center">
             <span className="font-bold text-primary flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-primary" />
               {language === 'en' ? '50% Down Payment (DP):' : 'Uang Muka (DP 50%):'}
             </span>
-            <span className="font-bold text-primary text-sm sm:text-base font-mono">
+            <span className="font-bold text-primary text-sm sm:text-base tabular-nums">
               {formatRupiah(dp)}
             </span>
           </div>
           <div className="flex justify-between items-center text-[11px] opacity-75 pt-1 border-t border-primary/20">
             <span>{language === 'en' ? 'Remaining Balance:' : 'Sisa Pelunasan:'}</span>
-            <span className="font-semibold">{formatRupiah(remaining)}</span>
+            <span className="font-semibold tabular-nums">{formatRupiah(remaining)}</span>
           </div>
           {paidAmount > 0 && (
             <div className="flex justify-between items-center text-[11px] text-emerald-400 font-bold pt-0.5">
               <span>{language === 'en' ? 'Already Paid:' : 'Sudah Dibayar:'}</span>
-              <span>{formatRupiah(paidAmount)}</span>
+              <span className="tabular-nums">{formatRupiah(paidAmount)}</span>
             </div>
           )}
         </div>
@@ -461,7 +659,7 @@ export default function OrderReceipt({
               ? (language === 'en' ? 'Keep this receipt as your official production estimate.' : 'Simpan struk ini sebagai referensi estimasi pesanan Anda.')
               : (language === 'en' ? 'Official receipt. Please present when claiming order.' : 'Struk transaksi resmi. Tunjukkan saat pengambilan / konfirmasi.')}
           </p>
-          <p className="text-[9px] font-mono opacity-50 pt-1">
+          <p className="text-[9px] opacity-50 pt-1">
             www.dreamcatcher.id · Sablon Berkualitas Premium
           </p>
         </div>
@@ -469,72 +667,135 @@ export default function OrderReceipt({
 
       {/* Sawtooth Bottom Edge */}
       <SawtoothEdge position="bottom" className={isLight ? 'text-slate-100' : 'text-[#0d0913]'} />
-
-      {/* Action Buttons Toolbar (No-Print) */}
-      {showActions && (
-        <div className="no-print p-4 bg-black/40 border-t border-white/10 flex flex-wrap items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-white/10"
-              title="Cetak Struk ke Printer / PDF"
-            >
-              <Printer size={14} className="text-primary" />
-              <span>{language === 'en' ? 'Print Receipt' : 'Cetak Struk'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-white/10"
-              title="Salin Teks Struk"
-            >
-              {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-              <span>{copied ? (language === 'en' ? 'Copied!' : 'Tersalin!') : (language === 'en' ? 'Copy Text' : 'Salin Struk')}</span>
-            </button>
-          </div>
-
-          {mode === 'modal' && onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-3.5 py-2 rounded-xl bg-primary/20 hover:bg-primary/30 text-primary text-xs font-bold transition-all cursor-pointer border border-primary/30"
-            >
-              {language === 'en' ? 'Close' : 'Tutup'}
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 
-  // If Modal Mode: Wrap in Backdrop Modal
+  // Render Action Buttons (Download, Share/WhatsApp, Print, Copy)
+  const renderActionButtons = () => (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        onClick={handleDownloadImage}
+        disabled={downloading}
+        className="btn-gradient-primary px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer min-h-[40px]"
+        title={language === 'en' ? 'Download receipt as PNG image' : 'Unduh struk sebagai gambar PNG'}
+      >
+        {downloading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+        <span>{downloading ? (language === 'en' ? 'Saving...' : 'Menyimpan...') : (language === 'en' ? 'Download Image' : 'Unduh Gambar')}</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={handleShare}
+        disabled={sharing}
+        className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md disabled:opacity-50 cursor-pointer min-h-[40px]"
+        title={language === 'en' ? 'Share receipt to WhatsApp / Social Media' : 'Bagikan struk ke WhatsApp / Media Sosial'}
+      >
+        {sharing ? <Loader2 size={15} className="animate-spin" /> : <Share2 size={15} />}
+        <span>{sharing ? (language === 'en' ? 'Sharing...' : 'Membagikan...') : (language === 'en' ? 'Share / WA' : 'Bagikan ke WA')}</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={handlePrint}
+        className="px-3 py-2 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-white/10 min-h-[40px]"
+        title={language === 'en' ? 'Print receipt / Save PDF' : 'Cetak struk / Simpan PDF'}
+      >
+        <Printer size={15} className="text-primary" />
+        <span className="hidden sm:inline">{language === 'en' ? 'Print' : 'Cetak'}</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="px-3 py-2 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-white/10 min-h-[40px]"
+        title={language === 'en' ? 'Copy receipt text' : 'Salin teks struk'}
+      >
+        {copied ? <Check size={15} className="text-emerald-400" /> : <Copy size={15} />}
+        <span className="hidden sm:inline">{copied ? (language === 'en' ? 'Copied' : 'Tersalin') : (language === 'en' ? 'Copy Text' : 'Salin')}</span>
+      </button>
+    </div>
+  );
+
+  // If Modal Mode: Wrap in Full-Screen Backdrop Portal attached directly to document.body
   if (mode === 'modal') {
-    return (
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
       <div
-        className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+        className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md overflow-y-auto overscroll-contain flex flex-col items-center justify-start p-2.5 sm:p-6 py-5 sm:py-8 animate-fade-in"
         onClick={(e) => {
           if (e.target === e.currentTarget && onClose) onClose();
         }}
       >
-        <div className="relative w-full max-w-md my-8">
-          {/* Close button in modal top-right */}
-          {onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              className="no-print absolute -top-3 -right-3 z-20 w-8 h-8 rounded-full bg-zinc-800 border border-white/20 text-white flex items-center justify-center hover:bg-primary transition-colors cursor-pointer shadow-lg"
-              title="Tutup Modal"
-            >
-              <X size={16} />
-            </button>
+        <div className="relative w-full max-w-[420px] sm:max-w-md my-auto space-y-3 pb-8">
+          {/* Top Modal Header */}
+          <div className="no-print bg-[#1a1222] border border-white/15 p-3.5 sm:p-4 rounded-2xl flex items-center justify-between shadow-2xl backdrop-blur-xl">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary">
+                <Receipt size={18} />
+              </div>
+              <div>
+                <h3
+                  className="font-heading text-sm sm:text-base text-white tracking-wider"
+                  style={{ fontFamily: "'Bebas Neue', 'Poppins', sans-serif" }}
+                >
+                  {language === 'en' ? 'OFFICIAL RECEIPT' : 'STRUK PEMBAYARAN RESMI'}
+                </h3>
+                <p className="text-[10px] text-gray-400 font-sans font-semibold tracking-wide">{receiptNumber}</p>
+              </div>
+            </div>
+
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-colors cursor-pointer border border-white/10"
+                title={language === 'en' ? 'Close' : 'Tutup'}
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+
+          {/* Top Action Buttons Toolbar */}
+          {showActions && (
+            <div className="no-print bg-[#1a1222] border border-white/15 p-3 rounded-2xl flex flex-wrap items-center justify-center sm:justify-between gap-2 shadow-xl">
+              {renderActionButtons()}
+            </div>
           )}
+
+          {/* Actual Receipt Paper for Print & Image Capture */}
           {receiptContent}
+
+          {/* Bottom Actions Toolbar & Close */}
+          <div className="no-print bg-[#1a1222] border border-white/15 p-3 rounded-2xl flex flex-wrap items-center justify-between gap-2.5 shadow-2xl">
+            {showActions && renderActionButtons()}
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold transition-all cursor-pointer border border-white/10 ml-auto min-h-[40px]"
+              >
+                {language === 'en' ? 'Close' : 'Tutup'}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   // Default Card Mode
-  return receiptContent;
+  return (
+    <div className="w-full space-y-3">
+      {receiptContent}
+      {showActions && (
+        <div className="no-print p-3 sm:p-4 bg-black/40 border border-white/10 rounded-2xl flex flex-wrap items-center justify-center sm:justify-between gap-2">
+          {renderActionButtons()}
+        </div>
+      )}
+    </div>
+  );
 }
