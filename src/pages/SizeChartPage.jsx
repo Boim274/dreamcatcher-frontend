@@ -5,102 +5,76 @@ import Footer from '../components/common/Footer';
 import ScrollToTop from '../components/common/ScrollToTop';
 import ScrollReveal from '../components/ui/ScrollReveal';
 import Icon from '../components/ui/Icon';
-import { WA_URL } from '../constants/whatsapp';
+import { getWhatsAppUrl } from '../constants/whatsapp';
 import { Ruler, Sparkles, CheckCircle2, ChevronRight, HelpCircle, ArrowRight } from 'lucide-react';
 import { useLanguageStore } from '../store/languageStore';
 import { useThemeStore } from '../store/themeStore';
 
 const getSizeCategories = (language = 'id') => [
   {
-    id: 'regular',
-    name: language === 'en' ? 'Regular T-Shirt' : 'Kaos Regular',
-    desc: 'Cotton Combed 30s & 24s Premium',
+    id: 'short_sleeve',
+    name: language === 'en' ? 'Short Sleeve T-Shirt' : 'Kaos Lengan Pendek',
+    badge: language === 'en' ? 'Adult' : 'Dewasa',
+    desc: language === 'en' ? '100% Cotton Combed 24s/30s Distro Standard' : 'Katun Combed 30s & 24s Premium Standar Distro',
     headers: language === 'en'
-      ? ['Size', 'Chest Width', 'Length', 'Shoulder Width', 'Sleeve Length']
-      : ['Ukuran', 'Lingkar Dada', 'Panjang Baju', 'Lebar Bahu', 'Panjang Lengan'],
+      ? ['Size', 'Chest Width', 'Chest Circ.', 'Body Length', 'Sleeve Length']
+      : ['Ukuran', 'Lebar Dada', 'Lingkar Dada', 'Panjang Baju', 'Panjang Lengan'],
     data: [
-      { size: 'S', chest: '94', length: '68', shoulder: '44', sleeve: '20' },
-      { size: 'M', chest: '98', length: '70', shoulder: '46', sleeve: '21' },
-      { size: 'L', chest: '104', length: '72', shoulder: '48', sleeve: '22' },
-      { size: 'XL', chest: '110', length: '74', shoulder: '50', sleeve: '23' },
-      { size: 'XXL', chest: '116', length: '76', shoulder: '52', sleeve: '24' },
-      { size: '3XL', chest: '122', length: '78', shoulder: '54', sleeve: '25' },
-      { size: '4XL', chest: '128', length: '80', shoulder: '56', sleeve: '26' },
+      { size: 'S', width: '47', chest: '94', length: '68', sleeve: '21' },
+      { size: 'M', width: '50', chest: '100', length: '70', sleeve: '22' },
+      { size: 'L', width: '53', chest: '106', length: '72', sleeve: '23' },
+      { size: 'XL', width: '56', chest: '112', length: '74', sleeve: '24' },
+      { size: 'XXL', width: '59', chest: '118', length: '76', sleeve: '25' },
+      { size: '3XL', width: '62', chest: '124', length: '78', sleeve: '26' },
     ],
   },
   {
-    id: 'oversize',
-    name: language === 'en' ? 'Oversize T-Shirt' : 'Kaos Oversize',
-    desc: 'Heavyweight Cotton 20s Drop Shoulder',
+    id: 'long_sleeve',
+    name: language === 'en' ? 'Long Sleeve T-Shirt' : 'Kaos Lengan Panjang',
+    badge: language === 'en' ? 'Adult' : 'Dewasa',
+    desc: language === 'en' ? '100% Cotton Combed 24s/30s Long Sleeve Distro' : 'Katun Combed 30s & 24s Premium Lengan Panjang',
     headers: language === 'en'
-      ? ['Size', 'Chest Width', 'Length', 'Shoulder Width', 'Sleeve Length']
-      : ['Ukuran', 'Lingkar Dada', 'Panjang Baju', 'Lebar Bahu', 'Panjang Lengan'],
+      ? ['Size', 'Chest Width', 'Chest Circ.', 'Body Length', 'Sleeve Length']
+      : ['Ukuran', 'Lebar Dada', 'Lingkar Dada', 'Panjang Baju', 'Panjang Lengan'],
     data: [
-      { size: 'S', chest: '106', length: '70', shoulder: '52', sleeve: '24' },
-      { size: 'M', chest: '112', length: '73', shoulder: '55', sleeve: '25' },
-      { size: 'L', chest: '118', length: '75', shoulder: '58', sleeve: '26' },
-      { size: 'XL', chest: '124', length: '78', shoulder: '61', sleeve: '27' },
-      { size: 'XXL', chest: '130', length: '80', shoulder: '64', sleeve: '28' },
-    ],
-  },
-  {
-    id: 'polo',
-    name: language === 'en' ? 'Polo Shirt' : 'Polo Shirt',
-    desc: 'Lacoste Pique Cotton CVC',
-    headers: language === 'en'
-      ? ['Size', 'Chest Width', 'Length', 'Shoulder Width', 'Sleeve Length']
-      : ['Ukuran', 'Lingkar Dada', 'Panjang Baju', 'Lebar Bahu', 'Panjang Lengan'],
-    data: [
-      { size: 'S', chest: '96', length: '68', shoulder: '43', sleeve: '21' },
-      { size: 'M', chest: '100', length: '70', shoulder: '45', sleeve: '22' },
-      { size: 'L', chest: '106', length: '72', shoulder: '47', sleeve: '23' },
-      { size: 'XL', chest: '112', length: '74', shoulder: '49', sleeve: '24' },
-      { size: 'XXL', chest: '118', length: '76', shoulder: '51', sleeve: '25' },
-    ],
-  },
-  {
-    id: 'hoodie',
-    name: language === 'en' ? 'Hoodie & Sweater' : 'Hoodie & Sweater',
-    desc: 'Fleece Cotton 280-330 GSM',
-    headers: language === 'en'
-      ? ['Size', 'Chest Width', 'Length', 'Shoulder Width', 'Sleeve Length']
-      : ['Ukuran', 'Lingkar Dada', 'Panjang Baju', 'Lebar Bahu', 'Panjang Lengan'],
-    data: [
-      { size: 'M', chest: '108', length: '68', shoulder: '50', sleeve: '60' },
-      { size: 'L', chest: '114', length: '71', shoulder: '52', sleeve: '62' },
-      { size: 'XL', chest: '120', length: '74', shoulder: '54', sleeve: '64' },
-      { size: 'XXL', chest: '126', length: '77', shoulder: '56', sleeve: '66' },
+      { size: 'S', width: '47', chest: '94', length: '68', sleeve: '58' },
+      { size: 'M', width: '50', chest: '100', length: '70', sleeve: '60' },
+      { size: 'L', width: '53', chest: '106', length: '72', sleeve: '62' },
+      { size: 'XL', width: '56', chest: '112', length: '74', sleeve: '64' },
+      { size: 'XXL', width: '59', chest: '118', length: '76', sleeve: '66' },
+      { size: '3XL', width: '62', chest: '124', length: '78', sleeve: '68' },
     ],
   },
   {
     id: 'kids',
     name: language === 'en' ? 'Kids T-Shirt' : 'Kaos Anak',
+    badge: language === 'en' ? 'Children' : 'Anak-anak',
     desc: language === 'en' ? 'Combed 30s Soft & Safe for Sensitive Skin' : 'Combed 30s Lembut & Aman untuk Kulit Sensitif',
     headers: language === 'en'
-      ? ['Size', 'Est. Age', 'Chest Width', 'Length', 'Shoulder Width']
-      : ['Ukuran', 'Estimasi Umur', 'Lingkar Dada', 'Panjang Baju', 'Lebar Bahu'],
+      ? ['Size', 'Est. Age', 'Chest Width', 'Chest Circ.', 'Body Length']
+      : ['Ukuran', 'Estimasi Umur', 'Lebar Dada', 'Lingkar Dada', 'Panjang Baju'],
     data: [
-      { size: 'XS', age: language === 'en' ? '1 - 2 Years' : '1 - 2 Tahun', chest: '62', length: '40', shoulder: '26' },
-      { size: 'S', age: language === 'en' ? '3 - 4 Years' : '3 - 4 Tahun', chest: '68', length: '44', shoulder: '28' },
-      { size: 'M', age: language === 'en' ? '5 - 6 Years' : '5 - 6 Tahun', chest: '74', length: '48', shoulder: '31' },
-      { size: 'L', age: language === 'en' ? '7 - 8 Years' : '7 - 8 Tahun', chest: '80', length: '53', shoulder: '34' },
-      { size: 'XL', age: language === 'en' ? '9 - 10 Years' : '9 - 10 Tahun', chest: '86', length: '57', shoulder: '37' },
+      { size: 'XS', age: language === 'en' ? '1 - 2 Years' : '1 - 2 Tahun', width: '31', chest: '62', length: '40' },
+      { size: 'S', age: language === 'en' ? '3 - 4 Years' : '3 - 4 Tahun', width: '34', chest: '68', length: '44' },
+      { size: 'M', age: language === 'en' ? '5 - 6 Years' : '5 - 6 Tahun', width: '37', chest: '74', length: '48' },
+      { size: 'L', age: language === 'en' ? '7 - 8 Years' : '7 - 8 Tahun', width: '40', chest: '80', length: '53' },
+      { size: 'XL', age: language === 'en' ? '9 - 10 Years' : '9 - 10 Tahun', width: '43', chest: '86', length: '57' },
     ],
   },
 ];
 
 const getMeasureGuide = (language = 'id') => [
-  { label: language === 'en' ? 'Chest Width' : 'Lingkar Dada', desc: language === 'en' ? 'Measure around the fullest part of chest, directly under armpits' : 'Ukur sekeliling bagian dada terlebar, tepat di bawah ketiak', icon: 'maximize' },
-  { label: language === 'en' ? 'Body Length' : 'Panjang Baju', desc: language === 'en' ? 'Measure from highest shoulder point (beside collar) straight down to bottom hem' : 'Ukur dari titik tertinggi bahu (samping kerah) lurus ke keliman bawah', icon: 'arrow-down' },
-  { label: language === 'en' ? 'Shoulder Width' : 'Lebar Bahu', desc: language === 'en' ? 'Measure from tip of left shoulder bone straight across to right shoulder bone' : 'Ukur dari ujung tulang bahu kiri lurus ke ujung tulang bahu kanan', icon: 'arrow-left' },
-  { label: language === 'en' ? 'Sleeve Length' : 'Panjang Lengan', desc: language === 'en' ? 'Measure from top shoulder seam down to sleeve wrist cuff' : 'Ukur dari puncak sambungan bahu hingga ujung ban pergelangan lengan', icon: 'arrow-right' },
+  { label: language === 'en' ? 'Chest Width' : 'Lebar Dada', desc: language === 'en' ? 'Measure straight across chest from armpit to armpit on a flat surface' : 'Ukur lurus mendatar dari jahitan ketiak kiri ke ketiak kanan baju', icon: 'maximize' },
+  { label: language === 'en' ? 'Chest Circumference' : 'Lingkar Dada', desc: language === 'en' ? 'Measure around the fullest part of chest (double the chest width)' : 'Ukur keliling dada terlebar atau dua kali ukuran lebar dada', icon: 'circle' },
+  { label: language === 'en' ? 'Body Length' : 'Panjang Baju', desc: language === 'en' ? 'Measure from highest shoulder point (beside collar) straight down to hem' : 'Ukur dari titik bahu tertinggi (samping kerah) lurus ke keliman bawah', icon: 'arrow-down' },
+  { label: language === 'en' ? 'Sleeve Length' : 'Panjang Lengan', desc: language === 'en' ? 'Measure from shoulder seam down to sleeve cuff (short or long sleeve)' : 'Ukur dari jahitan pundak sampai ujung lengan (pendek/panjang)', icon: 'arrow-right' },
 ];
 
 export default function SizeChartPage() {
   const { language } = useLanguageStore();
   const sizeCategories = getSizeCategories(language);
   const measureGuide = getMeasureGuide(language);
-  const [activeCategory, setActiveCategory] = useState('regular');
+  const [activeCategory, setActiveCategory] = useState('short_sleeve');
   
   // Interactive Size Recommender State
   const [height, setHeight] = useState('');
@@ -114,18 +88,17 @@ export default function SizeChartPage() {
     const w = parseFloat(weight);
     if (!h || !w) return;
 
-    // BMI calculation & height heuristics
+    // BMI calculation & height heuristics for adult t-shirts
     let base = 'M';
     if (w < 52 && h < 165) base = 'S';
     else if (w <= 62 && h <= 170) base = 'M';
     else if (w <= 73 && h <= 176) base = 'L';
     else if (w <= 85 && h <= 182) base = 'XL';
     else if (w <= 98) base = 'XXL';
-    else if (w <= 110) base = '3XL';
-    else base = '4XL';
+    else base = '3XL';
 
     // Adjust based on fit preference
-    const sizes = ['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
+    const sizes = ['S', 'M', 'L', 'XL', 'XXL', '3XL'];
     let idx = sizes.indexOf(base);
     if (fitPreference === 'loose' && idx < sizes.length - 1) {
       idx += 1;
@@ -152,21 +125,24 @@ export default function SizeChartPage() {
 
       <Navbar />
 
-      <main className="flex-1 py-12 sm:py-16 relative z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 py-10 sm:py-16 relative z-10">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
 
           {/* Header */}
-          <div className="text-center mb-10 sm:mb-14 relative">
+          <div className="text-center mb-8 sm:mb-14 relative">
             <ScrollReveal>
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-[11px] font-bold tracking-[2px] uppercase mb-4 shadow-inner">
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                 {language === 'en' ? 'Precision Garment & Screen Printing Standards' : 'Standar Presisi Sablon & Konveksi'}
               </div>
-              <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl text-white tracking-wide">
-                {language === 'en' ? 'SIZE ' : 'PANDUAN '}<span className="text-gradient">{language === 'en' ? 'GUIDE' : 'UKURAN'}</span>
+              <h1 className="font-heading text-3xl sm:text-5xl lg:text-6xl tracking-wide">
+                <span className={isLight ? 'text-slate-900' : 'text-white'}>
+                  {language === 'en' ? 'SIZE ' : 'PANDUAN '}
+                </span>
+                <span className="text-gradient">{language === 'en' ? 'GUIDE' : 'UKURAN'}</span>
               </h1>
-              <div className="divider mx-auto my-4" />
-              <p className="text-gray-400 text-xs sm:text-sm max-w-lg mx-auto leading-relaxed">
+              <div className="divider mx-auto my-3 sm:my-4" />
+              <p className={`text-xs sm:text-sm max-w-lg mx-auto leading-relaxed ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
                 {language === 'en'
                   ? 'Accurate standard garment tolerance (±1-2 cm) for your utmost wearing comfort'
                   : 'Toleransi akurat standar konveksi Indonesia (±1-2 cm) untuk kenyamanan pakaian terbaik saat Anda kenakan'}
@@ -177,49 +153,105 @@ export default function SizeChartPage() {
           {/* Category Tabs */}
           <ScrollReveal direction="up" delay={100}>
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8">
-              {sizeCategories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`px-4 sm:px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center gap-2 border ${
-                    activeCategory === cat.id
-                      ? 'bg-primary text-white border-primary shadow-lg shadow-primary/25 scale-105'
-                      : 'bg-white/[0.03] text-gray-300 border-white/10 hover:border-white/20 hover:bg-white/[0.06]'
-                  }`}
-                >
-                  <Ruler size={14} className={activeCategory === cat.id ? 'text-white' : 'text-primary'} />
-                  {cat.name}
-                </button>
-              ))}
+              {sizeCategories.map((cat) => {
+                const isActive = activeCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveCategory(cat.id)}
+                    className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all duration-300 flex items-center gap-2 border shadow-sm ${
+                      isActive
+                        ? 'bg-primary text-white border-primary shadow-lg shadow-primary/30 scale-[1.02]'
+                        : isLight
+                          ? 'bg-white text-slate-700 border-slate-200 hover:border-primary/40 hover:bg-slate-50'
+                          : 'bg-white/[0.04] text-gray-300 border-white/10 hover:border-white/20 hover:bg-white/[0.08]'
+                    }`}
+                  >
+                    <Ruler size={14} className={isActive ? 'text-white' : 'text-primary'} />
+                    <span>{cat.name}</span>
+                    <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
+                      isActive
+                        ? 'bg-white/20 text-white'
+                        : isLight
+                          ? 'bg-slate-100 text-slate-500'
+                          : 'bg-white/10 text-gray-400'
+                    }`}>
+                      {cat.badge}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </ScrollReveal>
 
           {/* Size Table Card */}
           <ScrollReveal direction="up" delay={150}>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden mb-12 backdrop-blur-xl shadow-2xl">
-              <div className="p-6 sm:p-7 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/[0.01]">
+            <div className={`rounded-2xl sm:rounded-3xl border overflow-hidden mb-12 backdrop-blur-xl shadow-2xl transition-colors ${
+              isLight ? 'bg-white border-slate-200 shadow-slate-200/50' : 'bg-white/[0.02] border-white/10'
+            }`}>
+              {/* Card Header */}
+              <div className={`p-4 sm:p-7 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                isLight ? 'bg-slate-50/80 border-slate-200' : 'bg-white/[0.01] border-white/10'
+              }`}>
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="w-2.5 h-2.5 rounded-full bg-primary" />
-                    {language === 'en' ? 'Size Chart: ' : 'Tabel Ukuran: '}{currentCategoryData.name}
-                  </h2>
-                  <p className="text-gray-400 text-xs mt-1">{currentCategoryData.desc} • {language === 'en' ? 'In centimeters (cm)' : 'Satuan centimeter (cm)'}</p>
+                    <h2 className={`text-base sm:text-xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      {language === 'en' ? 'Size Chart: ' : 'Tabel Ukuran: '}{currentCategoryData.name}
+                    </h2>
+                    <span className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+                      {currentCategoryData.badge}
+                    </span>
+                  </div>
+                  <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
+                    {currentCategoryData.desc} • {language === 'en' ? 'All measurements in centimeters (cm)' : 'Semua ukuran dalam centimeter (cm)'}
+                  </p>
                 </div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 text-xs self-start sm:self-auto">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs self-start sm:self-auto font-medium ${
+                  isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                }`}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   {language === 'en' ? 'Sewing Tolerance ±1-2 cm' : 'Toleransi Jahit ±1-2 cm'}
                 </span>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              {/* Mobile Swipe Hint Banner - prevents cutoff confusion on mobile */}
+              <div className={`sm:hidden flex items-center justify-between px-3.5 py-2 border-b text-xs ${
+                isLight ? 'bg-amber-50/90 border-amber-200/60 text-amber-900' : 'bg-primary/10 border-white/10 text-primary-200'
+              }`}>
+                <span className="flex items-center gap-1.5 font-medium">
+                  <svg className="w-3.5 h-3.5 text-primary animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8L22 12L18 16" />
+                    <path d="M6 16L2 12L6 8" />
+                    <path d="M2 12H22" />
+                  </svg>
+                  <span>{language === 'en' ? 'Swipe sideways to view all measurements' : 'Geser ke samping untuk lihat ukuran lengkap'}</span>
+                </span>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                  isLight ? 'bg-amber-200 text-amber-950' : 'bg-primary/30 text-white'
+                }`}>
+                  {currentCategoryData.data.length} {language === 'en' ? 'Sizes' : 'Ukuran'}
+                </span>
+              </div>
+
+              {/* Responsive Table with horizontal scroll & sticky first column */}
+              <div className="overflow-x-auto relative w-full scrollbar-thin">
+                <table className="w-full text-xs sm:text-sm min-w-[500px] sm:min-w-full border-collapse">
                   <thead>
-                    <tr className="bg-white/[0.04] border-b border-white/10 text-left">
+                    <tr className={`border-b text-center ${
+                      isLight ? 'bg-slate-100/80 border-slate-200 text-slate-700' : 'bg-white/[0.04] border-white/10 text-gray-300'
+                    }`}>
                       {currentCategoryData.headers.map((h, i) => (
                         <th
                           key={i}
-                          className={`p-4 font-bold text-xs tracking-wider uppercase ${
-                            i === 0 ? 'text-center text-primary' : 'text-center text-gray-300'
+                          className={`py-3 px-3 sm:py-3.5 sm:px-4 font-bold text-[11px] sm:text-xs tracking-wider uppercase whitespace-nowrap text-center ${
+                            i === 0
+                              ? `sticky left-0 z-20 ${
+                                  isLight
+                                    ? 'bg-slate-100 border-r border-slate-200 text-primary shadow-[2px_0_5px_rgba(0,0,0,0.04)]'
+                                    : 'bg-[#191120] border-r border-white/10 text-primary shadow-[2px_0_8px_rgba(0,0,0,0.3)]'
+                                }`
+                              : ''
                           }`}
                         >
                           {h}
@@ -228,33 +260,105 @@ export default function SizeChartPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {currentCategoryData.data.map((row, i) => (
-                      <tr
-                        key={i}
-                        className={`border-b border-white/5 last:border-0 hover:bg-primary/5 transition-colors ${
-                          calculatedSize === row.size ? 'bg-primary/10 border-primary/30' : ''
-                        }`}
-                      >
-                        <td className="p-4 text-center">
-                          <span
-                            className={`inline-flex items-center justify-center font-bold px-3.5 py-1 rounded-xl text-sm transition-transform ${
-                              calculatedSize === row.size
-                                ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-110 ring-2 ring-primary/50'
-                                : 'bg-white/10 text-white shadow-sm'
-                            }`}
-                          >
-                            {row.size}
-                          </span>
-                        </td>
-                        {row.age && <td className="p-4 text-center text-gray-300 font-medium text-xs">{row.age}</td>}
-                        <td className="p-4 text-center text-white font-medium">{row.chest} cm</td>
-                        <td className="p-4 text-center text-white font-medium">{row.length} cm</td>
-                        <td className="p-4 text-center text-white font-medium">{row.shoulder} cm</td>
-                        {row.sleeve && <td className="p-4 text-center text-white font-medium">{row.sleeve} cm</td>}
-                      </tr>
-                    ))}
+                    {currentCategoryData.data.map((row, i) => {
+                      const isMatch = calculatedSize === row.size;
+                      return (
+                        <tr
+                          key={i}
+                          className={`border-b transition-colors ${
+                            isLight ? 'border-slate-100 hover:bg-slate-50' : 'border-white/5 hover:bg-primary/5'
+                          } ${
+                            isMatch ? (isLight ? 'bg-primary/10 border-primary/30' : 'bg-primary/15 border-primary/40') : ''
+                          }`}
+                        >
+                          {/* Sticky First Column for Size Badge */}
+                          <td className={`py-3 px-3 sm:py-3.5 sm:px-4 text-center sticky left-0 z-10 whitespace-nowrap ${
+                            isLight
+                              ? 'bg-white border-r border-slate-200 shadow-[2px_0_5px_rgba(0,0,0,0.04)]'
+                              : 'bg-[#150d1a] border-r border-white/10 shadow-[2px_0_8px_rgba(0,0,0,0.3)]'
+                          } ${isMatch ? (isLight ? '!bg-primary/10' : '!bg-[#221028]') : ''}`}>
+                            <span
+                              className={`inline-flex items-center justify-center font-bold px-3 py-1 rounded-xl text-xs sm:text-sm min-w-[42px] transition-transform ${
+                                isMatch
+                                  ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-105 ring-2 ring-primary/50'
+                                  : isLight
+                                    ? 'bg-slate-100 text-slate-900 border border-slate-200'
+                                    : 'bg-white/10 text-white shadow-sm'
+                              }`}
+                            >
+                              {row.size}
+                            </span>
+                          </td>
+
+                          {/* Estimasi Umur (Khusus Kaos Anak) */}
+                          {row.age && (
+                            <td className={`py-3 px-3 sm:py-3.5 sm:px-4 text-center text-xs font-semibold whitespace-nowrap ${
+                              isLight ? 'text-slate-600' : 'text-gray-300'
+                            }`}>
+                              <span className={`px-2.5 py-1 rounded-lg border inline-block ${
+                                isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-white/5 border-white/10 text-gray-200'
+                              }`}>
+                                {row.age}
+                              </span>
+                            </td>
+                          )}
+
+                          {/* Lebar Dada */}
+                          {row.width && (
+                            <td className={`py-3 px-3 sm:py-3.5 sm:px-4 text-center whitespace-nowrap font-medium ${
+                              isLight ? 'text-slate-800' : 'text-white'
+                            }`}>
+                              <span className="font-semibold">{row.width}</span> <span className={`text-[11px] ${isLight ? 'text-slate-400' : 'text-gray-400'}`}>cm</span>
+                            </td>
+                          )}
+
+                          {/* Lingkar Dada */}
+                          {row.chest && (
+                            <td className={`py-3 px-3 sm:py-3.5 sm:px-4 text-center whitespace-nowrap font-medium ${
+                              isLight ? 'text-slate-800' : 'text-white'
+                            }`}>
+                              <span className="font-semibold text-primary">{row.chest}</span> <span className={`text-[11px] ${isLight ? 'text-slate-400' : 'text-gray-400'}`}>cm</span>
+                            </td>
+                          )}
+
+                          {/* Panjang Baju */}
+                          {row.length && (
+                            <td className={`py-3 px-3 sm:py-3.5 sm:px-4 text-center whitespace-nowrap font-medium ${
+                              isLight ? 'text-slate-800' : 'text-white'
+                            }`}>
+                              <span className="font-semibold">{row.length}</span> <span className={`text-[11px] ${isLight ? 'text-slate-400' : 'text-gray-400'}`}>cm</span>
+                            </td>
+                          )}
+
+                          {/* Panjang Lengan (Khusus Dewasa) */}
+                          {row.sleeve && (
+                            <td className={`py-3 px-3 sm:py-3.5 sm:px-4 text-center whitespace-nowrap font-medium ${
+                              isLight ? 'text-slate-800' : 'text-white'
+                            }`}>
+                              <span className="font-semibold">{row.sleeve}</span> <span className={`text-[11px] ${isLight ? 'text-slate-400' : 'text-gray-400'}`}>cm</span>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Table Footer info */}
+              <div className={`p-4 sm:p-5 border-t text-xs flex flex-col sm:flex-row items-center justify-between gap-3 ${
+                isLight ? 'bg-slate-50/60 border-slate-200 text-slate-500' : 'bg-white/[0.01] border-white/10 text-gray-400'
+              }`}>
+                <span className="flex items-center gap-1.5 text-center sm:text-left">
+                  <CheckCircle2 size={14} className="text-primary shrink-0" />
+                  <span>{language === 'en' ? 'Tip: Measure a t-shirt you already own that fits well for the best comparison.' : 'Tips: Ukur kaos ternyaman yang Anda miliki saat ini untuk perbandingan ukuran paling tepat.'}</span>
+                </span>
+                <Link
+                  to="/pesan"
+                  className="inline-flex items-center gap-1.5 text-primary hover:text-primary-focus font-bold text-xs uppercase tracking-wider shrink-0 transition-colors"
+                >
+                  {language === 'en' ? 'Start Order Now' : 'Mulai Pesan Sekarang'} <ChevronRight size={14} />
+                </Link>
               </div>
             </div>
           </ScrollReveal>
@@ -411,7 +515,7 @@ export default function SizeChartPage() {
                   </p>
                 </div>
                 <a
-                  href={WA_URL}
+                  href={getWhatsAppUrl('sizeChart')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-6 w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider text-center transition-colors shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2"

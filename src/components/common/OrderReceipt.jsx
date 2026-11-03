@@ -10,6 +10,7 @@ import { getImageUrl } from '../../utils/getImageUrl';
 import { useToast } from '../ui/Toast';
 import { getCleanConfigItems, formatConfigSummary, generateReceiptPlainText } from '../../utils/orderReceiptHelper';
 import { useThemeStore } from '../../store/themeStore';
+import { WA_URL } from '../../constants/whatsapp';
 
 import { RECEIPT_FONTS_BASE64 } from '../../utils/receiptFontsBase64';
 
@@ -350,7 +351,7 @@ export default function OrderReceipt({
 
         const waUrl = customerPhone && customerPhone !== '-' 
           ? `https://wa.me/?text=${waText}`
-          : `https://wa.me/6281234567890?text=${waText}`;
+          : `${WA_URL}?text=${waText}`;
 
         window.open(waUrl, '_blank');
         toast.info(language === 'en'

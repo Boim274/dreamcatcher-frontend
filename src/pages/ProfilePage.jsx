@@ -11,7 +11,7 @@ import { useLanguageStore } from '../store/languageStore';
 import { useThemeStore } from '../store/themeStore';
 import { useToast } from '../components/ui/Toast';
 import PhoneCountryInput from '../components/common/PhoneCountryInput';
-import { WA_URL } from '../constants/whatsapp';
+import { getWhatsAppUrl } from '../constants/whatsapp';
 import api from '../services/api';
 import UserAvatar from '../components/common/UserAvatar';
 import {
@@ -999,7 +999,7 @@ export default function ProfilePage() {
                       </Link>
 
                       <a
-                        href={WA_URL}
+                        href={getWhatsAppUrl('general')}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all group no-underline"

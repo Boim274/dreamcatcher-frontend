@@ -108,7 +108,7 @@ function ToastItem({ toast, onRemove }) {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onClick={handleClose}
-      className={`pointer-events-auto group relative flex items-start gap-3.5 p-3.5 sm:p-4 rounded-2xl backdrop-blur-2xl border ${config.cardBorder} cursor-pointer overflow-hidden transition-all duration-300 min-w-[300px] sm:min-w-[340px] max-w-[420px] ${
+      className={`pointer-events-auto group relative flex items-start gap-3.5 p-3.5 sm:p-4 rounded-2xl backdrop-blur-2xl border ${config.cardBorder} cursor-pointer overflow-hidden transition-all duration-300 w-full sm:w-auto min-w-0 sm:min-w-[340px] max-w-[420px] ${
         isLight ? 'bg-white/95 shadow-xl shadow-slate-900/10' : 'bg-[#180e20]/95 shadow-2xl shadow-black/80'
       } ${
         isClosing

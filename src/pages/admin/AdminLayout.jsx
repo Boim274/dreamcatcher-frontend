@@ -237,7 +237,11 @@ export default function AdminLayout() {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -275,8 +279,8 @@ export default function AdminLayout() {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
-      {/* Sidebar */}
-      <aside className={`fixed left-0 top-0 h-full ${sidebarWidth} ${theme === 'light' ? 'bg-white text-slate-800 border-r border-slate-200 shadow-xl' : 'bg-[#120a16]/95 text-white border-r border-white/10 shadow-2xl backdrop-blur-2xl'} z-50 transition-all duration-300 flex flex-col ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      {/* Sidebar (Desktop & Mobile Drawer) */}
+      <aside className={`fixed left-0 top-0 h-full ${mobileOpen ? 'w-[280px] sm:w-80' : sidebarWidth} ${theme === 'light' ? 'bg-white text-slate-800 border-r border-slate-200 shadow-xl' : 'bg-[#120a16]/95 text-white border-r border-white/10 shadow-2xl backdrop-blur-2xl'} z-50 transition-all duration-300 flex flex-col ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         {/* Logo & Workspace Header */}
         <div className={`p-4 ${theme === 'light' ? 'border-b border-slate-200' : 'border-b border-white/10'} ${sidebarCollapsed ? 'flex justify-center' : ''}`}>
           <div className="flex items-center gap-2.5">
@@ -482,148 +486,165 @@ export default function AdminLayout() {
             </button>
 
             {showNotifs && (
-              <div className={`absolute right-0 top-full mt-2.5 w-80 sm:w-96 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${
-                theme === 'light'
-                  ? 'bg-white/98 border border-slate-200 text-slate-800 shadow-2xl shadow-slate-400/25'
-                  : 'bg-[#160d1c]/98 border border-white/10 text-white shadow-2xl shadow-black/90 ring-1 ring-white/10'
-              } backdrop-blur-2xl`}>
-                {/* Header */}
-                <div className={`p-4 border-b ${theme === 'light' ? 'border-slate-200 bg-slate-50/90' : 'border-white/10 bg-gradient-to-br from-white/[0.04] to-transparent'}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <h4 className={`font-heading text-[16px] font-bold tracking-wide ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Notifikasi Masuk</h4>
-                      {totalNotifs > 0 && (
-                        <span className="px-2 py-0.5 text-[10px] font-bold bg-primary/20 text-primary rounded-full border border-primary/30 animate-pulse">
-                          {totalNotifs} Baru
-                        </span>
-                      )}
+              <>
+                {/* Mobile Backdrop */}
+                <div
+                  className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 sm:hidden"
+                  onClick={() => setShowNotifs(false)}
+                />
+                <div className={`fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-16 sm:top-full mt-2 sm:mt-2.5 sm:w-96 rounded-2xl overflow-hidden z-50 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 ${
+                  theme === 'light'
+                    ? 'bg-white/98 border border-slate-200 text-slate-800 shadow-slate-400/25'
+                    : 'bg-[#160d1c]/98 border border-white/10 text-white shadow-black/90 ring-1 ring-white/10'
+                } backdrop-blur-2xl`}>
+                  {/* Header */}
+                  <div className={`p-4 border-b ${theme === 'light' ? 'border-slate-200 bg-slate-50/90' : 'border-white/10 bg-gradient-to-br from-white/[0.04] to-transparent'}`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <h4 className={`font-heading text-[16px] font-bold tracking-wide ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Notifikasi Masuk</h4>
+                        {totalNotifs > 0 && (
+                          <span className="px-2 py-0.5 text-[10px] font-bold bg-primary/20 text-primary rounded-full border border-primary/30 animate-pulse">
+                            {totalNotifs} Baru
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowNotifs(false)}
+                        className={`sm:hidden p-1 rounded-lg transition-colors cursor-pointer ${
+                          theme === 'light' ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-200' : 'text-zinc-400 hover:text-white hover:bg-white/10'
+                        }`}
+                        title="Tutup Notifikasi"
+                      >
+                        <X size={17} />
+                      </button>
+                    </div>
+
+                    {/* Filter Tabs */}
+                    <div className={`flex items-center gap-1 p-1 rounded-xl border text-[11px] ${
+                      theme === 'light' ? 'bg-slate-100 border-slate-200' : 'bg-[#120a16] border-white/10'
+                    }`}>
+                      <button
+                        onClick={() => setNotifFilter('all')}
+                        className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition-all cursor-pointer ${
+                          notifFilter === 'all'
+                            ? 'bg-primary text-white shadow-sm'
+                            : theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
+                        }`}
+                      >
+                        Semua ({totalNotifs})
+                      </button>
+                      <button
+                        onClick={() => setNotifFilter('orders')}
+                        className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition-all cursor-pointer ${
+                          notifFilter === 'orders'
+                            ? 'bg-primary text-white shadow-sm'
+                            : theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
+                        }`}
+                      >
+                        Pesanan ({pendingOrders + cancelRequests})
+                      </button>
+                      <button
+                        onClick={() => setNotifFilter('payments')}
+                        className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition-all cursor-pointer ${
+                          notifFilter === 'payments'
+                            ? 'bg-primary text-white shadow-sm'
+                            : theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
+                        }`}
+                      >
+                        Bayar ({pendingPayments})
+                      </button>
                     </div>
                   </div>
 
-                  {/* Filter Tabs */}
-                  <div className={`flex items-center gap-1 p-1 rounded-xl border text-[11px] ${
-                    theme === 'light' ? 'bg-slate-100 border-slate-200' : 'bg-[#120a16] border-white/10'
+                  {/* Items List */}
+                  {filteredNotifs.length > 0 ? (
+                    <div className={`max-h-[60vh] sm:max-h-80 overflow-y-auto divide-y ${theme === 'light' ? 'divide-slate-100' : 'divide-white/5'} custom-scrollbar`}>
+                      {filteredNotifs.map((item) => {
+                        const IconComponent = item.icon;
+                        return (
+                          <Link
+                            key={item.id}
+                            to={item.link}
+                            onClick={() => setShowNotifs(false)}
+                            className={`flex items-start gap-3 p-3.5 transition-colors no-underline group ${
+                              theme === 'light' ? 'hover:bg-slate-50' : 'hover:bg-white/[0.04]'
+                            }`}
+                          >
+                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 border ${
+                              theme === 'light' ? 'border-slate-200' : 'border-white/10'
+                            } ${item.iconColor}`}>
+                              <IconComponent size={15} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1 mb-0.5">
+                                <span className={`font-semibold text-[13px] group-hover:text-primary transition-colors truncate ${
+                                  theme === 'light' ? 'text-slate-900' : 'text-white'
+                                }`}>
+                                  {item.title}
+                                </span>
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider ${item.badgeColor}`}>
+                                  {item.badge}
+                                </span>
+                              </div>
+                              <p className={`text-[12px] leading-snug ${theme === 'light' ? 'text-slate-600' : 'text-zinc-400'}`}>
+                                {item.message}
+                              </p>
+                              <div className={`flex items-center justify-between mt-1 text-[10px] ${theme === 'light' ? 'text-slate-500' : 'text-zinc-500'}`}>
+                                <span className={`font-medium ${theme === 'light' ? 'text-slate-700' : 'text-zinc-300'}`}>{item.detail}</span>
+                                <span>
+                                  {new Date(item.createdAt).toLocaleString('id-ID', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center">
+                      <Bell size={28} className={`mx-auto mb-2 opacity-50 ${theme === 'light' ? 'text-slate-400' : 'text-zinc-600'}`} />
+                      <p className={`text-[13px] font-medium ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Tidak ada notifikasi baru</p>
+                      <p className={`text-[11px] mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-zinc-400'}`}>
+                        {notifFilter === 'orders'
+                          ? 'Semua pesanan sudah diproses'
+                          : notifFilter === 'payments'
+                          ? 'Tidak ada bukti bayar yang menunggu verifikasi'
+                          : 'Semua pesanan dan pembayaran sudah up to date'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <div className={`p-2.5 border-t flex items-center justify-between text-[11px] ${
+                    theme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#120a16] border-white/10 text-zinc-400'
                   }`}>
-                    <button
-                      onClick={() => setNotifFilter('all')}
-                      className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition-all cursor-pointer ${
-                        notifFilter === 'all'
-                          ? 'bg-primary text-white shadow-sm'
-                          : theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
+                    <Link
+                      to="/admin/pesanan"
+                      onClick={() => setShowNotifs(false)}
+                      className={`flex items-center gap-1 transition-colors font-medium px-2 py-1 rounded-lg ${
+                        theme === 'light' ? 'text-slate-600 hover:text-primary' : 'text-zinc-400 hover:text-primary'
                       }`}
                     >
-                      Semua ({totalNotifs})
-                    </button>
-                    <button
-                      onClick={() => setNotifFilter('orders')}
-                      className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition-all cursor-pointer ${
-                        notifFilter === 'orders'
-                          ? 'bg-primary text-white shadow-sm'
-                          : theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
+                      Semua Pesanan <ArrowRight size={12} />
+                    </Link>
+                    <Link
+                      to="/admin/pembayaran"
+                      onClick={() => setShowNotifs(false)}
+                      className={`flex items-center gap-1 transition-colors font-medium px-2 py-1 rounded-lg ${
+                        theme === 'light' ? 'text-slate-600 hover:text-primary' : 'text-zinc-400 hover:text-primary'
                       }`}
                     >
-                      Pesanan ({pendingOrders + cancelRequests})
-                    </button>
-                    <button
-                      onClick={() => setNotifFilter('payments')}
-                      className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition-all cursor-pointer ${
-                        notifFilter === 'payments'
-                          ? 'bg-primary text-white shadow-sm'
-                          : theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
-                      }`}
-                    >
-                      Bayar ({pendingPayments})
-                    </button>
+                      Semua Pembayaran <ArrowRight size={12} />
+                    </Link>
                   </div>
                 </div>
-
-                {/* Items List */}
-                {filteredNotifs.length > 0 ? (
-                  <div className={`max-h-80 overflow-y-auto divide-y ${theme === 'light' ? 'divide-slate-100' : 'divide-white/5'} custom-scrollbar`}>
-                    {filteredNotifs.map((item) => {
-                      const IconComponent = item.icon;
-                      return (
-                        <Link
-                          key={item.id}
-                          to={item.link}
-                          onClick={() => setShowNotifs(false)}
-                          className={`flex items-start gap-3 p-3.5 transition-colors no-underline group ${
-                            theme === 'light' ? 'hover:bg-slate-50' : 'hover:bg-white/[0.04]'
-                          }`}
-                        >
-                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 border ${
-                            theme === 'light' ? 'border-slate-200' : 'border-white/10'
-                          } ${item.iconColor}`}>
-                            <IconComponent size={15} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-1 mb-0.5">
-                              <span className={`font-semibold text-[13px] group-hover:text-primary transition-colors truncate ${
-                                theme === 'light' ? 'text-slate-900' : 'text-white'
-                              }`}>
-                                {item.title}
-                              </span>
-                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase tracking-wider ${item.badgeColor}`}>
-                                {item.badge}
-                              </span>
-                            </div>
-                            <p className={`text-[12px] leading-snug ${theme === 'light' ? 'text-slate-600' : 'text-zinc-400'}`}>
-                              {item.message}
-                            </p>
-                            <div className={`flex items-center justify-between mt-1 text-[10px] ${theme === 'light' ? 'text-slate-500' : 'text-zinc-500'}`}>
-                              <span className={`font-medium ${theme === 'light' ? 'text-slate-700' : 'text-zinc-300'}`}>{item.detail}</span>
-                              <span>
-                                {new Date(item.createdAt).toLocaleString('id-ID', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
-                              </span>
-                            </div>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="p-8 text-center">
-                    <Bell size={28} className={`mx-auto mb-2 opacity-50 ${theme === 'light' ? 'text-slate-400' : 'text-zinc-600'}`} />
-                    <p className={`text-[13px] font-medium ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Tidak ada notifikasi baru</p>
-                    <p className={`text-[11px] mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-zinc-400'}`}>
-                      {notifFilter === 'orders'
-                        ? 'Semua pesanan sudah diproses'
-                        : notifFilter === 'payments'
-                        ? 'Tidak ada bukti bayar yang menunggu verifikasi'
-                        : 'Semua pesanan dan pembayaran sudah up to date'}
-                    </p>
-                  </div>
-                )}
-
-                {/* Footer */}
-                <div className={`p-2.5 border-t flex items-center justify-between text-[11px] ${
-                  theme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#120a16] border-white/10 text-zinc-400'
-                }`}>
-                  <Link
-                    to="/admin/pesanan"
-                    onClick={() => setShowNotifs(false)}
-                    className={`flex items-center gap-1 transition-colors font-medium px-2 py-1 rounded-lg ${
-                      theme === 'light' ? 'text-slate-600 hover:text-primary' : 'text-zinc-400 hover:text-primary'
-                    }`}
-                  >
-                    Semua Pesanan <ArrowRight size={12} />
-                  </Link>
-                  <Link
-                    to="/admin/pembayaran"
-                    onClick={() => setShowNotifs(false)}
-                    className={`flex items-center gap-1 transition-colors font-medium px-2 py-1 rounded-lg ${
-                      theme === 'light' ? 'text-slate-600 hover:text-primary' : 'text-zinc-400 hover:text-primary'
-                    }`}
-                  >
-                    Semua Pembayaran <ArrowRight size={12} />
-                  </Link>
-                </div>
-              </div>
+              </>
             )}
           </div>
 
@@ -643,11 +664,16 @@ export default function AdminLayout() {
             </button>
 
             {showProfileDropdown && (
-              <div className={`absolute right-0 top-full mt-2.5 w-60 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${
-                theme === 'light'
-                  ? 'bg-white/98 border border-slate-200 text-slate-800 shadow-2xl shadow-slate-400/25'
-                  : 'bg-[#160d1c]/98 border border-white/10 text-white shadow-2xl shadow-black/90 ring-1 ring-white/10'
-              } backdrop-blur-2xl`}>
+              <>
+                <div
+                  className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 sm:hidden"
+                  onClick={() => setShowProfileDropdown(false)}
+                />
+                <div className={`absolute right-0 top-full mt-2.5 w-60 max-w-[calc(100vw-24px)] rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${
+                  theme === 'light'
+                    ? 'bg-white/98 border border-slate-200 text-slate-800 shadow-2xl shadow-slate-400/25'
+                    : 'bg-[#160d1c]/98 border border-white/10 text-white shadow-2xl shadow-black/90 ring-1 ring-white/10'
+                } backdrop-blur-2xl`}>
                 {/* Header User Info */}
                 <div className={`p-4 border-b ${theme === 'light' ? 'border-slate-200 bg-slate-50/80' : 'border-white/10 bg-gradient-to-br from-white/[0.04] to-transparent'}`}>
                   <div className="flex items-center gap-3">
@@ -717,17 +743,114 @@ export default function AdminLayout() {
                   </button>
                 </div>
               </div>
-            )}
+            </>
+          )}
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className={`${mainMargin} pt-16 min-h-screen transition-all duration-300 ${theme === 'light' ? 'bg-[#f8fafc] text-slate-800' : 'bg-[#0f0a13] text-white'}`}>
+      <main className={`${mainMargin} pt-16 pb-20 lg:pb-8 min-h-screen transition-all duration-300 ${theme === 'light' ? 'bg-[#f8fafc] text-slate-800' : 'bg-[#0f0a13] text-white'}`}>
         <div className="p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto">
           <Outlet />
         </div>
       </main>
+
+      {/* Mobile Native App Bottom Navigation Bar (Visible on < lg screens) */}
+      <nav
+        aria-label="Navigasi Bawah Mobile"
+        className={`fixed bottom-0 left-0 right-0 h-16 lg:hidden border-t z-40 px-2 flex items-center justify-around transition-all duration-300 shadow-[0_-8px_25px_rgba(0,0,0,0.35)] backdrop-blur-2xl ${
+          theme === 'light'
+            ? 'bg-white/95 border-slate-200 text-slate-700'
+            : 'bg-[#120a16]/95 border-white/10 text-zinc-300'
+        }`}
+      >
+        {/* 1. Dashboard */}
+        <Link
+          to="/admin"
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all no-underline ${
+            location.pathname === '/admin'
+              ? 'text-primary font-bold scale-105'
+              : theme === 'light' ? 'text-slate-500 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
+          }`}
+        >
+          <div className="relative">
+            <LayoutDashboard className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] mt-1 font-medium">Dashboard</span>
+        </Link>
+
+        {/* 2. Pesanan (with Badge) */}
+        <Link
+          to="/admin/pesanan"
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all no-underline relative ${
+            location.pathname.startsWith('/admin/pesanan')
+              ? 'text-primary font-bold scale-105'
+              : theme === 'light' ? 'text-slate-500 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
+          }`}
+        >
+          <div className="relative">
+            <ShoppingBag className="w-5 h-5" />
+            {pendingOrders + cancelRequests > 0 && (
+              <span className="absolute -top-1.5 -right-2.5 bg-primary text-white text-[9px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center animate-pulse shadow-sm shadow-primary/40">
+                {pendingOrders + cancelRequests > 9 ? '9+' : pendingOrders + cancelRequests}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] mt-1 font-medium">Pesanan</span>
+        </Link>
+
+        {/* 3. Pembayaran (with Badge) */}
+        <Link
+          to="/admin/pembayaran"
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all no-underline relative ${
+            location.pathname.startsWith('/admin/pembayaran')
+              ? 'text-primary font-bold scale-105'
+              : theme === 'light' ? 'text-slate-500 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
+          }`}
+        >
+          <div className="relative">
+            <CreditCard className="w-5 h-5" />
+            {pendingPayments > 0 && (
+              <span className="absolute -top-1.5 -right-2.5 bg-amber-500 text-white text-[9px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center animate-pulse shadow-sm shadow-amber-950/40">
+                {pendingPayments > 9 ? '9+' : pendingPayments}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] mt-1 font-medium">Bayar</span>
+        </Link>
+
+        {/* 4. Produk */}
+        <Link
+          to="/admin/produk"
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all no-underline ${
+            location.pathname.startsWith('/admin/produk')
+              ? 'text-primary font-bold scale-105'
+              : theme === 'light' ? 'text-slate-500 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
+          }`}
+        >
+          <div className="relative">
+            <Shirt className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] mt-1 font-medium">Produk</span>
+        </Link>
+
+        {/* 5. Menu / Drawer Trigger */}
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${
+            mobileOpen
+              ? 'text-primary font-bold scale-105'
+              : theme === 'light' ? 'text-slate-500 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
+          }`}
+        >
+          <div className="relative">
+            <Menu className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] mt-1 font-medium">Menu</span>
+        </button>
+      </nav>
 
       {/* Confirm Dialog for Logout */}
       <ConfirmDialog

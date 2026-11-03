@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Star,
   X,
@@ -74,7 +75,9 @@ export default function TestimonialForm({ order, existingTestimonial, onClose, o
 
   const [rating, setRating] = useState(existingTestimonial?.rating || 5);
   const [hoverRating, setHoverRating] = useState(0);
-  const [review, setReview] = useState(existingTestimonial?.review || '');
+  const [review, setReview] = useState(
+    (existingTestimonial?.review || '').replace(/^testimoni\s+update(\s+dari\s+order\s*\d*)?\s*:\s*/i, '')
+  );
   const [saving, setSaving] = useState(false);
   const [selectedTags, setSelectedTags] = useState([]);
 
@@ -118,10 +121,11 @@ export default function TestimonialForm({ order, existingTestimonial, onClose, o
 
     setSaving(true);
     try {
+      const cleanReviewText = review.replace(/^testimoni\s+update(\s+dari\s+order\s*\d*)?\s*:\s*/i, '').trim();
       const payload = {
         order_id: order.id,
         rating,
-        review: review.trim(),
+        review: cleanReviewText,
         image_url: user?.avatar || order?.user?.avatar || existingTestimonial?.image_url || null,
         customer_name: user?.name || order?.customer_name || existingTestimonial?.customer_name,
       };
@@ -148,13 +152,13 @@ export default function TestimonialForm({ order, existingTestimonial, onClose, o
   const customerName = user?.name || order.customer_name || 'Pelanggan Dreamcatcher';
   const customerAvatar = user?.avatar || order?.user?.avatar || existingTestimonial?.image_url;
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-[150] overflow-y-auto p-3 sm:p-6 flex items-center justify-center bg-black/75 backdrop-blur-sm transition-all duration-200 animate-in fade-in"
+      className="fixed inset-0 z-[9999] overflow-y-auto p-3.5 sm:p-6 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-all duration-200 animate-in fade-in"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className={`relative w-full max-w-lg rounded-2xl border transition-all duration-200 animate-in zoom-in-95 shadow-2xl my-auto flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-3.5rem)] overflow-hidden ${
+        className={`relative w-full max-w-lg rounded-2xl sm:rounded-3xl border transition-all duration-200 animate-in zoom-in-95 shadow-2xl my-auto flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-3.5rem)] overflow-hidden ${
           isLight
             ? 'bg-white text-slate-900 border-slate-200 shadow-slate-900/10'
             : 'bg-[#18121c] text-white border-white/10 shadow-black/80'
@@ -399,10 +403,11 @@ export default function TestimonialForm({ order, existingTestimonial, onClose, o
               )}
             </button>
           </div>
-
         </form>
         </div>
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 }

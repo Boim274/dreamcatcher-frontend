@@ -309,10 +309,35 @@ export default function PaymentsPage() {
             ) : (
               <div className={`space-y-4 transition-opacity ${refreshing ? 'opacity-50 pointer-events-none' : ''}`}>
                 {payments.map((payment) => (
-                  <div key={payment.id} className="bg-[#140b19] border border-white/15 rounded-2xl p-5 sm:p-6 shadow-xl hover:border-white/25 transition-all">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                      <div className="flex gap-4">
-                        {payment.payment_proof && (
+                  <div key={payment.id} className="bg-[#140b19] border border-white/15 rounded-2xl p-4 sm:p-6 shadow-xl hover:border-white/25 transition-all flex flex-col gap-4">
+                    {/* Top Row: Customer & Order Meta */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-3 border-b border-white/10">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center font-bold text-sm text-primary shrink-0">
+                          {payment.order?.customer_name?.charAt(0)?.toUpperCase() || 'C'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-base text-white truncate leading-snug">
+                            {payment.order?.customer_name || 'Customer'}
+                          </p>
+                          <p className="text-zinc-400 text-xs">
+                            Kode Order: <span className="font-mono text-primary font-bold">#{payment.order?.order_code}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                        <StatusBadge status={paymentStatusColor(payment.payment_status).badge} />
+                        <span className="text-[11px] text-zinc-400">
+                          {formatDate(payment.created_at)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Middle: Proof Thumbnail & Financial Details */}
+                    <div className="flex flex-col sm:flex-row gap-4 items-start">
+                      {payment.payment_proof && (
+                        <div className="flex sm:flex-col items-center gap-2 w-full sm:w-auto shrink-0">
                           <button
                             type="button"
                             onClick={() => setSelectedProof({
@@ -322,7 +347,8 @@ export default function PaymentsPage() {
                               amount: payment.amount,
                               date: payment.created_at,
                             })}
-                            className="relative group flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl overflow-hidden border border-white/15 hover:border-primary/50 transition-all cursor-pointer w-28 h-28 sm:w-32 sm:h-32"
+                            className="relative group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl overflow-hidden border border-white/15 hover:border-primary/50 transition-all cursor-pointer w-24 h-24 sm:w-28 sm:h-28 shrink-0 bg-black/40"
+                            title="Klik untuk memperbesar bukti transfer"
                           >
                             <OptimizedImage
                               src={payment.payment_proof}
@@ -332,104 +358,121 @@ export default function PaymentsPage() {
                               containerClassName="w-full h-full"
                               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                             />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[11px] font-bold z-10">
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[10px] font-bold z-10">
                               Lihat Bukti
                             </div>
                           </button>
-                        )}
-                        <div className="space-y-1">
-                          <p className="font-semibold text-lg text-white font-heading">
-                            {payment.order?.customer_name || 'Customer'}
-                          </p>
-                          <p className="text-zinc-400 text-xs">Order: <span className="font-mono text-zinc-300 font-bold">{payment.order?.order_code}</span></p>
-                          <p className="font-bold text-xl text-primary font-mono pt-1">{formatRupiah(payment.amount)}</p>
-                          <p className="text-zinc-400 text-xs">
-                            {payment.payment_method.replace('_', ' ').toUpperCase()} —{' '}
-                            <span className="font-semibold text-zinc-300">{paymentTypeLabel[payment.payment_type] || payment.payment_type}</span>
-                          </p>
-                          <p className="text-zinc-500 text-[11px]">{formatDate(payment.created_at)}</p>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedProof({
+                              url: getImageUrl(payment.payment_proof),
+                              orderCode: payment.order?.order_code,
+                              customerName: payment.order?.customer_name,
+                              amount: payment.amount,
+                              date: payment.created_at,
+                            })}
+                            className="sm:hidden flex-1 py-2 px-3 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-zinc-300 hover:text-white text-center cursor-pointer"
+                          >
+                            Buka Bukti Transfer
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="flex-1 min-w-0 space-y-1.5 w-full">
+                        <div className="flex items-baseline justify-between sm:justify-start sm:gap-3">
+                          <span className="text-xs text-zinc-400">Nominal Transfer:</span>
+                          <span className="font-bold text-xl sm:text-2xl text-primary font-mono tracking-tight">
+                            {formatRupiah(payment.amount)}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                          <span className="px-2.5 py-0.5 rounded-lg bg-white/5 border border-white/10 text-xs text-zinc-300 font-medium">
+                            {payment.payment_method?.replace('_', ' ').toUpperCase()}
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-lg bg-primary/10 border border-primary/20 text-xs text-primary font-semibold">
+                            {paymentTypeLabel[payment.payment_type] || payment.payment_type}
+                          </span>
                           {payment.order?.remaining_amount > 0 && (
-                            <p className="text-amber-400 text-xs font-semibold mt-1">
-                              Sisa tagihan: {formatRupiah(payment.order.remaining_amount)}
-                            </p>
+                            <span className="px-2.5 py-0.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 font-semibold">
+                              Sisa Tagihan: {formatRupiah(payment.order.remaining_amount)}
+                            </span>
                           )}
                         </div>
-                      </div>
-
-                      <div className="flex flex-col sm:items-end gap-2">
-                        <StatusBadge status={paymentStatusColor(payment.payment_status).badge} />
-                        <span className="text-[11px] text-zinc-400">
-                          {paymentStatusColor(payment.payment_status).label}
-                        </span>
-
-                        {payment.payment_status === 'pending' && (
-                          <div className="flex flex-wrap sm:flex-nowrap gap-2 mt-4">
-                            {payment.payment_type === 'pelunasan' ? (
-                              <button
-                                onClick={() => handleVerify(payment.id, 'pelunasan', 'Verifikasi Pelunasan')}
-                                disabled={actionLoading === payment.id}
-                                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 shadow-lg shadow-emerald-950/40 transition-all flex items-center gap-1.5 cursor-pointer border-none disabled:opacity-50"
-                              >
-                                {actionLoading === payment.id ? (
-                                  <LoadingSpinner size="sm" />
-                                ) : (
-                                  <>
-                                    <CheckCircle className="w-4 h-4" /> Verifikasi Pelunasan
-                                  </>
-                                )}
-                              </button>
-                            ) : payment.payment_type === 'dp' ? (
-                              <button
-                                onClick={() => handleVerify(payment.id, 'dp', 'Verifikasi DP')}
-                                disabled={actionLoading === payment.id}
-                                className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-[#ff60a8] text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 shadow-lg shadow-primary/30 transition-all flex items-center gap-1.5 cursor-pointer border-none disabled:opacity-50"
-                              >
-                                {actionLoading === payment.id ? (
-                                  <LoadingSpinner size="sm" />
-                                ) : (
-                                  <>
-                                    <Percent className="w-4 h-4" /> Verifikasi DP
-                                  </>
-                                )}
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleVerify(payment.id, 'full', 'Verifikasi (Lunas)')}
-                                disabled={actionLoading === payment.id}
-                                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 shadow-lg shadow-emerald-950/40 transition-all flex items-center gap-1.5 cursor-pointer border-none disabled:opacity-50"
-                              >
-                                {actionLoading === payment.id ? (
-                                  <LoadingSpinner size="sm" />
-                                ) : (
-                                  <>
-                                    <CheckCircle className="w-4 h-4" /> Verifikasi (Lunas)
-                                  </>
-                                )}
-                              </button>
-                            )}
-                            <button
-                              onClick={() => setShowRejectModal(payment.id)}
-                              disabled={actionLoading === payment.id}
-                              className="px-3.5 py-2 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                            >
-                              <XCircle className="w-4 h-4" /> Tolak
-                            </button>
-                          </div>
-                        )}
 
                         {payment.payment_status === 'paid' && payment.verifier && (
-                          <p className="text-zinc-500 text-xs mt-2">Verifikasi oleh: <span className="text-zinc-300 font-semibold">{payment.verifier.name}</span></p>
+                          <p className="text-zinc-500 text-xs pt-1">
+                            Diverifikasi oleh: <span className="text-zinc-300 font-semibold">{payment.verifier.name}</span>
+                          </p>
                         )}
                         {payment.payment_status === 'dp' && payment.verifier && (
-                          <p className="text-zinc-500 text-xs mt-2">Verifikasi DP oleh: <span className="text-zinc-300 font-semibold">{payment.verifier.name}</span></p>
+                          <p className="text-zinc-500 text-xs pt-1">
+                            Verifikasi DP oleh: <span className="text-zinc-300 font-semibold">{payment.verifier.name}</span>
+                          </p>
                         )}
                       </div>
                     </div>
 
                     {payment.notes && (
-                      <div className="mt-4 p-3.5 bg-black/40 border border-white/10 rounded-xl">
-                        <p className="text-zinc-400 text-xs">Catatan:</p>
-                        <p className="font-medium text-white text-xs mt-0.5">{payment.notes}</p>
+                      <div className="p-3 bg-black/40 border border-white/10 rounded-xl text-xs">
+                        <span className="text-zinc-400 font-semibold">Catatan Customer: </span>
+                        <span className="text-white">{payment.notes}</span>
+                      </div>
+                    )}
+
+                    {/* Action Bar (Touch-friendly for mobile & desktop) */}
+                    {payment.payment_status === 'pending' && (
+                      <div className="grid grid-cols-1 sm:flex sm:justify-end gap-2.5 pt-3 border-t border-white/10">
+                        {payment.payment_type === 'pelunasan' ? (
+                          <button
+                            onClick={() => handleVerify(payment.id, 'pelunasan', 'Verifikasi Pelunasan')}
+                            disabled={actionLoading === payment.id}
+                            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 shadow-lg shadow-emerald-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer border-none disabled:opacity-50"
+                          >
+                            {actionLoading === payment.id ? (
+                              <LoadingSpinner size="sm" />
+                            ) : (
+                              <>
+                                <CheckCircle className="w-4 h-4" /> Verifikasi Pelunasan
+                              </>
+                            )}
+                          </button>
+                        ) : payment.payment_type === 'dp' ? (
+                          <button
+                            onClick={() => handleVerify(payment.id, 'dp', 'Verifikasi DP')}
+                            disabled={actionLoading === payment.id}
+                            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-[#ff60a8] text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 shadow-lg shadow-primary/30 transition-all flex items-center justify-center gap-2 cursor-pointer border-none disabled:opacity-50"
+                          >
+                            {actionLoading === payment.id ? (
+                              <LoadingSpinner size="sm" />
+                            ) : (
+                              <>
+                                <Percent className="w-4 h-4" /> Verifikasi DP (50%)
+                              </>
+                            )}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleVerify(payment.id, 'full', 'Verifikasi (Lunas)')}
+                            disabled={actionLoading === payment.id}
+                            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 shadow-lg shadow-emerald-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer border-none disabled:opacity-50"
+                          >
+                            {actionLoading === payment.id ? (
+                              <LoadingSpinner size="sm" />
+                            ) : (
+                              <>
+                                <CheckCircle className="w-4 h-4" /> Verifikasi Pembayaran
+                              </>
+                            )}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setShowRejectModal(payment.id)}
+                          disabled={actionLoading === payment.id}
+                          className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                          <XCircle className="w-4 h-4" /> Tolak Bukti
+                        </button>
                       </div>
                     )}
                   </div>

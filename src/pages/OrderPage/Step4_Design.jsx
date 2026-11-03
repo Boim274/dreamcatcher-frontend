@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useOrderStore } from '../../store/orderStore';
 import { useLanguageStore } from '../../store/languageStore';
 import { designService } from '../../services/designService';
@@ -6,7 +7,7 @@ import { aiChatService } from '../../services/aiChatService';
 import { conversationService } from '../../services/conversationService';
 import Icon from '../../components/ui/Icon';
 import { useToast } from '../../components/ui/Toast';
-import { Loader2, Zap, Image, Camera, Clock, ChevronDown, ChevronUp, UploadCloud, Check, Sparkles, Info, ZoomIn, FileImage, Palette } from 'lucide-react';
+import { Loader2, Zap, Image, Camera, Clock, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, UploadCloud, Check, Sparkles, Info, ZoomIn, FileImage, Palette, X } from 'lucide-react';
 import { getImageUrl } from '../../utils/getImageUrl';
 import { getUserSession } from '../../utils/userSession';
 import DesignUpload from '../../components/design-studio/DesignUpload';
@@ -158,6 +159,14 @@ export default function Step4Design() {
   const [historyHasMore, setHistoryHasMore] = useState(false);
   const [historyTotal, setHistoryTotal] = useState(0);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const historyScrollRef = useRef(null);
+
+  const scrollHistory = (direction) => {
+    if (historyScrollRef.current) {
+      const scrollAmount = direction === 'left' ? -220 : 220;
+      historyScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
   const [pendingHistoryDesign, setPendingHistoryDesign] = useState(null);
   const [readySummary, setReadySummary] = useState(null);
   const [lastFinalPrompt, setLastFinalPrompt] = useState('');
@@ -168,6 +177,7 @@ export default function Step4Design() {
   const [editPrompt, setEditPrompt] = useState('');
   const [editing, setEditing] = useState(false);
   const [uploadingAreaIndex, setUploadingAreaIndex] = useState(null);
+  const [showGuidelines, setShowGuidelines] = useState(true);
 
   const refreshQuota = () => {
     designService.getQuota().then((res) => setQuota(res.quota)).catch(() => {});
@@ -656,13 +666,13 @@ export default function Step4Design() {
                       : 'border-white/10 hover:border-white/20'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold tracking-[1.5px] uppercase px-2.5 py-0.5 rounded-md bg-primary/20 text-primary border border-primary/30">
+                  <div className="flex items-start sm:items-center justify-between gap-3 mb-3.5 pb-3 border-b border-white/5">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-bold tracking-[1.5px] uppercase px-2.5 py-0.5 rounded-md bg-primary/20 text-primary border border-primary/30 shrink-0">
                           {language === 'en' ? `Area ${index + 1}` : `Area ${index + 1}`}
                         </span>
-                        <span className="text-white text-sm font-bold">
+                        <span className="text-white text-sm sm:text-base font-bold truncate">
                           {td(getPositionLabel(area.position))}
                         </span>
                       </div>
@@ -672,14 +682,15 @@ export default function Step4Design() {
                       </p>
                     </div>
 
-                    <div>
+                    <div className="shrink-0">
                       {isFilled ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
                           <Check size={12} /> {language === 'en' ? 'Attached' : 'Terpasang'}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                          {language === 'en' ? 'Empty' : 'Belum Ada Desain'}
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                          {language === 'en' ? 'No Design' : 'Belum Ada Desain'}
                         </span>
                       )}
                     </div>
@@ -726,60 +737,106 @@ export default function Step4Design() {
             })}
           </div>
 
-          {/* Design Guidelines Hint Card */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-sm">
-            <div className="flex items-center gap-2 mb-3 text-primary">
-              <Info size={16} />
-              <h5 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
-                {language === 'en' ? 'Artwork Guidelines for Best Quality' : 'Petunjuk File Desain Siap Cetak'}
-              </h5>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-zinc-300">
-              <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex flex-col gap-1.5">
-                <span className="font-semibold text-emerald-400 inline-flex items-center gap-1.5">
-                  <Sparkles size={14} className="text-emerald-400 shrink-0" />
-                  {language === 'en' ? 'Transparent PNG' : 'Latar Transparan'}
-                </span>
-                <p className="text-[11px] text-zinc-400 leading-relaxed">
-                  {language === 'en'
-                    ? 'Recommended PNG with transparent background so no white box prints on shirt.'
-                    : 'Disarankan PNG tanpa background agar tidak ikut tercetak kotak putih di kaos.'}
-                </p>
+          {/* Design Guidelines Hint Card (Collapsible) */}
+          <div className="rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-sm overflow-hidden transition-all duration-300">
+            {/* Header / Toggle Button */}
+            <div
+              onClick={() => setShowGuidelines((prev) => !prev)}
+              className="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer select-none hover:bg-white/[0.03] transition-colors"
+              role="button"
+              tabIndex={0}
+              aria-expanded={showGuidelines}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0">
+                  <Info size={15} />
+                </div>
+                <div className="min-w-0">
+                  <h5 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider truncate">
+                    {language === 'en' ? 'Artwork Guidelines' : 'Petunjuk File Desain Siap Cetak'}
+                  </h5>
+                  <p className="text-[10px] sm:text-xs text-zinc-400">
+                    {showGuidelines
+                      ? (language === 'en' ? 'Click to hide guidelines' : 'Bisa ditutup jika sudah paham')
+                      : (language === 'en' ? 'Click to view file recommendations' : 'Klik untuk melihat tips format, resolusi & sablon')}
+                  </p>
+                </div>
               </div>
-              <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex flex-col gap-1.5">
-                <span className="font-semibold text-blue-400 inline-flex items-center gap-1.5">
-                  <ZoomIn size={14} className="text-blue-400 shrink-0" />
-                  {language === 'en' ? 'High Resolution' : 'Resolusi Tajam'}
-                </span>
-                <p className="text-[11px] text-zinc-400 leading-relaxed">
-                  {language === 'en'
-                    ? 'Use sharp images (min. 1000px or 300 DPI). Avoid blurry WhatsApp screenshots.'
-                    : 'Gunakan gambar tajam (min. 1000px atau 300 DPI). Hindari screenshot buram.'}
-                </p>
-              </div>
-              <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex flex-col gap-1.5">
-                <span className="font-semibold text-purple-400 inline-flex items-center gap-1.5">
-                  <FileImage size={14} className="text-purple-400 shrink-0" />
-                  {language === 'en' ? 'Supported Formats' : 'Format & Ukuran'}
-                </span>
-                <p className="text-[11px] text-zinc-400 leading-relaxed">
-                  {language === 'en'
-                    ? 'PNG, JPG, WebP, & Apple HEIC supported. Max size 10MB per design.'
-                    : 'Mendukung PNG, JPG, WebP, dan foto Apple HEIC. Ukuran maksimal 10MB.'}
-                </p>
-              </div>
-              <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex flex-col gap-1.5">
-                <span className="font-semibold text-amber-400 inline-flex items-center gap-1.5">
-                  <Palette size={14} className="text-amber-400 shrink-0" />
-                  {language === 'en' ? 'Print Method' : 'Kesesuaian Sablon'}
-                </span>
-                <p className="text-[11px] text-zinc-400 leading-relaxed">
-                  {isFullColorSablon
-                    ? (language === 'en' ? 'DTF/DTG supports unlimited colors, photo gradients, and shading.' : 'DTF/DTG mendukung full color, gradasi foto, dan warna bebas.')
-                    : (language === 'en' ? 'Manual screen print recommends solid flat colors (max 4 colors).' : 'Sablon manual disarankan warna solid tanpa gradasi halus (maks. 4 warna).')}
-                </p>
+              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowGuidelines((prev) => !prev);
+                  }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 transition-colors"
+                >
+                  {showGuidelines ? (
+                    <>
+                      <X size={13} className="text-zinc-400" />
+                      <span>{language === 'en' ? 'Close' : 'Tutup'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown size={13} className="text-primary" />
+                      <span className="text-primary font-semibold">{language === 'en' ? 'Open' : 'Buka'}</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
+
+            {/* Collapsible Guidelines Content */}
+            {showGuidelines && (
+              <div className="px-3.5 sm:px-4 pb-3.5 sm:pb-4 pt-1 border-t border-white/5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 text-xs text-zinc-300">
+                  <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex flex-col gap-1">
+                    <span className="font-semibold text-emerald-400 text-xs sm:text-[13px] inline-flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-emerald-400 shrink-0" />
+                      {language === 'en' ? 'Transparent PNG' : 'Latar Transparan'}
+                    </span>
+                    <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                      {language === 'en'
+                        ? 'Recommended PNG with transparent background so no white box prints on shirt.'
+                        : 'Disarankan PNG tanpa background agar tidak ikut tercetak kotak putih di kaos.'}
+                    </p>
+                  </div>
+                  <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex flex-col gap-1">
+                    <span className="font-semibold text-blue-400 text-xs sm:text-[13px] inline-flex items-center gap-1.5">
+                      <ZoomIn size={14} className="text-blue-400 shrink-0" />
+                      {language === 'en' ? 'High Resolution' : 'Resolusi Tajam'}
+                    </span>
+                    <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                      {language === 'en'
+                        ? 'Use sharp images (min. 1000px or 300 DPI). Avoid blurry WhatsApp screenshots.'
+                        : 'Gunakan gambar tajam (min. 1000px atau 300 DPI). Hindari screenshot buram.'}
+                    </p>
+                  </div>
+                  <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex flex-col gap-1">
+                    <span className="font-semibold text-purple-400 text-xs sm:text-[13px] inline-flex items-center gap-1.5">
+                      <FileImage size={14} className="text-purple-400 shrink-0" />
+                      {language === 'en' ? 'Supported Formats' : 'Format & Ukuran'}
+                    </span>
+                    <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                      {language === 'en'
+                        ? 'PNG, JPG, WebP, & Apple HEIC supported. Max size 10MB per design.'
+                        : 'Mendukung PNG, JPG, WebP, dan foto Apple HEIC. Ukuran maksimal 10MB.'}
+                    </p>
+                  </div>
+                  <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex flex-col gap-1">
+                    <span className="font-semibold text-amber-400 text-xs sm:text-[13px] inline-flex items-center gap-1.5">
+                      <Palette size={14} className="text-amber-400 shrink-0" />
+                      {language === 'en' ? 'Print Method' : 'Kesesuaian Sablon'}
+                    </span>
+                    <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed">
+                      {isFullColorSablon
+                        ? (language === 'en' ? 'DTF/DTG supports unlimited colors, photo gradients, and shading.' : 'DTF/DTG mendukung full color, gradasi foto, dan warna bebas.')
+                        : (language === 'en' ? 'Manual screen print recommends solid flat colors (max 4 colors).' : 'Sablon manual disarankan warna solid tanpa gradasi halus (maks. 4 warna).')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* AI Switch Banner */}
@@ -810,49 +867,87 @@ export default function Step4Design() {
 
           {/* History Designs (Quick Pick) */}
           {historyDesigns.length > 0 && (
-            <div className="bg-ink/60 border border-white/10 rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-primary" />
-                  <h4 className="text-white text-xs font-bold uppercase tracking-wider">
+            <div className="bg-ink/60 border border-white/10 rounded-2xl p-3.5 sm:p-5">
+              {/* Header: Responsive stacking to prevent text squishing on mobile */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-3.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="w-6 h-6 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center text-primary shrink-0">
+                    <Clock className="w-3.5 h-3.5" />
+                  </div>
+                  <h4 className="text-white text-xs sm:text-sm font-bold tracking-wide">
                     {language === 'en' ? 'Pick from Your Design History' : 'Pilih dari Riwayat Desain Anda'}
                   </h4>
                   {historyTotal > 0 && (
-                    <span className="text-zinc-500 text-[11px]">
-                      ({historyTotal} {language === 'en' ? 'designs' : 'desain'})
+                    <span className="text-zinc-300 text-[11px] font-semibold bg-white/10 border border-white/10 px-2.5 py-0.5 rounded-full">
+                      {historyTotal} {language === 'en' ? 'designs' : 'desain'}
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-zinc-400">
-                  {language === 'en' ? 'Click any design to apply to an area' : 'Klik gambar untuk langsung menerapkan ke area'}
-                </p>
+                <div className="flex items-center justify-between sm:justify-end gap-2 text-[11px] text-zinc-400 w-full sm:w-auto">
+                  <span className="sm:hidden text-primary font-bold text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 flex items-center gap-1 shrink-0">
+                    <span className="text-xs">⇄</span> {language === 'en' ? 'Swipe' : 'Bisa Digeser'}
+                  </span>
+                  <span className="truncate">
+                    {language === 'en' ? 'Tap image to apply to active area' : 'Klik gambar untuk langsung menerapkan ke area'}
+                  </span>
+                </div>
               </div>
 
-              <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-thin">
-                {historyDesigns.map((d) => (
-                  <button
-                    key={d.id}
-                    type="button"
-                    onClick={() => handleSelectHistory(d)}
-                    className="relative shrink-0 w-24 h-24 rounded-xl overflow-hidden border border-white/10 hover:border-primary/60 hover:ring-2 hover:ring-primary/20 transition-all group bg-black/40 cursor-pointer"
-                    title={d.prompt || 'Desain tersimpan'}
-                  >
-                    <img src={d.imageUrl} alt="History" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <span className="text-white text-[10px] font-bold bg-primary px-2 py-0.5 rounded-lg shadow">
-                        {language === 'en' ? 'Apply' : 'Gunakan'}
-                      </span>
+              {/* Swipeable Gallery with touch-pan-x, snap, and navigation controls */}
+              <div className="relative group">
+                {/* Arrow Left */}
+                <button
+                  type="button"
+                  onClick={() => scrollHistory('left')}
+                  className="hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-[#181120]/95 border border-white/20 text-white shadow-xl items-center justify-center hover:bg-primary transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+                  title="Geser ke kiri"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                <div
+                  ref={historyScrollRef}
+                  className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-2.5 pt-1 scrollbar-thin scroll-smooth snap-x snap-mandatory touch-pan-x overscroll-x-contain -mx-1 px-1"
+                  style={{ WebkitOverflowScrolling: 'touch' }}
+                >
+                  {historyDesigns.map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => handleSelectHistory(d)}
+                      className="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-white/10 hover:border-primary/60 hover:ring-2 hover:ring-primary/20 transition-all group/item bg-black/40 cursor-pointer snap-start active:scale-95"
+                      title={d.prompt || 'Desain tersimpan'}
+                    >
+                      <img src={d.imageUrl} alt="History" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/0 group-hover/item:bg-black/50 transition-colors flex items-center justify-center opacity-0 group-hover/item:opacity-100">
+                        <span className="text-white text-[10px] font-bold bg-primary px-2 py-0.5 rounded-lg shadow">
+                          {language === 'en' ? 'Apply' : 'Gunakan'}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                  {historyLoading && (
+                    <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-white/10 flex items-center justify-center bg-black/30 snap-start">
+                      <Loader2 className="w-5 h-5 animate-spin text-gray" />
                     </div>
-                  </button>
-                ))}
-                {historyLoading && (
-                  <div className="shrink-0 w-24 h-24 rounded-xl border border-white/10 flex items-center justify-center bg-black/30">
-                    <Loader2 className="w-5 h-5 animate-spin text-gray" />
-                  </div>
-                )}
+                  )}
+                </div>
+
+                {/* Arrow Right */}
+                <button
+                  type="button"
+                  onClick={() => scrollHistory('right')}
+                  className="hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-[#181120]/95 border border-white/20 text-white shadow-xl items-center justify-center hover:bg-primary transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+                  title="Geser ke kanan"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight size={16} />
+                </button>
               </div>
+
               {historyHasMore && (
-                <div className="mt-2.5">
+                <div className="mt-2.5 flex items-center justify-between">
                   <button
                     type="button"
                     onClick={() => loadHistory(historyPage + 1)}
@@ -1156,10 +1251,16 @@ export default function Step4Design() {
         />
       )}
 
-      {/* History/Result Area Picker Modal */}
-      {pendingHistoryDesign && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
-          <div className="bg-[#170e1c] border border-white/15 rounded-3xl p-6 max-w-sm w-full shadow-2xl animate-fade-in relative overflow-hidden">
+      {/* History/Result Area Picker Modal (Portal to body so it centers in viewport) */}
+      {pendingHistoryDesign && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in"
+          onClick={() => setPendingHistoryDesign(null)}
+        >
+          <div
+            className="bg-[#170e1c] border border-white/15 rounded-3xl p-6 max-w-sm w-full shadow-2xl relative overflow-hidden my-auto animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="absolute -top-16 -right-16 w-32 h-32 bg-primary/20 rounded-full blur-2xl pointer-events-none" />
             <h3 className="text-white font-bold text-base mb-1 tracking-wide">
               {language === 'en' ? 'Select Print Area' : 'Pilih Area Cetak'}
@@ -1191,12 +1292,13 @@ export default function Step4Design() {
             <button
               type="button"
               onClick={() => setPendingHistoryDesign(null)}
-              className="w-full mt-4 py-2.5 text-gray-400 text-xs font-medium hover:text-white transition-colors"
+              className="w-full mt-4 py-2.5 text-gray-400 text-xs font-medium hover:text-white transition-colors cursor-pointer"
             >
               {language === 'en' ? 'Cancel' : 'Batal'}
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Navigation */}

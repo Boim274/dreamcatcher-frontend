@@ -14,7 +14,8 @@ import { useAuthModalStore } from '../store/authModalStore';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatRupiah } from '../utils/formatRupiah';
-import { ChevronLeft, Minus, Plus, ShoppingCart } from 'lucide-react';
+import { getWhatsAppUrl } from '../constants/whatsapp';
+import { ChevronLeft, Minus, Plus, ShoppingCart, MessageCircle } from 'lucide-react';
 import OptimizedImage from '../components/ui/OptimizedImage';
 
 export default function ProductDetailPage() {
@@ -82,33 +83,39 @@ export default function ProductDetailPage() {
   const outOfStock = selectedSizeStock <= 0;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#120c16] text-white relative overflow-hidden selection:bg-primary selection:text-white">
+    <div className={`min-h-screen flex flex-col relative overflow-hidden selection:bg-primary selection:text-white transition-colors ${
+      isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#120c16] text-white'
+    }`}>
       {/* Background Ambient Glows */}
       <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-primary/15 via-purple-600/10 to-transparent blur-3xl rounded-full" />
       <div className="pointer-events-none absolute top-1/3 -left-48 w-96 h-96 bg-primary/10 blur-3xl rounded-full" />
       <div className="pointer-events-none absolute bottom-1/4 -right-48 w-96 h-96 bg-purple-600/10 blur-3xl rounded-full" />
 
       <Navbar />
-      <main className="flex-1 py-12 relative z-10">
+      <main className="flex-1 py-8 sm:py-12 relative z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Header */}
-          <div className="text-center mb-12 relative">
+          <div className="text-center mb-8 sm:mb-12 relative">
             <ScrollReveal>
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary uppercase tracking-wider mb-3">
                 {td(product.category?.name || (isEn ? 'Product Details' : 'Detail Produk'))}
               </div>
-              <h1 className="font-heading text-3xl sm:text-4xl text-white tracking-wide mb-3">{td(product.name)}</h1>
+              <h1 className={`font-heading text-3xl sm:text-4xl tracking-wide mb-3 ${
+                isLight ? 'text-slate-900' : 'text-white'
+              }`}>{td(product.name)}</h1>
               <div className="w-16 h-1 bg-gradient-to-r from-primary to-purple-500 rounded-full mx-auto" />
             </ScrollReveal>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
 
             {/* Image Gallery */}
             <ScrollReveal>
               <div>
-                <div className="glass-card border border-white/10 rounded-3xl overflow-hidden mb-4 aspect-square flex items-center justify-center bg-black/40 p-4">
+                <div className={`border rounded-3xl overflow-hidden mb-4 aspect-square flex items-center justify-center p-4 ${
+                  isLight ? 'bg-white border-slate-200/90 shadow-md' : 'glass-card border-white/10 bg-black/40'
+                }`}>
                   <OptimizedImage
                     src={images[activeImage]?.image_url}
                     mediumSrc={images[activeImage]?.medium_url}
@@ -122,14 +129,18 @@ export default function ProductDetailPage() {
                   />
                 </div>
                 {images.length > 1 && (
-                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
                     {images.map((img, i) => (
                       <button
                         key={i}
                         type="button"
                         onClick={() => setActiveImage(i)}
-                        className={`w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all p-1 bg-black/20 ${
-                          activeImage === i ? 'border-primary shadow-lg shadow-primary/25 scale-105' : 'border-white/10 hover:border-white/30'
+                        className={`w-18 h-18 sm:w-20 sm:h-20 flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all p-1 cursor-pointer ${
+                          activeImage === i
+                            ? 'border-primary shadow-lg shadow-primary/25 scale-105'
+                            : isLight
+                            ? 'border-slate-200 bg-white hover:border-slate-300'
+                            : 'border-white/10 bg-black/20 hover:border-white/30'
                         }`}
                       >
                         <OptimizedImage
@@ -151,7 +162,7 @@ export default function ProductDetailPage() {
             <ScrollReveal>
               <div>
                 {/* Price + Stock */}
-                <div className="flex items-center gap-4 mb-6">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
                   <p className="text-3xl sm:text-4xl font-bold text-gradient-primary">{formatRupiah(product.base_price)}</p>
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full ${
                     product.stock > 0 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
@@ -163,15 +174,19 @@ export default function ProductDetailPage() {
 
                 {/* Description */}
                 {product.description && (
-                  <div className="glass-card border border-white/10 rounded-3xl p-5 mb-5">
+                  <div className={`border rounded-3xl p-5 mb-5 ${
+                    isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'glass-card border-white/10'
+                  }`}>
                     <p className="text-primary text-xs uppercase tracking-wider mb-2 font-bold">{t('productDetail.descTab', 'Deskripsi')}</p>
-                    <p className="text-white/70 text-xs sm:text-sm leading-relaxed">{td(product.description)}</p>
+                    <p className={`text-xs sm:text-sm leading-relaxed ${isLight ? 'text-slate-600' : 'text-white/70'}`}>{td(product.description)}</p>
                   </div>
                 )}
 
                 {/* Size Selection */}
                 {sizes.length > 0 && (
-                  <div className="glass-card border border-white/10 rounded-3xl p-5 mb-5">
+                  <div className={`border rounded-3xl p-5 mb-5 ${
+                    isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'glass-card border-white/10'
+                  }`}>
                     <p className="text-primary text-xs uppercase tracking-wider mb-3 font-bold">{t('productDetail.selectSize', 'Pilih Ukuran')}</p>
                     <div className="flex flex-wrap gap-2.5">
                       {sizes.map((size) => (
@@ -179,7 +194,7 @@ export default function ProductDetailPage() {
                           key={size.name}
                           type="button"
                           onClick={() => setSelectedSize(size.name)}
-                          className={`min-w-[50px] px-4 py-2.5 rounded-2xl border text-xs sm:text-sm font-semibold transition-all ${
+                          className={`min-w-[50px] px-4 py-2.5 rounded-2xl border text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                             selectedSize === size.name
                               ? 'border-primary bg-primary text-white shadow-lg shadow-primary/25'
                               : isLight
@@ -197,7 +212,9 @@ export default function ProductDetailPage() {
 
                 {/* Color Selection */}
                 {colors.length > 0 && (
-                  <div className="glass-card border border-white/10 rounded-3xl p-5 mb-5">
+                  <div className={`border rounded-3xl p-5 mb-5 ${
+                    isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'glass-card border-white/10'
+                  }`}>
                     <p className="text-primary text-xs uppercase tracking-wider mb-3 font-bold">{t('productDetail.selectColor', 'Pilih Warna')}</p>
                     <div className="flex flex-wrap gap-2.5">
                       {colors.map((color) => (
@@ -205,7 +222,7 @@ export default function ProductDetailPage() {
                           key={color.name}
                           type="button"
                           onClick={() => setSelectedColor(color.name)}
-                          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-xs sm:text-sm font-medium transition-all ${
+                          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-xs sm:text-sm font-medium transition-all cursor-pointer ${
                             selectedColor === color.name
                               ? isLight
                                 ? 'border-primary bg-primary/10 text-primary font-bold shadow-lg shadow-primary/15'
@@ -226,16 +243,18 @@ export default function ProductDetailPage() {
                 )}
 
                 {/* Quantity */}
-                <div className="glass-card border border-white/10 rounded-3xl p-5 mb-6">
+                <div className={`border rounded-3xl p-5 mb-6 ${
+                  isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'glass-card border-white/10'
+                }`}>
                   <p className="text-primary text-xs uppercase tracking-wider mb-3 font-bold">{t('productDetail.quantity', 'Jumlah')}</p>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-4">
                     <div className={`flex items-center border rounded-2xl p-1 ${
                       isLight ? 'bg-slate-100 border-slate-200' : 'bg-white/[0.03] border-white/10'
                     }`}>
                       <button
                         type="button"
                         onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${
+                        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors cursor-pointer ${
                           isLight ? 'hover:bg-slate-200 text-slate-700' : 'hover:bg-white/10 text-white'
                         }`}
                       >
@@ -252,7 +271,7 @@ export default function ProductDetailPage() {
                       <button
                         type="button"
                         onClick={() => setQuantity((q) => Math.min(selectedSizeStock, q + 1))}
-                        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${
+                        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors cursor-pointer ${
                           isLight ? 'hover:bg-slate-200 text-slate-700' : 'hover:bg-white/10 text-white'
                         }`}
                       >
@@ -266,12 +285,12 @@ export default function ProductDetailPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
                   <button
                     type="button"
                     onClick={handleBuyNow}
                     disabled={outOfStock}
-                    className="btn-gradient-primary flex-1 py-4 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold disabled:opacity-50"
+                    className="btn-gradient-primary flex-1 py-3.5 sm:py-4 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold disabled:opacity-50 cursor-pointer"
                   >
                     {outOfStock ? (isEn ? 'Out of Stock' : 'Stok Habis') : (isEn ? 'Buy Now' : 'Beli Sekarang')}
                   </button>
@@ -279,37 +298,56 @@ export default function ProductDetailPage() {
                     type="button"
                     onClick={handleAddToCart}
                     disabled={outOfStock}
-                    className="btn-glass flex items-center justify-center gap-2 py-4 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold disabled:opacity-50"
+                    className={`flex items-center justify-center gap-2 py-3.5 sm:py-4 px-6 rounded-2xl text-xs uppercase tracking-wider font-bold disabled:opacity-50 transition-all cursor-pointer border ${
+                      isLight
+                        ? 'border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-800'
+                        : 'btn-glass text-white'
+                    }`}
                   >
                     <ShoppingCart size={16} /> {outOfStock ? (isEn ? 'Out of Stock' : 'Stok Habis') : (isEn ? '+ Cart' : '+ Keranjang')}
                   </button>
                 </div>
 
                 {/* Info Produk */}
-                <div className="glass-card border border-white/10 rounded-3xl p-5 mb-6">
+                <div className={`border rounded-3xl p-5 mb-6 ${
+                  isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'glass-card border-white/10'
+                }`}>
                   <p className="text-primary text-xs uppercase tracking-wider mb-3 font-bold">{isEn ? 'Product Information' : 'Informasi Produk'}</p>
                   <div className="space-y-2.5 text-xs">
-                    <div className="flex justify-between py-1.5 border-b border-white/5">
-                      <span className="text-white/50">{t('productDetail.categoryPrefix', 'Kategori')}</span>
-                      <span className="text-white font-medium">{td(product.category?.name || '-')}</span>
+                    <div className={`flex justify-between py-1.5 border-b ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
+                      <span className={isLight ? 'text-slate-500' : 'text-white/50'}>{t('productDetail.categoryPrefix', 'Kategori')}</span>
+                      <span className={`font-medium ${isLight ? 'text-slate-900' : 'text-white'}`}>{td(product.category?.name || '-')}</span>
                     </div>
-                    <div className="flex justify-between py-1.5 border-b border-white/5">
-                      <span className="text-white/50">{isEn ? 'Total Stock' : 'Total Stok'}</span>
-                      <span className="text-white font-medium">{product.stock > 0 ? `${product.stock} pcs` : (isEn ? 'Out of Stock' : 'Habis')}</span>
+                    <div className={`flex justify-between py-1.5 border-b ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
+                      <span className={isLight ? 'text-slate-500' : 'text-white/50'}>{isEn ? 'Total Stock' : 'Total Stok'}</span>
+                      <span className={`font-medium ${isLight ? 'text-slate-900' : 'text-white'}`}>{product.stock > 0 ? `${product.stock} pcs` : (isEn ? 'Out of Stock' : 'Habis')}</span>
                     </div>
                     {product.sizes?.length > 0 && (
                       <div className="flex justify-between py-1.5">
-                        <span className="text-white/50">{isEn ? 'Available Sizes' : 'Ukuran Tersedia'}</span>
-                        <span className="text-white font-medium">{product.sizes.map(s => s.name).join(', ')}</span>
+                        <span className={isLight ? 'text-slate-500' : 'text-white/50'}>{isEn ? 'Available Sizes' : 'Ukuran Tersedia'}</span>
+                        <span className={`font-medium ${isLight ? 'text-slate-900' : 'text-white'}`}>{product.sizes.map(s => s.name).join(', ')}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
+                {/* WhatsApp Product Consultation Button */}
+                <a
+                  href={getWhatsAppUrl('productDetail', { productName: td(product.name) || product.name })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full mb-6 py-3.5 px-5 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 no-underline"
+                >
+                  <MessageCircle size={16} />
+                  <span>{isEn ? 'Consult This Product on WhatsApp' : 'Konsultasi Produk Ini via WhatsApp'}</span>
+                </a>
+
                 {/* Back Link */}
                 <Link
                   to="/produk"
-                  className="inline-flex items-center gap-2 text-white/50 hover:text-primary transition-colors text-xs font-semibold"
+                  className={`inline-flex items-center gap-2 transition-colors text-xs font-semibold ${
+                    isLight ? 'text-slate-600 hover:text-primary' : 'text-white/50 hover:text-primary'
+                  }`}
                 >
                   <ChevronLeft size={16} /> {t('productDetail.backToCatalog', 'Kembali ke Katalog Produk')}
                 </Link>

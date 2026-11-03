@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { MessageCircle, ShoppingCart } from 'lucide-react';
-import { WA_URL } from '../../constants/whatsapp';
+import { getWhatsAppUrlByPath } from '../../constants/whatsapp';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
 import { useLanguageStore } from '../../store/languageStore';
@@ -23,15 +23,15 @@ export default function FloatingCustomerBar() {
   return (
     <aside
       aria-label={isEn ? "Customer Quick Actions" : "Aksi Cepat Pelanggan"}
-      className={`fixed bottom-6 right-5 sm:right-7 z-50 flex items-center gap-2.5 p-2 rounded-full backdrop-blur-2xl border transition-all duration-300 ${
+      className={`fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] md:bottom-6 right-3.5 sm:right-7 z-40 flex items-center gap-2 p-1.5 sm:p-2 rounded-full backdrop-blur-2xl border transition-all duration-300 ${
         isLight
           ? 'bg-white/95 border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.12)] ring-1 ring-slate-100 hover:border-primary/40'
           : 'bg-[#130c18]/92 border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.7)] ring-1 ring-white/10 hover:border-primary/40'
       }`}
     >
-      {/* 1. WHATSAPP FLOATING BUTTON */}
+      {/* 1. WHATSAPP FLOATING BUTTON (Context-Aware Pre-filled message) */}
       <a
-        href={WA_URL}
+        href={getWhatsAppUrlByPath(location.pathname)}
         target="_blank"
         rel="noopener noreferrer"
         className="w-11 h-11 rounded-full bg-gradient-to-tr from-[#25D366] to-[#128C7E] text-white flex items-center justify-center shadow-lg shadow-[#25D366]/30 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer no-underline group relative"

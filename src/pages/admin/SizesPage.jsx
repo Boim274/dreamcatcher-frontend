@@ -401,50 +401,68 @@ export default function SizesPage() {
           </div>
         ) : (
           <>
-            {/* Mobile View: Cards */}
-            <div className="sm:hidden space-y-3">
+            {/* Mobile View: Cards (< lg screens) */}
+            <div className="lg:hidden space-y-3">
               {displayedSizes.map((item) => {
                 const cat = getSizeCategory(item.name);
                 const CatIcon = cat.icon;
                 return (
                   <div
                     key={item.id}
-                    className="bg-card border border-border/80 rounded-2xl p-4 flex items-center gap-3.5 shadow-md"
+                    className="bg-card border border-border/80 rounded-2xl p-4 shadow-md hover:border-primary/40 transition-all space-y-3"
                   >
-                    <div className={`w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 ${cat.boxClass}`}>
-                      <CatIcon size={20} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-white text-sm">{item.name}</p>
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${cat.badgeClass}`}>
-                          <CatIcon size={9} />
-                          {cat.label}
-                        </span>
-                        <span className="text-gray text-xs font-mono ml-auto">#{item.sort_order}</span>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 ${cat.boxClass}`}>
+                          <CatIcon size={20} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-white text-base leading-tight truncate">{item.name}</p>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${cat.badgeClass}`}>
+                              <CatIcon size={9} />
+                              {cat.label}
+                            </span>
+                            <span className="text-gray text-xs font-mono bg-ink px-1.5 py-0.5 rounded border border-border">
+                              #{item.sort_order}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-gray text-xs mt-1 leading-snug">{item.dimensions || 'Dimensi belum diatur'}</p>
-                      <div className="mt-1.5">
-                        <span className="inline-block px-2 py-0.5 rounded-md bg-ink border border-border text-primary text-[10px] font-semibold">
-                          {item.service?.name || 'Umum (Semua)'}
-                        </span>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => openModal(item)}
+                          className="p-2 rounded-xl bg-ink border border-border hover:border-primary/40 text-gray hover:text-white transition-colors"
+                          title="Edit Ukuran"
+                          aria-label="Edit Ukuran"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete({ show: true, id: item.id })}
+                          className="p-2 rounded-xl bg-ink border border-border hover:border-rose-500/40 text-rose-400 hover:bg-rose-500/10 transition-colors"
+                          title="Hapus Ukuran"
+                          aria-label="Hapus Ukuran"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <button
-                        onClick={() => openModal(item)}
-                        className="p-2 rounded-xl bg-ink border border-border hover:border-primary/40 text-gray hover:text-white transition-colors"
-                        title="Edit Ukuran"
-                      >
-                        <Edit2 size={14} />
-                      </button>
-                      <button
-                        onClick={() => setConfirmDelete({ show: true, id: item.id })}
-                        className="p-2 rounded-xl bg-ink border border-border hover:border-rose-500/40 text-rose-400 hover:bg-rose-500/10 transition-colors"
-                        title="Hapus Ukuran"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+
+                    <div className="bg-ink/60 border border-border/60 rounded-xl p-3 flex flex-col gap-1.5 text-xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-gray">Dimensi / Spesifikasi:</span>
+                        <span className="font-medium text-white/90 text-right truncate">
+                          {item.dimensions || 'Belum diatur'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-border/40">
+                        <span className="text-gray">Layanan:</span>
+                        <span className="text-primary font-semibold text-right truncate">
+                          {item.service?.name || 'Umum (Semua Layanan)'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -465,8 +483,8 @@ export default function SizesPage() {
               )}
             </div>
 
-            {/* Desktop View: Table */}
-            <div className="hidden sm:block bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xl">
+            {/* Desktop View: Table (>= lg screens) */}
+            <div className="hidden lg:block bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead className="bg-ink/80 border-b border-border/80 text-[11px] font-semibold text-gray uppercase tracking-wider">
@@ -476,7 +494,9 @@ export default function SizesPage() {
                       <th className="px-5 py-3.5">Dimensi / Ukuran Fisik</th>
                       <th className="px-5 py-3.5">Layanan Terkait</th>
                       <th className="px-5 py-3.5 text-center">Urutan</th>
-                      <th className="px-5 py-3.5 text-right">Aksi</th>
+                      <th className="px-5 py-3.5 text-right sticky right-0 bg-ink/90 backdrop-blur-sm z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.3)]">
+                        Aksi
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60 text-sm">
@@ -517,7 +537,7 @@ export default function SizesPage() {
                               #{item.sort_order}
                             </span>
                           </td>
-                          <td className="px-5 py-3.5 text-right">
+                          <td className="px-5 py-3.5 text-right sticky right-0 bg-card group-hover:bg-ink/90 transition-colors z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.25)]">
                             <div className="flex items-center justify-end gap-2">
                               <button
                                 onClick={() => openModal(item)}
@@ -557,22 +577,22 @@ export default function SizesPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
 
-              {/* Footer info */}
-              <div className="flex items-center justify-between p-4 border-t border-border/80 bg-ink/30 text-xs text-gray">
-                <p>
-                  Menampilkan <span className="text-white font-medium">{displayedSizes.length}</span> dari{' '}
-                  <span className="text-white font-medium">{sizes.length}</span> ukuran total
-                </p>
-                {categoryFilter !== 'all' && (
-                  <button
-                    onClick={() => setCategoryFilter('all')}
-                    className="text-primary hover:underline font-medium cursor-pointer"
-                  >
-                    Tampilkan Semua Kategori
-                  </button>
-                )}
-              </div>
+            {/* Footer info for both mobile & desktop */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-border/80 rounded-2xl text-xs text-gray shadow-md">
+              <p className="text-center sm:text-left">
+                Menampilkan <span className="text-white font-medium">{displayedSizes.length}</span> dari{' '}
+                <span className="text-white font-medium">{sizes.length}</span> ukuran total
+              </p>
+              {categoryFilter !== 'all' && (
+                <button
+                  onClick={() => setCategoryFilter('all')}
+                  className="text-primary hover:underline font-semibold cursor-pointer"
+                >
+                  Tampilkan Semua Kategori
+                </button>
+              )}
             </div>
           </>
         )}

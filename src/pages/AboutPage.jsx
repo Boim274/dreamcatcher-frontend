@@ -4,7 +4,7 @@ import Footer from '../components/common/Footer';
 import ScrollToTop from '../components/common/ScrollToTop';
 import ScrollReveal from '../components/ui/ScrollReveal';
 import Icon from '../components/ui/Icon';
-import { WA_URL } from '../constants/whatsapp';
+import { getWhatsAppUrl } from '../constants/whatsapp';
 import { useLanguageStore } from '../store/languageStore';
 import { useThemeStore } from '../store/themeStore';
 import { X, ShieldCheck, Zap, Sparkles, Award, MapPin, Phone, Mail, Clock, ExternalLink, CheckCircle2 } from 'lucide-react';
@@ -321,7 +321,7 @@ export default function AboutPage() {
 
                 <div className="pt-6 mt-6 border-t border-white/10 flex flex-col sm:flex-row gap-3">
                   <a
-                    href={WA_URL}
+                    href={getWhatsAppUrl('general')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 py-3 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider text-center transition-colors shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2"

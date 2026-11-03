@@ -11,7 +11,7 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import Icon from '../components/ui/Icon';
 import ScrollReveal from '../components/ui/ScrollReveal';
 import { formatRupiah } from '../utils/formatRupiah';
-import { WA_URL } from '../constants/whatsapp';
+import { getWhatsAppUrl } from '../constants/whatsapp';
 import { ArrowLeft, ArrowRight, Check, Sparkles, Shirt, ShieldCheck, Zap } from 'lucide-react';
 
 const FALLBACK_MODELS = [
@@ -424,7 +424,7 @@ export default function ShirtModelSelectPage() {
               <a
                 target="_blank"
                 rel="noopener noreferrer"
-                href={WA_URL}
+                href={getWhatsAppUrl('order')}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-xs uppercase tracking-wider text-white shadow-xl shadow-green-500/25 transition-all hover:scale-105 active:scale-95 shrink-0"
                 style={{ background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)' }}
               >

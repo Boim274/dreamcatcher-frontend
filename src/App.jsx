@@ -42,6 +42,8 @@ import ReportsPage from './pages/admin/ReportsPage';
 import UsersPage from './pages/admin/UsersPage';
 import AuthModal from './components/ui/AuthModal';
 import FloatingCustomerBar from './components/common/FloatingCustomerBar';
+import MobileBottomNav from './components/common/MobileBottomNav';
+import MobileMenuDrawer from './components/common/MobileMenuDrawer';
 import { ToastProvider } from './components/ui/Toast';
 
 function ProtectedRoute({ children }) {
@@ -230,6 +232,8 @@ function AppContent() {
       </Routes>
       <AuthModal />
       <FloatingCustomerBar />
+      <MobileBottomNav />
+      <MobileMenuDrawer />
     </BrowserRouter>
   );
 }

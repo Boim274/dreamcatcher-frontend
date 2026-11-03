@@ -188,7 +188,7 @@ function CustomDropdown({
   const selectedOption = options.find((o) => o.value === value);
 
   return (
-    <div ref={containerRef} className={`relative flex flex-col ${isOpen ? 'z-40' : 'z-10'}`}>
+    <div ref={containerRef} className={`relative flex flex-col ${isOpen ? 'z-[60]' : 'z-10'}`}>
       {/* Label & Description */}
       {label && (
         <label className="text-primary text-[12px] font-bold tracking-[1.5px] uppercase mb-1.5 flex items-center justify-between">
@@ -211,7 +211,7 @@ function CustomDropdown({
         onClick={() => !disabled && onToggle(!isOpen)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`w-full min-h-[50px] px-4 py-3 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all duration-200 outline-none select-none ${
+        className={`w-full min-h-[50px] px-4 py-3 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all duration-200 outline-none select-none cursor-pointer ${
           disabled
             ? 'opacity-40 cursor-not-allowed bg-white/[0.02] border-white/5'
             : isOpen
@@ -281,10 +281,10 @@ function CustomDropdown({
       {isOpen && (
         <div
           role="listbox"
-          className={`absolute left-0 right-0 top-[calc(100%+6px)] z-50 rounded-2xl border shadow-2xl backdrop-blur-2xl p-1.5 max-h-64 overflow-y-auto overscroll-contain transition-all animate-fadeIn ${
+          className={`absolute left-0 right-0 top-[calc(100%+6px)] z-[70] rounded-2xl border shadow-2xl backdrop-blur-2xl p-1.5 max-h-60 sm:max-h-64 overflow-y-auto overscroll-contain transition-all animate-fadeIn ${
             isLight
               ? 'bg-white/95 border-slate-200 text-slate-800 shadow-xl shadow-slate-900/10'
-              : 'bg-[#18181b]/95 border-white/15 text-white shadow-2xl shadow-black/80'
+              : 'bg-[#18181b]/98 border-white/15 text-white shadow-2xl shadow-black/80'
           }`}
         >
           {options.length === 0 ? (
@@ -627,7 +627,7 @@ export default function Step2ServiceConfig() {
 
       {/* Kaos Configuration */}
       {isKaos && (
-        <div className="space-y-6 relative z-10">
+        <div className={`space-y-6 relative ${openDropdownId ? 'z-30' : 'z-10'}`}>
           {/* 0. Pilihan Model Kaos (Short Sleeve vs Long Sleeve) */}
           <div className={`rounded-2xl border p-4 sm:p-5 transition-all ${
             isLight ? 'bg-slate-50/80 border-slate-200' : 'bg-white/[0.02] border-white/10'
@@ -973,7 +973,9 @@ export default function Step2ServiceConfig() {
               return (
                 <div
                   key={index}
-                  className={`rounded-2xl border p-5 sm:p-6 transition-all duration-300 ${
+                  className={`rounded-2xl border p-5 sm:p-6 transition-all duration-300 relative ${
+                    openDropdownId?.includes(`-${index}`) ? 'z-30' : 'z-10'
+                  } ${
                     isComplete
                       ? isLight
                         ? 'border-primary/50 bg-primary/[0.02] shadow-md'
@@ -1159,7 +1161,7 @@ export default function Step2ServiceConfig() {
 
       {/* Banner Configuration */}
       {isBanner && (
-        <div className="space-y-6 relative z-10">
+        <div className={`space-y-6 relative ${openDropdownId ? 'z-30' : 'z-10'}`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <CustomDropdown
               id="dropdown-banner-size"
@@ -1213,7 +1215,7 @@ export default function Step2ServiceConfig() {
 
       {/* Stiker Configuration */}
       {isStiker && (
-        <div className="space-y-6 relative z-10">
+        <div className={`space-y-6 relative ${openDropdownId ? 'z-30' : 'z-10'}`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <CustomDropdown
               id="dropdown-stiker-material"
@@ -1269,7 +1271,7 @@ export default function Step2ServiceConfig() {
 
       {/* Bordir Configuration */}
       {isBordir && (
-        <div className="space-y-6 relative z-10">
+        <div className={`space-y-6 relative ${openDropdownId ? 'z-30' : 'z-10'}`}>
           <div className="max-w-md">
             <CustomDropdown
               id="dropdown-bordir-position"
@@ -1297,7 +1299,7 @@ export default function Step2ServiceConfig() {
       )}
 
       {/* Navigation Buttons */}
-      <div className={`flex items-center gap-2.5 sm:gap-4 mt-8 sm:mt-10 pt-5 sm:pt-6 border-t relative z-10 ${
+      <div className={`flex items-center gap-2.5 sm:gap-4 mt-8 sm:mt-10 pt-5 sm:pt-6 border-t relative z-0 ${
         isLight ? 'border-slate-200' : 'border-white/10'
       }`}>
         <button

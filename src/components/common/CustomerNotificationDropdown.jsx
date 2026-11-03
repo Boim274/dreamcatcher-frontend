@@ -1,14 +1,12 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Bell,
-  CheckCircle,
   CreditCard,
-  Package,
-  Truck,
-  AlertCircle,
-  Check,
-  ArrowUpRight,
+  ShoppingBag,
+  ArrowRight,
+  X,
 } from 'lucide-react';
 import { useCustomerNotifStore } from '../../store/customerNotifStore';
 import { useAuthStore } from '../../store/authStore';
@@ -21,8 +19,9 @@ export default function CustomerNotificationDropdown({
   customButtonClass = '',
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [filter, setFilter] = useState('all'); // 'all' | 'unread' | 'completed' | 'payment'
+  const [filter, setFilter] = useState('all'); // 'all' | 'orders' | 'payments'
   const dropdownRef = useRef(null);
+  const mobileModalRef = useRef(null);
   const navigate = useNavigate();
 
   const { user, isAuthenticated } = useAuthStore();
@@ -31,19 +30,35 @@ export default function CustomerNotificationDropdown({
   const isEn = language === 'en';
   const isLight = theme === 'light';
 
-  const { notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications } =
+  const { notifications, unreadCount, markAsRead, fetchNotifications } =
     useCustomerNotifStore();
 
   // Close when clicked outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setIsOpen(false);
+      // If clicking inside desktop dropdown container
+      if (dropdownRef.current && dropdownRef.current.contains(e.target)) {
+        return;
       }
+      // If clicking inside mobile modal container
+      if (mobileModalRef.current && mobileModalRef.current.contains(e.target)) {
+        return;
+      }
+      setIsOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Handle ESC key to close
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   // Poll notifications
   useEffect(() => {
@@ -55,10 +70,18 @@ export default function CustomerNotificationDropdown({
     return () => clearInterval(interval);
   }, [isAuthenticated, user, fetchNotifications]);
 
+  const ordersCount = useMemo(
+    () => notifications.filter((n) => n.category !== 'payment').length,
+    [notifications]
+  );
+  const paymentsCount = useMemo(
+    () => notifications.filter((n) => n.category === 'payment').length,
+    [notifications]
+  );
+
   const filteredNotifs = useMemo(() => {
-    if (filter === 'unread') return notifications.filter((n) => !n.isRead);
-    if (filter === 'completed') return notifications.filter((n) => n.category === 'completed');
-    if (filter === 'payment') return notifications.filter((n) => n.category === 'payment');
+    if (filter === 'orders') return notifications.filter((n) => n.category !== 'payment');
+    if (filter === 'payments') return notifications.filter((n) => n.category === 'payment');
     return notifications;
   }, [notifications, filter]);
 
@@ -67,50 +90,32 @@ export default function CustomerNotificationDropdown({
   const handleItemClick = (notif) => {
     markAsRead(notif.id, user.id);
     setIsOpen(false);
-    navigate(notif.link);
+    if (notif.link) {
+      navigate(notif.link);
+    }
   };
 
-  // Sleek, simple, and clean notification icon
-  const renderIcon = (iconType) => {
-    const baseClass = `w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors`;
-    switch (iconType) {
-      case 'completed':
-        return (
-          <div className={`${baseClass} ${isLight ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/60' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'}`}>
-            <CheckCircle size={15} />
-          </div>
-        );
-      case 'payment_verified':
-        return (
-          <div className={`${baseClass} ${isLight ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-primary/15 text-primary border border-primary/25'}`}>
-            <CreditCard size={15} />
-          </div>
-        );
-      case 'processing':
-        return (
-          <div className={`${baseClass} ${isLight ? 'bg-amber-50 text-amber-600 border border-amber-200/60' : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'}`}>
-            <Package size={15} />
-          </div>
-        );
-      case 'shipped':
-        return (
-          <div className={`${baseClass} ${isLight ? 'bg-sky-50 text-sky-600 border border-sky-200/60' : 'bg-sky-500/15 text-sky-400 border border-sky-500/20'}`}>
-            <Truck size={15} />
-          </div>
-        );
-      case 'dp_remaining':
-        return (
-          <div className={`${baseClass} ${isLight ? 'bg-rose-50 text-rose-600 border border-rose-200/60' : 'bg-rose-500/15 text-rose-400 border border-rose-500/20'}`}>
-            <AlertCircle size={15} />
-          </div>
-        );
-      default:
-        return (
-          <div className={`${baseClass} ${isLight ? 'bg-slate-100 text-slate-600 border border-slate-200' : 'bg-white/10 text-white border border-white/10'}`}>
-            <Bell size={15} />
-          </div>
-        );
+  const renderIcon = (item) => {
+    if (item.category === 'payment' || item.iconType === 'payment_verified') {
+      return (
+        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border transition-colors ${
+          isLight
+            ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+        }`}>
+          <CreditCard size={18} />
+        </div>
+      );
     }
+    return (
+      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border transition-colors ${
+        isLight
+          ? 'bg-primary/10 text-primary border-primary/20'
+          : 'bg-primary/10 text-primary border-primary/25'
+      }`}>
+        <ShoppingBag size={18} />
+      </div>
+    );
   };
 
   const buttonStyle = customButtonClass || (isFloating
@@ -125,9 +130,178 @@ export default function CustomerNotificationDropdown({
           : 'bg-white/5 hover:bg-white/10 border-white/10 text-zinc-300 hover:text-white'
       }`);
 
-  const popupPlacementClass = placement === 'top'
-    ? 'bottom-full mb-3 right-0 sm:right-0 origin-bottom-right'
-    : 'top-full mt-2.5 right-0 origin-top-right';
+  const renderDropdownContent = () => (
+    <>
+      {/* Header */}
+      <div className={`p-4 border-b shrink-0 ${isLight ? 'border-slate-200 bg-slate-50/90' : 'border-white/10 bg-gradient-to-br from-white/[0.04] to-transparent'}`}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h4 className={`font-heading text-lg sm:text-[18px] font-bold tracking-wide uppercase ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              {isEn ? "Incoming Notifications" : "Notifikasi Masuk"}
+            </h4>
+            {unreadCount > 0 && (
+              <span className="px-2.5 py-0.5 text-xs font-bold bg-primary/20 text-primary rounded-full border border-primary/30 animate-pulse">
+                {unreadCount} {isEn ? "New" : "Baru"}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              isLight ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-200' : 'text-zinc-400 hover:text-white hover:bg-white/10'
+            }`}
+            title={isEn ? "Close" : "Tutup Notifikasi"}
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className={`flex items-center gap-1 p-1 rounded-2xl border text-xs ${
+          isLight ? 'bg-slate-100 border-slate-200' : 'bg-[#120a16] border-white/10'
+        }`}>
+          <button
+            type="button"
+            onClick={() => setFilter('all')}
+            className={`flex-1 py-1.5 px-2 rounded-xl font-bold transition-all cursor-pointer text-center ${
+              filter === 'all'
+                ? 'bg-primary text-white shadow-sm'
+                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            {isEn ? "All" : "Semua"} ({notifications.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('orders')}
+            className={`flex-1 py-1.5 px-2 rounded-xl font-bold transition-all cursor-pointer text-center ${
+              filter === 'orders'
+                ? 'bg-primary text-white shadow-sm'
+                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            {isEn ? "Orders" : "Pesanan"} ({ordersCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('payments')}
+            className={`flex-1 py-1.5 px-2 rounded-xl font-bold transition-all cursor-pointer text-center ${
+              filter === 'payments'
+                ? 'bg-primary text-white shadow-sm'
+                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            {isEn ? "Payment" : "Bayar"} ({paymentsCount})
+          </button>
+        </div>
+      </div>
+
+      {/* Items List */}
+      {filteredNotifs.length > 0 ? (
+        <div className={`max-h-[55vh] sm:max-h-80 overflow-y-auto divide-y ${isLight ? 'divide-slate-100' : 'divide-white/5'} custom-scrollbar`}>
+          {filteredNotifs.map((item) => (
+            <Link
+              key={item.id}
+              to={item.link || '/pesanan-saya'}
+              onClick={() => handleItemClick(item)}
+              className={`flex items-start gap-3 p-3.5 sm:p-4 transition-colors cursor-pointer group no-underline relative ${
+                !item.isRead
+                  ? (isLight ? 'bg-primary/[0.04] hover:bg-primary/[0.08]' : 'bg-primary/[0.06] hover:bg-primary/[0.12]')
+                  : (isLight ? 'hover:bg-slate-50' : 'hover:bg-white/[0.03]')
+              }`}
+            >
+              {/* Icon */}
+              {renderIcon(item)}
+
+              {/* Body */}
+              <div className="flex-1 min-w-0">
+                {/* Row 1: Order Code & Badge Pill */}
+                <div className="flex items-center justify-between gap-2 mb-0.5">
+                  <span className={`font-mono font-bold text-[13.5px] sm:text-[14px] tracking-tight group-hover:text-primary transition-colors truncate ${
+                    isLight ? 'text-slate-900' : 'text-white'
+                  }`}>
+                    {item.orderCode ? `#${item.orderCode}` : item.title}
+                  </span>
+                  <span className={`text-[9.5px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase tracking-wider shrink-0 ${
+                    item.category === 'payment'
+                      ? (isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30')
+                      : (isLight ? 'bg-primary/10 text-primary border-primary/30' : 'bg-primary/20 text-primary border-primary/30')
+                  }`}>
+                    {item.category === 'payment'
+                      ? (isEn ? 'PAYMENT PROOF' : 'BUKTI BAYAR')
+                      : (item.badge || (isEn ? 'ORDER STATUS' : 'PESANAN BARU'))}
+                  </span>
+                </div>
+
+                {/* Row 2: Message Description */}
+                <p className={`text-[12px] leading-snug line-clamp-2 mt-0.5 ${
+                  isLight ? 'text-slate-600' : 'text-zinc-400'
+                }`}>
+                  {item.message}
+                </p>
+
+                {/* Row 3: Amount/Detail & Date */}
+                <div className="flex items-center justify-between mt-1.5 text-[11px]">
+                  <span className={`font-bold ${isLight ? 'text-slate-800' : 'text-white'}`}>
+                    {item.detail || item.ctaLabel || 'Rp 0'}
+                  </span>
+                  <span className={isLight ? 'text-slate-500' : 'text-zinc-500'}>
+                    {item.createdAt
+                      ? new Date(item.createdAt).toLocaleDateString(isEn ? 'en-US' : 'id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : (isEn ? 'Just now' : 'Baru saja')}
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="p-8 text-center">
+          <Bell size={28} className={`mx-auto mb-2 opacity-50 ${isLight ? 'text-slate-400' : 'text-zinc-600'}`} />
+          <p className={`text-[13px] font-medium ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            {isEn ? "No new notifications" : "Tidak ada notifikasi baru"}
+          </p>
+          <p className={`text-[11px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+            {filter === 'orders'
+              ? (isEn ? 'All orders are processed' : 'Semua pesanan sudah diproses')
+              : filter === 'payments'
+              ? (isEn ? 'No pending payment verification' : 'Tidak ada pembayaran yang perlu diproses')
+              : (isEn ? 'All orders and status are up to date' : 'Semua pesanan dan pembayaran sudah up to date')}
+          </p>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className={`p-3 px-4 border-t shrink-0 flex items-center justify-between text-xs font-semibold ${
+        isLight ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#120a16] border-white/10 text-zinc-400'
+      }`}>
+        <Link
+          to="/pesanan-saya"
+          onClick={() => setIsOpen(false)}
+          className={`flex items-center gap-1.5 transition-colors ${
+            isLight ? 'text-slate-600 hover:text-primary' : 'text-zinc-400 hover:text-primary'
+          }`}
+        >
+          {isEn ? "All Orders" : "Semua Pesanan"} <ArrowRight size={14} />
+        </Link>
+        <Link
+          to="/histori-pesanan"
+          onClick={() => setIsOpen(false)}
+          className={`flex items-center gap-1.5 transition-colors ${
+            isLight ? 'text-slate-600 hover:text-primary' : 'text-zinc-400 hover:text-primary'
+          }`}
+        >
+          {isEn ? "All Payments" : "Semua Pembayaran"} <ArrowRight size={14} />
+        </Link>
+      </div>
+    </>
+  );
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -147,195 +321,43 @@ export default function CustomerNotificationDropdown({
         )}
       </button>
 
-      {/* Dropdown Menu Container */}
+      {/* 1. MOBILE PORTAL: Escapes any parent containing block, guarantees 100% viewport alignment */}
+      {isOpen && typeof document !== 'undefined' && createPortal(
+        <div className="sm:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[9998] animate-in fade-in duration-200"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Modal Container */}
+          <div
+            ref={mobileModalRef}
+            onClick={(e) => e.stopPropagation()}
+            className={`fixed left-3 right-3 top-16 mt-1 z-[9999] rounded-3xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 ${
+              isLight
+                ? 'bg-white/98 border border-slate-200 text-slate-800 shadow-slate-400/25'
+                : 'bg-[#160d1c]/98 border border-white/10 text-white shadow-black/90 ring-1 ring-white/10'
+            } backdrop-blur-2xl flex flex-col max-h-[calc(100vh-5.5rem)]`}
+          >
+            {renderDropdownContent()}
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* 2. DESKTOP DROPDOWN: Positioned relative to parent button */}
       {isOpen && (
         <div
-          className={`absolute ${popupPlacementClass} w-80 sm:w-96 max-w-[92vw] rounded-2xl border shadow-2xl overflow-hidden z-50 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150 ${
+          className={`hidden sm:flex flex-col absolute ${
+            placement === 'top' ? 'bottom-full mb-3 origin-bottom-right' : 'top-full mt-2.5 origin-top-right'
+          } right-0 w-96 rounded-3xl overflow-hidden z-50 shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${
             isLight
-              ? 'bg-white/98 border-slate-200 text-slate-900 shadow-slate-900/15'
-              : 'bg-[#181120]/98 border-white/15 text-white shadow-black/80'
-          }`}
+              ? 'bg-white/98 border border-slate-200 text-slate-800 shadow-slate-400/25'
+              : 'bg-[#160d1c]/98 border border-white/10 text-white shadow-black/90 ring-1 ring-white/10'
+          } backdrop-blur-2xl`}
         >
-          {/* Header */}
-          <div className={`p-4 border-b ${isLight ? 'bg-slate-50/70 border-slate-100' : 'bg-white/[0.02] border-white/10'}`}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${isLight ? 'bg-primary/10 text-primary' : 'bg-primary/20 text-primary'}`}>
-                  <Bell size={13} />
-                </div>
-                <h4 className={`font-heading text-sm font-bold tracking-wide ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                  {isEn ? "Notifications" : "Notifikasi"}
-                </h4>
-                {unreadCount > 0 && (
-                  <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${
-                    isLight ? 'bg-primary/10 text-primary border-primary/20' : 'bg-primary/20 text-primary border-primary/30'
-                  }`}>
-                    {unreadCount} {isEn ? "New" : "Baru"}
-                  </span>
-                )}
-              </div>
-
-              {unreadCount > 0 && (
-                <button
-                  type="button"
-                  onClick={() => markAllAsRead(user.id)}
-                  className={`text-[11px] transition-colors flex items-center gap-1 cursor-pointer font-medium ${
-                    isLight ? 'text-slate-500 hover:text-primary' : 'text-zinc-400 hover:text-primary'
-                  }`}
-                >
-                  <Check size={12} /> {isEn ? "Mark all read" : "Tandai dibaca"}
-                </button>
-              )}
-            </div>
-
-            {/* Filter Tabs (Simple, minimalist pills) */}
-            <div className={`flex items-center gap-1 p-1 rounded-xl text-[11px] ${isLight ? 'bg-slate-100 border border-slate-200/80' : 'bg-white/5 border border-white/10'}`}>
-              <button
-                type="button"
-                onClick={() => setFilter('all')}
-                className={`flex-1 py-1 px-1.5 rounded-lg font-semibold transition-all cursor-pointer text-center ${
-                  filter === 'all'
-                    ? (isLight ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60' : 'bg-primary text-white shadow-sm')
-                    : (isLight ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white')
-                }`}
-              >
-                {isEn ? "All" : "Semua"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter('unread')}
-                className={`flex-1 py-1 px-1.5 rounded-lg font-semibold transition-all cursor-pointer text-center ${
-                  filter === 'unread'
-                    ? (isLight ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60' : 'bg-primary text-white shadow-sm')
-                    : (isLight ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white')
-                }`}
-              >
-                {isEn ? "Unread" : "Belum Baca"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter('completed')}
-                className={`flex-1 py-1 px-1.5 rounded-lg font-semibold transition-all cursor-pointer text-center ${
-                  filter === 'completed'
-                    ? (isLight ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60' : 'bg-primary text-white shadow-sm')
-                    : (isLight ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white')
-                }`}
-              >
-                {isEn ? "Done" : "Selesai"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter('payment')}
-                className={`flex-1 py-1 px-1.5 rounded-lg font-semibold transition-all cursor-pointer text-center ${
-                  filter === 'payment'
-                    ? (isLight ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60' : 'bg-primary text-white shadow-sm')
-                    : (isLight ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white')
-                }`}
-              >
-                {isEn ? "Payment" : "Bayar"}
-              </button>
-            </div>
-          </div>
-
-          {/* List Items */}
-          <div className={`max-h-80 overflow-y-auto divide-y custom-scrollbar ${isLight ? 'divide-slate-100' : 'divide-white/5'}`}>
-            {filteredNotifs.length > 0 ? (
-              filteredNotifs.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => handleItemClick(item)}
-                  className={`p-3.5 transition-all cursor-pointer group flex items-start gap-3 relative ${
-                    !item.isRead
-                      ? (isLight ? 'bg-primary/[0.04] hover:bg-primary/[0.08]' : 'bg-primary/[0.06] hover:bg-primary/[0.12]')
-                      : (isLight ? 'hover:bg-slate-50/80' : 'hover:bg-white/[0.03]')
-                  }`}
-                >
-                  {/* Subtle Unread indicator dot */}
-                  {!item.isRead && (
-                    <span className="absolute left-1.5 top-5 w-1.5 h-1.5 bg-primary rounded-full" />
-                  )}
-
-                  {renderIcon(item.iconType)}
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 mb-0.5">
-                      <span className={`font-heading text-xs font-bold transition-colors truncate ${
-                        isLight ? 'text-slate-900 group-hover:text-primary' : 'text-white group-hover:text-primary'
-                      }`}>
-                        {item.title}
-                      </span>
-                      {item.orderCode && (
-                        <span className={`text-[10px] font-mono shrink-0 ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
-                          #{item.orderCode}
-                        </span>
-                      )}
-                    </div>
-
-                    <p className={`text-[12px] leading-snug mb-1.5 line-clamp-2 ${
-                      isLight ? 'text-slate-600' : 'text-zinc-300'
-                    }`}>
-                      {item.message}
-                    </p>
-
-                    <div className="flex items-center justify-between gap-2 text-[10px]">
-                      <span className={isLight ? 'text-slate-400 font-mono' : 'text-zinc-500 font-mono'}>
-                        {item.createdAt
-                          ? new Date(item.createdAt).toLocaleDateString(isEn ? 'en-US' : 'id-ID', {
-                              day: 'numeric',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : (isEn ? 'Just now' : 'Baru saja')}
-                      </span>
-
-                      <span className={`font-semibold flex items-center gap-0.5 group-hover:underline ${
-                        isLight ? 'text-primary' : 'text-primary'
-                      }`}>
-                        {item.ctaLabel}
-                        <ArrowUpRight size={11} />
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="p-8 text-center">
-                <div className={`w-10 h-10 rounded-2xl mx-auto mb-2 flex items-center justify-center ${
-                  isLight ? 'bg-slate-100 text-slate-400' : 'bg-white/5 text-zinc-500'
-                }`}>
-                  <Bell size={18} />
-                </div>
-                <p className={`text-xs font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-200'}`}>
-                  {isEn ? "No Notifications Yet" : "Belum Ada Notifikasi"}
-                </p>
-                <p className={`text-[11px] mt-0.5 max-w-[200px] mx-auto ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
-                  {isEn
-                    ? "Status updates for your orders and payments will appear here."
-                    : "Pembaruan status pesanan dan pembayaran akan muncul di sini."}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Footer Quick Links */}
-          <div className={`p-2.5 px-4 border-t flex items-center justify-between text-[11px] ${
-            isLight ? 'bg-slate-50/80 border-slate-100 text-slate-600' : 'bg-[#120a16] border-white/10 text-zinc-400'
-          }`}>
-            <span className={`text-[11px] ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
-              {filteredNotifs.length} {isEn ? "items" : "notifikasi"}
-            </span>
-
-            <Link
-              to="/pesanan-saya"
-              onClick={() => setIsOpen(false)}
-              className={`flex items-center gap-1.5 font-medium transition-colors px-2.5 py-1 rounded-lg no-underline ${
-                isLight ? 'text-slate-600 hover:text-primary hover:bg-slate-100' : 'text-zinc-300 hover:text-primary hover:bg-white/5'
-              }`}
-            >
-              <Package size={13} /> {isEn ? "My Orders" : "Pesanan Saya"}
-            </Link>
-          </div>
+          {renderDropdownContent()}
         </div>
       )}
     </div>

@@ -188,7 +188,7 @@ export default function DesignUpload({ onUploadDesign, currentDesign, isLoading 
         onDragOver={handleDrag}
         onDrop={handleDrop}
         onClick={() => { if (!isBusy) inputRef.current?.click(); }}
-        className={`bg-ink border-2 border-dashed rounded-xl p-5 sm:p-10 text-center transition-all duration-200 ${
+        className={`bg-ink border-2 border-dashed rounded-xl p-4 sm:p-8 text-center transition-all duration-200 ${
           isBusy ? 'opacity-60 cursor-wait border-primary/40' : 'cursor-pointer'
         } ${
           dragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
@@ -197,18 +197,18 @@ export default function DesignUpload({ onUploadDesign, currentDesign, isLoading 
         {isBusy ? (
           <>
             <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 text-primary animate-spin mx-auto mb-3 sm:mb-4" />
-            <p className="text-white font-semibold text-sm sm:text-[15px] mb-1">
+            <p className="text-white font-semibold text-xs sm:text-[15px] mb-1">
               {convertingHeic ? 'Mengonversi Format Apple HEIC...' : 'Mengunggah Desain...'}
             </p>
             <p className="text-gray text-[11px] sm:text-[12px]">Mohon tunggu sebentar...</p>
           </>
         ) : (
           <>
-            <Upload className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-gray mb-2.5 sm:mb-4" />
-            <p className="text-white font-semibold text-sm sm:text-[15px] mb-1">Upload Desain Kaos</p>
-            <p className="text-gray text-[11px] sm:text-[12px]">Seret & lepas file di sini, atau klik untuk pilih file</p>
-            <p className="text-gray-medium text-[10px] sm:text-[11px] mt-1.5 font-medium">
-              Format: PNG, JPG, WebP, HEIC (iPhone) &bull; Maks. 10MB
+            <Upload className="w-7 h-7 sm:w-10 sm:h-10 mx-auto text-primary/70 mb-2 sm:mb-3" />
+            <p className="text-white font-semibold text-xs sm:text-[15px] mb-1">Upload Desain Kaos</p>
+            <p className="text-gray text-[11px] sm:text-[12px] px-2">Klik atau seret file gambar ke sini</p>
+            <p className="text-gray-medium text-[10px] sm:text-[11px] mt-1 font-medium leading-tight">
+              Format: PNG, JPG, WebP, HEIC &bull; Maks. 10MB
             </p>
           </>
         )}

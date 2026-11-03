@@ -611,90 +611,163 @@ export default function ColorsPage() {
             </p>
           </div>
         ) : (
-          <div className="bg-[#140b19] border border-white/10 rounded-3xl overflow-hidden shadow-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-white/10 bg-white/[0.02] text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-                    <th className="py-4 px-6">Warna</th>
-                    <th className="py-4 px-6">Nama Warna</th>
-                    <th className="py-4 px-6">Kode HEX</th>
-                    <th className="py-4 px-6 text-center">Urutan</th>
-                    <th className="py-4 px-6 text-center">Status</th>
-                    <th className="py-4 px-6 text-right">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5 text-xs text-zinc-300">
-                  {colors.map((color) => (
-                    <tr key={color.id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-9 h-9 rounded-xl border border-white/20 shadow-md shrink-0 ring-1 ring-black/20"
-                            style={{ backgroundColor: color.hex_code }}
-                          />
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 font-semibold text-white">
-                        {color.name}
-                      </td>
-                      <td className="py-4 px-6 font-mono text-zinc-400">
-                        <button
-                          onClick={() => copyHex(color.hex_code)}
-                          className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer group"
-                        >
-                          <span className="uppercase">{color.hex_code}</span>
-                          {copiedHex === color.hex_code ? (
-                            <Check size={12} className="text-green-400" />
-                          ) : (
-                            <Copy size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                          )}
-                        </button>
-                      </td>
-                      <td className="py-4 px-6 text-center font-mono">
-                        {color.sort_order}
-                      </td>
-                      <td className="py-4 px-6 text-center">
-                        <button
-                          onClick={() => toggleActive(color.id, color.is_active)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${
-                            color.is_active
-                              ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
-                              : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20 hover:bg-zinc-500/20'
-                          }`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${color.is_active ? 'bg-green-400' : 'bg-zinc-500'}`} />
-                          {color.is_active ? 'Aktif' : 'Nonaktif'}
-                        </button>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => openModal(color)}
-                            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-                            title="Edit Warna"
-                          >
-                            <Edit2 size={15} />
-                          </button>
-                          <button
-                            onClick={() => setConfirmDelete({ show: true, id: color.id })}
-                            className="p-2 rounded-xl text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
-                            title="Hapus Warna"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="space-y-4">
+            {/* Mobile View: Swatch Cards (< lg screens) */}
+            <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {colors.map((color) => (
+                <div
+                  key={color.id}
+                  className="bg-[#140b19] border border-white/10 rounded-2xl p-4 flex flex-col justify-between gap-3 shadow-md hover:border-primary/40 transition-all"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div
+                      className="w-12 h-12 rounded-2xl border border-white/20 shadow-lg shrink-0 ring-1 ring-black/40"
+                      style={{ backgroundColor: color.hex_code }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1">
+                        <p className="font-bold text-white text-sm truncate">{color.name}</p>
+                        <span className="text-[10px] font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10 text-zinc-400">
+                          #{color.sort_order}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => copyHex(color.hex_code)}
+                        className="flex items-center gap-1.5 mt-1 text-xs font-mono text-zinc-400 hover:text-white transition-colors cursor-pointer group"
+                      >
+                        <span className="uppercase">{color.hex_code}</span>
+                        {copiedHex === color.hex_code ? (
+                          <Check size={12} className="text-green-400" />
+                        ) : (
+                          <Copy size={12} className="opacity-70 group-hover:opacity-100" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2.5 border-t border-white/5">
+                    <button
+                      onClick={() => toggleActive(color.id, color.is_active)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${
+                        color.is_active
+                          ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
+                          : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20 hover:bg-zinc-500/20'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${color.is_active ? 'bg-green-400' : 'bg-zinc-500'}`} />
+                      {color.is_active ? 'Aktif' : 'Nonaktif'}
+                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => openModal(color)}
+                        className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                        title="Edit Warna"
+                        aria-label="Edit Warna"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete({ show: true, id: color.id })}
+                        className="p-2 rounded-xl text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                        title="Hapus Warna"
+                        aria-label="Hapus Warna"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Pagination */}
+            {/* Desktop View: Table (>= lg screens) */}
+            <div className="hidden lg:block bg-[#140b19] border border-white/10 rounded-3xl overflow-hidden shadow-xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/10 bg-white/[0.02] text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+                      <th className="py-4 px-6">Warna</th>
+                      <th className="py-4 px-6">Nama Warna</th>
+                      <th className="py-4 px-6">Kode HEX</th>
+                      <th className="py-4 px-6 text-center">Urutan</th>
+                      <th className="py-4 px-6 text-center">Status</th>
+                      <th className="py-4 px-6 text-right sticky right-0 bg-[#140b19]/95 backdrop-blur-sm z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.4)]">
+                        Aksi
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-xs text-zinc-300">
+                    {colors.map((color) => (
+                      <tr key={color.id} className="hover:bg-white/[0.02] transition-colors group">
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-9 h-9 rounded-xl border border-white/20 shadow-md shrink-0 ring-1 ring-black/20"
+                              style={{ backgroundColor: color.hex_code }}
+                            />
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 font-semibold text-white">
+                          {color.name}
+                        </td>
+                        <td className="py-4 px-6 font-mono text-zinc-400">
+                          <button
+                            onClick={() => copyHex(color.hex_code)}
+                            className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer group"
+                          >
+                            <span className="uppercase">{color.hex_code}</span>
+                            {copiedHex === color.hex_code ? (
+                              <Check size={12} className="text-green-400" />
+                            ) : (
+                              <Copy size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                            )}
+                          </button>
+                        </td>
+                        <td className="py-4 px-6 text-center font-mono">
+                          {color.sort_order}
+                        </td>
+                        <td className="py-4 px-6 text-center">
+                          <button
+                            onClick={() => toggleActive(color.id, color.is_active)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${
+                              color.is_active
+                                ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
+                                : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20 hover:bg-zinc-500/20'
+                            }`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${color.is_active ? 'bg-green-400' : 'bg-zinc-500'}`} />
+                            {color.is_active ? 'Aktif' : 'Nonaktif'}
+                          </button>
+                        </td>
+                        <td className="py-4 px-6 text-right sticky right-0 bg-[#140b19] group-hover:bg-[#140b19]/95 transition-colors z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.3)]">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => openModal(color)}
+                              className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+                              title="Edit Warna"
+                            >
+                              <Edit2 size={15} />
+                            </button>
+                            <button
+                              onClick={() => setConfirmDelete({ show: true, id: color.id })}
+                              className="p-2 rounded-xl text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+                              title="Hapus Warna"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Pagination for both mobile & desktop */}
             {pagination.total > pagination.per_page && (
-              <div className="flex items-center justify-between p-4 border-t border-white/10 bg-white/[0.01]">
-                <p className="text-xs text-zinc-400">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-[#140b19] border border-white/10 rounded-2xl shadow-md">
+                <p className="text-xs text-zinc-400 text-center sm:text-left">
                   Menampilkan <strong className="text-white">{colors.length}</strong> dari{' '}
                   <strong className="text-white">{pagination.total}</strong> warna
                 </p>
@@ -703,16 +776,18 @@ export default function ColorsPage() {
                     disabled={page <= 1}
                     onClick={() => setPage((p) => p - 1)}
                     className="p-2 rounded-xl border border-white/10 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/5 text-zinc-300 transition-colors cursor-pointer"
+                    aria-label="Halaman sebelumnya"
                   >
                     <ChevronLeft size={16} />
                   </button>
-                  <span className="text-xs font-mono px-3 text-zinc-300">
+                  <span className="text-xs font-mono px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-zinc-300">
                     {pagination.current_page} / {pagination.last_page}
                   </span>
                   <button
                     disabled={page >= pagination.last_page}
                     onClick={() => setPage((p) => p + 1)}
                     className="p-2 rounded-xl border border-white/10 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/5 text-zinc-300 transition-colors cursor-pointer"
+                    aria-label="Halaman berikutnya"
                   >
                     <ChevronRight size={16} />
                   </button>

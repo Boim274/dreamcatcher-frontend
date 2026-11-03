@@ -3,6 +3,7 @@ import Icon from '../ui/Icon';
 import { NAV_LINKS } from '../../constants/nav';
 import { scrollToTop } from '../../utils/scrollToTop';
 import { useLanguageStore } from '../../store/languageStore';
+import { getWhatsAppUrl } from '../../constants/whatsapp';
 
 export default function Footer() {
   const { t, language } = useLanguageStore();
@@ -78,10 +79,18 @@ export default function Footer() {
                 <span className="flex-1">Perum. Mutiara Bekasi Jaya Blok A2 No.6, RT 001/RW 008, Kec. Cibarusah, Kab. Bekasi, Jawa Barat</span>
               </li>
               <li className="flex items-center gap-3 text-zinc-400">
-                <div className="w-7 h-7 rounded-lg bg-primary/15 border border-primary/30 text-primary flex items-center justify-center shrink-0 shadow-sm shadow-primary/20">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 shadow-sm shadow-emerald-500/20">
                   <Icon name="phone" size={14} />
                 </div>
-                <span className="font-mono flex-1">+62 878-7729-4587</span>
+                <a
+                  href={getWhatsAppUrl('general')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono flex-1 hover:text-emerald-400 transition-colors no-underline text-zinc-300"
+                  title="Chat WhatsApp CS"
+                >
+                  +62 878-7729-4587 <span className="text-[10px] text-emerald-400 font-sans font-semibold ml-1">(Chat CS)</span>
+                </a>
               </li>
               <li className="flex items-center gap-3 text-zinc-400">
                 <div className="w-7 h-7 rounded-lg bg-primary/15 border border-primary/30 text-primary flex items-center justify-center shrink-0 shadow-sm shadow-primary/20">

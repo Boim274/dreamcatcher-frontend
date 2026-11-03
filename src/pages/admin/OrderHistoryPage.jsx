@@ -2,7 +2,20 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { Search, Eye, ChevronLeft, ChevronRight, History, X, RotateCcw, Package } from 'lucide-react';
+import {
+  Search,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  History,
+  X,
+  RotateCcw,
+  Package,
+  Calendar,
+  MessageCircle,
+  Copy,
+  Check,
+} from 'lucide-react';
 import { formatRupiah } from '../../utils/formatRupiah';
 import { getImageUrl } from '../../utils/getImageUrl';
 import ErrorBoundary from '../../components/ui/ErrorBoundary';
@@ -22,18 +35,41 @@ const emptyFilters = { status: '', payment_status: '', search: '', date_from: ''
 
 function TableSkeleton() {
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden animate-pulse">
-      <div className="h-11 bg-ink" />
-      <div className="divide-y divide-border">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="px-4 py-4 flex items-center gap-6">
-            <div className="h-4 w-20 bg-ink rounded" />
-            <div className="h-4 w-28 bg-ink rounded" />
-            <div className="h-4 w-32 bg-ink rounded hidden md:block" />
-            <div className="h-4 w-16 bg-ink rounded ml-auto" />
-            <div className="h-5 w-20 bg-ink rounded-full" />
+    <div className="space-y-3">
+      {/* Skeleton Cards on Mobile */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 lg:hidden">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-card border border-border rounded-2xl p-4 space-y-3 animate-pulse">
+            <div className="flex justify-between items-center">
+              <div className="h-4 w-28 bg-ink rounded" />
+              <div className="h-3.5 w-20 bg-ink rounded" />
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-ink shrink-0" />
+              <div className="space-y-1.5 flex-1">
+                <div className="h-3.5 w-32 bg-ink rounded" />
+                <div className="h-3 w-24 bg-ink rounded" />
+              </div>
+            </div>
+            <div className="h-10 bg-ink/70 rounded-xl" />
           </div>
         ))}
+      </div>
+
+      {/* Skeleton Table on Desktop */}
+      <div className="hidden lg:block bg-card border border-border rounded-xl overflow-hidden animate-pulse">
+        <div className="h-11 bg-ink" />
+        <div className="divide-y divide-border">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="px-4 py-3 flex items-center gap-4">
+              <div className="h-4 w-20 bg-ink rounded shrink-0" />
+              <div className="h-4 w-28 bg-ink rounded shrink-0" />
+              <div className="h-4 w-32 bg-ink rounded" />
+              <div className="h-4 w-16 bg-ink rounded ml-auto" />
+              <div className="h-5 w-20 bg-ink rounded-full shrink-0" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -45,6 +81,14 @@ export default function OrderHistoryPage() {
   const [error, setError] = useState(false);
   const [pagination, setPagination] = useState(null);
   const [filters, setFilters] = useState(emptyFilters);
+  const [copiedCode, setCopiedCode] = useState(null);
+
+  const handleCopyCode = (code, e) => {
+    e.stopPropagation();
+    navigator.clipboard?.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 1500);
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -216,38 +260,162 @@ export default function OrderHistoryPage() {
             )}
           </div>
         ) : (
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-ink">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Kode</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Customer</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Produk / Layanan</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Total</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Status</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Pembayaran</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Tanggal</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {orders.map((order) => (
-                    <tr key={order.id} className="transition-colors hover:bg-ink">
-                      <td className="px-4 py-3 font-mono font-semibold text-primary">{order.order_code}</td>
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-white">{order.customer_name}</p>
-                        <p className="text-gray text-sm">{order.phone}</p>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-light">
-                        {(() => {
-                          const firstItem = order.items?.[0];
-                          const thumb = firstItem?.design?.thumbnail_url || firstItem?.design?.image_url
-                            || firstItem?.product?.images?.[0]?.thumbnail_url || firstItem?.product?.images?.[0]?.image_url
-                            || null;
-                          const names = order.items?.map((i) => i.product?.name || i.service?.name || i.product_name).filter(Boolean).join(', ') || '-';
-                          return (
-                            <div className="flex items-center gap-2.5 max-w-[240px]">
+          <div className="space-y-4">
+            {/* Mobile Card View (< lg screens) */}
+            <div className="lg:hidden space-y-3">
+              {orders.map((order) => {
+                const firstItem = order.items?.[0];
+                const thumb = firstItem?.design?.thumbnail_url || firstItem?.design?.image_url
+                  || firstItem?.product?.images?.[0]?.thumbnail_url || firstItem?.product?.images?.[0]?.image_url
+                  || null;
+                const names = order.items?.map((i) => i.product?.name || i.service?.name || i.product_name).filter(Boolean).join(', ') || 'Pesanan Sablon';
+                const totalQty = order.items?.reduce((acc, curr) => acc + (Number(curr.quantity) || 1), 0) || 1;
+                const cleanPhone = (order.phone || '').replace(/\D/g, '');
+                const waPhone = cleanPhone.startsWith('0') ? `62${cleanPhone.slice(1)}` : cleanPhone;
+
+                return (
+                  <div
+                    key={order.id}
+                    className="bg-card border border-border/80 rounded-2xl p-4 shadow-sm hover:border-primary/40 transition-all space-y-3.5"
+                  >
+                    {/* Top Row: Code, Copy, Status Badge */}
+                    <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-3">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-mono text-sm font-bold text-primary truncate">
+                          {order.order_code}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => handleCopyCode(order.order_code, e)}
+                          className="p-1 rounded text-gray hover:text-white hover:bg-ink transition-colors shrink-0"
+                          title="Salin Kode Pesanan"
+                          aria-label="Salin Kode"
+                        >
+                          {copiedCode === order.order_code ? (
+                            <Check size={13} className="text-emerald-400" />
+                          ) : (
+                            <Copy size={13} />
+                          )}
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <StatusBadge status={order.status} />
+                      </div>
+                    </div>
+
+                    {/* Customer & Phone / WA */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-white text-[15px] truncate">
+                          {order.customer_name}
+                        </p>
+                        <p className="text-xs text-gray truncate">{order.phone || '-'}</p>
+                      </div>
+                      {waPhone && (
+                        <a
+                          href={`https://wa.me/${waPhone}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors shrink-0"
+                        >
+                          <MessageCircle size={13} />
+                          <span>WA</span>
+                        </a>
+                      )}
+                    </div>
+
+                    {/* Product & Total */}
+                    <div className="bg-ink/60 border border-border/50 rounded-xl p-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {thumb ? (
+                          <OptimizedImage
+                            src={thumb}
+                            variant="thumbnail"
+                            alt="Item thumbnail"
+                            containerClassName="w-10 h-10 rounded-lg bg-ink border border-border flex-shrink-0"
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-ink border border-border flex items-center justify-center text-gray flex-shrink-0">
+                            <Package size={18} />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-gray-light truncate">{names}</p>
+                          <p className="text-[11px] text-gray mt-0.5">{totalQty} pcs</p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-[11px] text-gray">Total Bayar</p>
+                        <p className="text-sm font-bold text-white font-mono">{formatRupiah(order.total_price)}</p>
+                      </div>
+                    </div>
+
+                    {/* Payment Status & Date */}
+                    <div className="flex items-center justify-between text-xs text-gray pt-1 border-t border-border/40">
+                      <div className="flex items-center gap-1.5">
+                        <span>Bayar:</span>
+                        {order.payment_status ? (
+                          <StatusBadge status={paymentStatusBadge[order.payment_status] || 'pending'} />
+                        ) : (
+                          <span>-</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar size={12} className="text-gray-medium" />
+                        <span>{new Date(order.created_at).toLocaleDateString('id-ID')}</span>
+                      </div>
+                    </div>
+
+                    {/* Action Button */}
+                    <Link
+                      to={`/admin/pesanan/${order.id}`}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary/10 border border-primary/25 text-primary hover:bg-primary hover:text-white font-medium text-sm transition-all"
+                    >
+                      <Eye size={15} />
+                      <span>Lihat Rincian Pesanan</span>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View (>= lg screens) */}
+            <div className="hidden lg:block bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-ink/80 border-b border-border">
+                    <tr>
+                      <th className="px-3.5 py-3 text-xs font-semibold uppercase tracking-wider text-gray">Kode</th>
+                      <th className="px-3.5 py-3 text-xs font-semibold uppercase tracking-wider text-gray">Customer</th>
+                      <th className="px-3.5 py-3 text-xs font-semibold uppercase tracking-wider text-gray">Produk / Layanan</th>
+                      <th className="px-3.5 py-3 text-xs font-semibold uppercase tracking-wider text-gray">Total</th>
+                      <th className="px-3.5 py-3 text-xs font-semibold uppercase tracking-wider text-gray">Status</th>
+                      <th className="px-3.5 py-3 text-xs font-semibold uppercase tracking-wider text-gray">Pembayaran</th>
+                      <th className="px-3.5 py-3 text-xs font-semibold uppercase tracking-wider text-gray">Tanggal</th>
+                      <th className="px-3.5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray sticky right-0 bg-ink/90 backdrop-blur-sm z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.3)]">
+                        Aksi
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {orders.map((order) => {
+                      const firstItem = order.items?.[0];
+                      const thumb = firstItem?.design?.thumbnail_url || firstItem?.design?.image_url
+                        || firstItem?.product?.images?.[0]?.thumbnail_url || firstItem?.product?.images?.[0]?.image_url
+                        || null;
+                      const names = order.items?.map((i) => i.product?.name || i.service?.name || i.product_name).filter(Boolean).join(', ') || '-';
+                      return (
+                        <tr key={order.id} className="transition-colors hover:bg-ink/60 group">
+                          <td className="px-3.5 py-3 font-mono font-semibold text-primary whitespace-nowrap text-sm">
+                            {order.order_code}
+                          </td>
+                          <td className="px-3.5 py-3">
+                            <p className="font-medium text-white text-sm">{order.customer_name}</p>
+                            <p className="text-gray text-xs">{order.phone || '-'}</p>
+                          </td>
+                          <td className="px-3.5 py-3 text-sm text-gray-light max-w-[200px]">
+                            <div className="flex items-center gap-2">
                               {thumb ? (
                                 <OptimizedImage
                                   src={thumb}
@@ -263,62 +431,66 @@ export default function OrderHistoryPage() {
                               )}
                               <span className="truncate">{names}</span>
                             </div>
-                          );
-                        })()}
-                      </td>
-                      <td className="px-4 py-3 font-bold text-white">{formatRupiah(order.total_price)}</td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={order.status} />
-                      </td>
-                      <td className="px-4 py-3">
-                        {order.payment_status ? (
-                          <StatusBadge status={paymentStatusBadge[order.payment_status] || 'pending'} />
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray">
-                        {new Date(order.created_at).toLocaleDateString('id-ID')}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Link
-                          to={`/admin/pesanan/${order.id}`}
-                          className="inline-flex items-center gap-1 text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
-                        >
-                          <Eye className="w-4 h-4" />
-                          Detail
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          </td>
+                          <td className="px-3.5 py-3 font-bold text-white whitespace-nowrap text-sm">
+                            {formatRupiah(order.total_price)}
+                          </td>
+                          <td className="px-3.5 py-3 whitespace-nowrap">
+                            <StatusBadge status={order.status} />
+                          </td>
+                          <td className="px-3.5 py-3 whitespace-nowrap">
+                            {order.payment_status ? (
+                              <StatusBadge status={paymentStatusBadge[order.payment_status] || 'pending'} />
+                            ) : (
+                              '-'
+                            )}
+                          </td>
+                          <td className="px-3.5 py-3 text-xs text-gray whitespace-nowrap">
+                            {new Date(order.created_at).toLocaleDateString('id-ID')}
+                          </td>
+                          <td className="px-3.5 py-3 text-right whitespace-nowrap sticky right-0 bg-card group-hover:bg-ink/90 transition-colors z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.25)]">
+                            <Link
+                              to={`/admin/pesanan/${order.id}`}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary hover:text-white text-primary text-xs font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            >
+                              <Eye size={13} />
+                              Detail
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
+            {/* Pagination for both views */}
             {pagination && (
-              <div className="flex items-center justify-between p-4 border-t border-border">
-                <p className="text-gray text-sm">
-                  Menampilkan {orders.length} dari {pagination.total} pesanan
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-border rounded-xl">
+                <p className="text-gray text-xs sm:text-sm text-center sm:text-left">
+                  Menampilkan <span className="font-semibold text-white">{orders.length}</span> dari{' '}
+                  <span className="font-semibold text-white">{pagination.total}</span> pesanan
                 </p>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => fetchOrders(undefined, pagination.current_page - 1)}
                     disabled={pagination.current_page === 1}
-                    className="p-2 rounded-lg hover:bg-border disabled:opacity-50 text-gray-light disabled:text-gray-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    className="p-2 rounded-lg bg-ink hover:bg-border disabled:opacity-40 text-gray-light disabled:text-gray-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary border border-border"
                     aria-label="Halaman sebelumnya"
                   >
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="px-4 py-2 bg-ink border border-border rounded-lg text-gray-light text-sm">
+                  <span className="px-3 py-1.5 bg-ink border border-border rounded-lg text-white font-mono text-xs sm:text-sm font-semibold">
                     {pagination.current_page} / {pagination.last_page}
                   </span>
                   <button
                     onClick={() => fetchOrders(undefined, pagination.current_page + 1)}
                     disabled={pagination.current_page === pagination.last_page}
-                    className="p-2 rounded-lg hover:bg-border disabled:opacity-50 text-gray-light disabled:text-gray-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    className="p-2 rounded-lg bg-ink hover:bg-border disabled:opacity-40 text-gray-light disabled:text-gray-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary border border-border"
                     aria-label="Halaman berikutnya"
                   >
-                    <ChevronRight className="w-5 h-5" />
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>

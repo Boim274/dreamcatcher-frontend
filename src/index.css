@@ -2211,6 +2211,23 @@ html.light ::-webkit-scrollbar-thumb:hover,
   }
 }
 
+/* ==========================================================================
+   MOBILE BOTTOM NAVIGATION & APP-LIKE LAYOUT ENHANCEMENTS
+   ========================================================================== */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+@media (max-width: 767px) {
+  nav[aria-label="Mobile Bottom Navigation"] a,
+  nav[aria-label="Mobile Bottom Navigation"] button {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+}
+
 
 
 

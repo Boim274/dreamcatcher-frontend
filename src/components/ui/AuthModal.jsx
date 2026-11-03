@@ -134,7 +134,7 @@ export default function AuthModal() {
       className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md transition-all duration-300 animate-in fade-in"
       onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
     >
-      <div className={`relative w-full max-w-[460px] max-h-[92vh] overflow-y-auto rounded-3xl p-6 sm:p-8 scrollbar-thin animate-in zoom-in-95 duration-200 transition-colors ${
+      <div className={`relative w-full max-w-[460px] max-h-[92vh] overflow-y-auto rounded-3xl p-5 sm:p-8 scrollbar-thin animate-in zoom-in-95 duration-200 transition-colors ${
         isLight
           ? 'bg-white border border-slate-200 shadow-2xl shadow-slate-900/15 scrollbar-thumb-slate-200'
           : 'bg-gradient-to-b from-[#2a1d2e] via-[#1d1422] to-[#140e18] border border-white/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_rgba(236,74,150,0.18)] scrollbar-thumb-white/10'
@@ -147,7 +147,7 @@ export default function AuthModal() {
         {/* Tombol Tutup Bulat Minimalis */}
         <button
           onClick={closeModal}
-          className={`absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 z-20 cursor-pointer ${
+          className={`absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 z-20 cursor-pointer ${
             isLight
               ? 'bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-500 hover:text-slate-800'
               : 'bg-white/5 hover:bg-white/15 border border-white/10 text-zinc-400 hover:text-white'
@@ -159,8 +159,8 @@ export default function AuthModal() {
 
         <div className="relative z-10">
             {/* Header Brand & Badging */}
-            <div className="mb-4">
-              <h2 className={`font-heading text-4xl sm:text-[42px] tracking-wide leading-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            <div className="mb-4 pr-7 sm:pr-0">
+              <h2 className={`font-heading text-2xl sm:text-3xl md:text-[38px] tracking-wide leading-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {activeTab === 'login'
                   ? (isEn ? 'LOGIN TO ACCOUNT' : 'MASUK KE AKUN')
                   : (isEn ? 'CREATE NEW ACCOUNT' : 'DAFTAR AKUN BARU')}

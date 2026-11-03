@@ -283,15 +283,15 @@ export default function TestimonialsPage() {
           </div>
         ) : (
           <>
-            {/* Mobile View: Cards */}
-            <div className="sm:hidden space-y-3">
+            {/* Mobile View: Cards (< lg screens) */}
+            <div className="lg:hidden space-y-3">
               {testimonials.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-card border border-border/80 rounded-2xl p-4 flex flex-col gap-3 shadow-md"
+                  className="bg-card border border-border/80 rounded-2xl p-4 flex flex-col gap-3 shadow-md hover:border-primary/40 transition-all"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="w-11 h-11 rounded-full overflow-hidden bg-ink border border-border flex items-center justify-center text-primary flex-shrink-0">
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-ink border border-border flex items-center justify-center text-primary flex-shrink-0">
                       {item.image_url ? (
                         <OptimizedImage
                           src={item.image_url}
@@ -305,8 +305,8 @@ export default function TestimonialsPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1">
-                        <p className="font-semibold text-white text-sm truncate">{item.customer_name}</p>
+                      <div className="flex items-center justify-between gap-1.5">
+                        <p className="font-bold text-white text-sm truncate">{item.customer_name}</p>
                         {renderStars(item.rating)}
                       </div>
                       <p className="text-gray text-xs italic mt-1 line-clamp-2">
@@ -315,10 +315,10 @@ export default function TestimonialsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-border/60">
+                  <div className="flex items-center justify-between pt-2.5 border-t border-border/60">
                     <button
                       onClick={() => toggleActive(item.id, item.is_active)}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold cursor-pointer ${
                         item.is_active
                           ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                           : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
@@ -337,6 +337,7 @@ export default function TestimonialsPage() {
                         onClick={() => openModal(item)}
                         className="p-2 rounded-xl bg-ink border border-border hover:border-primary/40 text-gray hover:text-white transition-colors"
                         title="Edit Testimoni"
+                        aria-label="Edit Testimoni"
                       >
                         <Edit2 size={14} />
                       </button>
@@ -344,6 +345,7 @@ export default function TestimonialsPage() {
                         onClick={() => setConfirmDelete({ show: true, id: item.id })}
                         className="p-2 rounded-xl bg-ink border border-border hover:border-rose-500/40 text-rose-400 hover:bg-rose-500/10 transition-colors"
                         title="Hapus Testimoni"
+                        aria-label="Hapus Testimoni"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -367,8 +369,8 @@ export default function TestimonialsPage() {
               )}
             </div>
 
-            {/* Desktop View: Table */}
-            <div className="hidden sm:block bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xl">
+            {/* Desktop View: Table (>= lg screens) */}
+            <div className="hidden lg:block bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead className="bg-ink/80 border-b border-border/80 text-[11px] font-semibold text-gray uppercase tracking-wider">
@@ -377,7 +379,9 @@ export default function TestimonialsPage() {
                       <th className="px-5 py-3.5">Rating Kepuasan</th>
                       <th className="px-5 py-3.5">Ulasan / Feedback</th>
                       <th className="px-5 py-3.5 text-center">Status Tampil</th>
-                      <th className="px-5 py-3.5 text-right">Aksi</th>
+                      <th className="px-5 py-3.5 text-right sticky right-0 bg-ink/90 backdrop-blur-sm z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.3)]">
+                        Aksi
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60 text-sm">
@@ -437,7 +441,7 @@ export default function TestimonialsPage() {
                             {item.is_active ? 'Aktif' : 'Disembunyikan'}
                           </button>
                         </td>
-                        <td className="px-5 py-3.5 text-right">
+                        <td className="px-5 py-3.5 text-right sticky right-0 bg-card group-hover:bg-ink/90 transition-colors z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.25)]">
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => openModal(item)}
@@ -476,37 +480,39 @@ export default function TestimonialsPage() {
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
-              {pagination.last_page > 1 && (
-                <div className="flex items-center justify-between p-4 border-t border-border/80 bg-ink/30 text-xs text-gray">
-                  <p>
-                    Menampilkan <span className="text-white font-medium">{(pagination.current_page - 1) * pagination.per_page + 1}</span>–
-                    <span className="text-white font-medium">{Math.min(pagination.current_page * pagination.per_page, pagination.total)}</span> dari{' '}
-                    <span className="text-white font-medium">{pagination.total}</span> ulasan
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={pagination.current_page === 1}
-                      className="p-2 rounded-xl bg-card border border-border text-gray-light hover:text-white hover:bg-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <span className="px-3 py-1 rounded-xl bg-card border border-border text-white font-semibold">
-                      {pagination.current_page} / {pagination.last_page}
-                    </span>
-                    <button
-                      onClick={() => setPage((p) => Math.min(pagination.last_page, p + 1))}
-                      disabled={pagination.current_page === pagination.last_page}
-                      className="p-2 rounded-xl bg-card border border-border text-gray-light hover:text-white hover:bg-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
+
+            {/* Pagination for both views */}
+            {pagination.last_page > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-border/80 rounded-2xl text-xs text-gray shadow-md">
+                <p className="text-center sm:text-left">
+                  Menampilkan <span className="text-white font-medium">{(pagination.current_page - 1) * pagination.per_page + 1}</span>–
+                  <span className="text-white font-medium">{Math.min(pagination.current_page * pagination.per_page, pagination.total)}</span> dari{' '}
+                  <span className="text-white font-medium">{pagination.total}</span> ulasan
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={pagination.current_page === 1}
+                    className="p-2 rounded-xl bg-ink border border-border text-gray-light hover:text-white hover:bg-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Halaman sebelumnya"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className="px-3 py-1 rounded-xl bg-ink border border-border text-white font-semibold">
+                    {pagination.current_page} / {pagination.last_page}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(pagination.last_page, p + 1))}
+                    disabled={pagination.current_page === pagination.last_page}
+                    className="p-2 rounded-xl bg-ink border border-border text-gray-light hover:text-white hover:bg-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Halaman berikutnya"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
 

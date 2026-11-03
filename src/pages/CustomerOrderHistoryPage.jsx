@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { orderService } from '../services/orderService';
 import { useLanguageStore } from '../store/languageStore';
@@ -396,7 +397,11 @@ function HistoryCard({ order, onRefresh }) {
             </Link>
 
             <a
-              href={waLink(`Halo Admin Dreamcatcher, saya ingin menanyakan terkait pesanan #${order.order_code}`)}
+              href={waLink(
+                language === 'en'
+                  ? `Hello Admin, I would like to consult about my order #${order.order_code}.\n\nOrder Code: #${order.order_code}\nStatus: ${order.status}\n\nPlease provide an update on this order. Thank you!`
+                  : `Halo Admin, saya ingin konsultasi mengenai pesanan #${order.order_code}.\n\nNomor Pesanan: #${order.order_code}\nStatus: ${order.status}\n\nMohon informasi update terkait pesanan ini ya Admin. Terima kasih.`
+              )}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 border border-primary/50 text-primary bg-primary/10 hover:bg-primary hover:text-white font-semibold py-3 rounded-xl transition-all text-xs uppercase tracking-wider"
@@ -420,16 +425,16 @@ function HistoryCard({ order, onRefresh }) {
         />
       )}
 
-      {/* Lightbox Image Preview Modal */}
-      {lightboxImage && (
+      {/* Lightbox Image Preview Modal (Portal to body so it centers in viewport) */}
+      {lightboxImage && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4 backdrop-blur-md animate-fade-in"
           onClick={() => setLightboxImage(null)}
         >
           <button
             onClick={() => setLightboxImage(null)}
             aria-label={language === 'en' ? 'Close' : 'Tutup'}
-            className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 rounded-full p-2.5 backdrop-blur-sm"
+            className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 rounded-full p-2.5 backdrop-blur-sm cursor-pointer"
           >
             <XCircle className="w-6 h-6" />
           </button>
@@ -439,7 +444,8 @@ function HistoryCard({ order, onRefresh }) {
             className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl border border-white/20 bg-[#120c16]"
             onClick={(e) => e.stopPropagation()}
           />
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -13,11 +13,12 @@ import { NAV_LINKS } from '../../constants/nav';
 import { scrollToTop } from '../../utils/scrollToTop';
 import UserAvatar from './UserAvatar';
 import { Sun, Moon, Globe } from 'lucide-react';
+import { useMobileNavStore } from '../../store/mobileNavStore';
 
 const navLinks = NAV_LINKS;
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isDrawerOpen, toggleDrawer } = useMobileNavStore();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -35,7 +36,6 @@ export default function Navbar() {
   useEffect(() => {
     if (prevLocationRef.current !== location.pathname) {
       prevLocationRef.current = location.pathname;
-      setIsOpen(false);
       setShowDropdown(false);
       setShowLangDropdown(false);
     }
@@ -82,19 +82,19 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={`sticky top-0 z-50 px-[5%] backdrop-blur-2xl border-b transition-all duration-300 ${
+      <nav className={`sticky top-0 z-50 px-3 sm:px-[5%] backdrop-blur-2xl border-b transition-all duration-300 ${
         isLight
           ? 'bg-white/90 border-slate-200 shadow-[0_4px_25px_rgba(0,0,0,0.06)] text-slate-800'
           : 'bg-[#130d17]/85 border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.6)] text-white'
       }`}>
         <div className="flex items-center justify-between h-16 max-w-7xl mx-auto">
           {/* LOGO */}
-          <Link to="/" onClick={scrollToTop} className="flex items-center gap-2.5 no-underline group">
+          <Link to="/" onClick={scrollToTop} className="flex items-center gap-2 sm:gap-2.5 no-underline group shrink-0">
             <div className="relative">
-              <img src="/logo.png" alt="Dreamcatcher" className="h-9 w-auto transition-transform duration-300 group-hover:scale-105" />
+              <img src="/logo.png" alt="Dreamcatcher" className="h-8 sm:h-9 w-auto transition-transform duration-300 group-hover:scale-105" />
               <div className="absolute inset-0 bg-primary/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
-            <span className={`font-heading text-[26px] tracking-[2px] leading-none ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            <span className={`font-heading text-xl sm:text-[26px] tracking-[1.5px] sm:tracking-[2px] leading-none ${isLight ? 'text-slate-900' : 'text-white'}`}>
               Dream<span className="text-primary">catcher</span>
             </span>
           </Link>
@@ -309,13 +309,13 @@ export default function Navbar() {
           </div>
 
           {/* MOBILE CONTROLS & HAMBURGER */}
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-1.5 sm:gap-2 md:hidden">
             {/* Quick Lang Mobile */}
             <button
               type="button"
               onClick={toggleLanguage}
-              className={`p-1.5 px-2 rounded-lg border text-xs font-bold ${
-                isLight ? 'bg-slate-100 border-slate-200 text-slate-800' : 'bg-white/5 border-white/10 text-white'
+              className={`p-1.5 px-2 rounded-lg border text-xs font-bold cursor-pointer ${
+                isLight ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-800' : 'bg-white/5 hover:bg-white/10 border-white/10 text-white'
               }`}
               title={t('lang.selectLang')}
             >
@@ -326,8 +326,8 @@ export default function Navbar() {
             <button
               type="button"
               onClick={toggleTheme}
-              className={`p-1.5 rounded-lg border ${
-                isLight ? 'bg-slate-100 border-slate-200 text-slate-800' : 'bg-white/5 border-white/10 text-white'
+              className={`p-1.5 rounded-lg border cursor-pointer ${
+                isLight ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-800' : 'bg-white/5 hover:bg-white/10 border-white/10 text-white'
               }`}
               title={theme === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark')}
             >
@@ -337,7 +337,7 @@ export default function Navbar() {
             {isAuthenticated ? (
               <Link
                 to="/profile"
-                className="inline-flex"
+                className="inline-flex shrink-0"
                 aria-label="Profil Saya"
               >
                 <UserAvatar user={user} size="sm" rounded="rounded-full" border />
@@ -345,7 +345,7 @@ export default function Navbar() {
             ) : (
               <button
                 onClick={openLogin}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase border ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold uppercase border cursor-pointer ${
                   isLight ? 'bg-slate-100 border-slate-200 text-slate-800' : 'bg-white/10 border-white/15 text-zinc-200'
                 }`}
               >
@@ -353,143 +353,22 @@ export default function Navbar() {
               </button>
             )}
             <button
-              onClick={() => setIsOpen(!isOpen)}
-              className={`p-2 rounded-xl border cursor-pointer ${
-                isLight ? 'bg-slate-100 border-slate-200 text-slate-800' : 'bg-white/5 border-white/10 text-white'
+              type="button"
+              onClick={toggleDrawer}
+              className={`p-1.5 sm:p-2 rounded-xl border cursor-pointer shrink-0 transition-colors ${
+                isDrawerOpen
+                  ? 'bg-primary/20 border-primary text-primary'
+                  : isLight
+                  ? 'bg-slate-100 border-slate-200 text-slate-800'
+                  : 'bg-white/5 border-white/10 text-white'
               }`}
               aria-label="Menu"
+              title={language === 'en' ? "Menu & Account" : "Menu & Akun"}
             >
-              <Icon name={isOpen ? "x" : "menu"} size={20} />
+              <Icon name={isDrawerOpen ? "x" : "menu"} size={19} />
             </button>
           </div>
         </div>
-
-        {/* MOBILE DRAWER */}
-        {isOpen && (
-          <div className={`md:hidden py-4 border-t animate-in slide-in-from-top-2 duration-200 ${
-            isLight ? 'border-slate-200' : 'border-white/10'
-          }`}>
-            <div className="flex flex-col gap-1.5">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => { handleNavClick(); setIsOpen(false); }}
-                  className={`px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wider uppercase no-underline transition-colors ${
-                    location.pathname === link.to
-                      ? 'bg-primary/20 text-primary font-bold'
-                      : isLight
-                      ? 'text-slate-700 hover:bg-slate-100'
-                      : 'text-zinc-300 hover:bg-white/5'
-                  }`}
-                >
-                  {getTranslatedNav(link.to, link.label)}
-                </Link>
-              ))}
-
-              {/* Mobile Language & Theme Quick Switchers */}
-              <div className={`p-3 rounded-xl my-2 border flex items-center justify-between ${
-                isLight ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-black/30 border-white/10 text-zinc-300'
-              }`}>
-                <div className="flex items-center gap-2 text-xs font-semibold">
-                  <Globe size={14} className="text-primary" />
-                  <span>{t('lang.title')}:</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setLanguage('id')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                      language === 'id' ? 'bg-primary text-white' : 'bg-white/10 text-zinc-400'
-                    }`}
-                  >
-                    🇮🇩 ID
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLanguage('en')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                      language === 'en' ? 'bg-primary text-white' : 'bg-white/10 text-zinc-400'
-                    }`}
-                  >
-                    🇬🇧 EN
-                  </button>
-                </div>
-              </div>
-
-              {isAuthenticated ? (
-                <div className={`mt-2 pt-2 border-t space-y-1 ${isLight ? 'border-slate-200' : 'border-white/10'}`}>
-                  <div className={`px-3 py-2 rounded-xl mb-2 flex items-center gap-3 ${isLight ? 'bg-slate-100 text-slate-900' : 'bg-white/5 text-white'}`}>
-                    <UserAvatar user={user} size="sm" rounded="rounded-full" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold truncate">{user?.name}</p>
-                      <p className={`text-[11px] truncate ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>{user?.email}</p>
-                    </div>
-                  </div>
-                  <Link
-                    to="/pesanan-saya"
-                    onClick={() => setIsOpen(false)}
-                    className={`block px-3 py-2 text-xs font-medium no-underline rounded-lg ${
-                      isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-zinc-300 hover:text-white'
-                    }`}
-                  >
-                    {t('nav.myOrders')}
-                  </Link>
-                  <Link
-                    to="/histori-pesanan"
-                    onClick={() => setIsOpen(false)}
-                    className={`block px-3 py-2 text-xs font-medium no-underline rounded-lg ${
-                      isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-zinc-300 hover:text-white'
-                    }`}
-                  >
-                    {t('nav.orderHistory')}
-                  </Link>
-                  <Link
-                    to="/profile"
-                    onClick={() => setIsOpen(false)}
-                    className={`block px-3 py-2 text-xs font-medium no-underline rounded-lg ${
-                      isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-zinc-300 hover:text-white'
-                    }`}
-                  >
-                    {t('nav.myProfile')}
-                  </Link>
-                  {user?.role === 'admin' && (
-                    <Link
-                      to="/admin"
-                      onClick={() => setIsOpen(false)}
-                      className="block px-3 py-2 text-xs font-semibold text-primary no-underline rounded-lg"
-                    >
-                      {t('nav.adminPanel')}
-                    </Link>
-                  )}
-                  <button
-                    onClick={() => { setShowLogoutConfirm(true); setIsOpen(false); }}
-                    className="block w-full text-left px-3 py-2 text-xs font-semibold text-rose-500 hover:text-rose-600 cursor-pointer"
-                  >
-                    {t('nav.logout')}
-                  </button>
-                </div>
-              ) : (
-                <div className={`grid grid-cols-2 gap-2 mt-2 pt-2 border-t ${isLight ? 'border-slate-200' : 'border-white/10'}`}>
-                  <button
-                    onClick={() => { openLogin(); setIsOpen(false); }}
-                    className={`py-2.5 rounded-xl text-center text-xs font-bold uppercase ${
-                      isLight ? 'bg-slate-100 text-slate-800 hover:bg-slate-200' : 'bg-white/10 text-white hover:bg-white/15'
-                    }`}
-                  >
-                    {t('nav.login')}
-                  </button>
-                  <button
-                    onClick={() => { openRegister(); setIsOpen(false); }}
-                    className="py-2.5 rounded-xl text-center text-xs font-bold uppercase text-white bg-gradient-to-r from-primary to-[#ff60a8]"
-                  >
-                    {t('nav.register')}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </nav>
 
       <CustomerOrderAlerts />

@@ -151,23 +151,25 @@ export default function CategoriesPage() {
           </div>
         ) : (
           <>
-            {/* Mobile View: Cards */}
-            <div className="sm:hidden space-y-3">
+            {/* Mobile View: Cards (< lg screens) */}
+            <div className="lg:hidden space-y-3">
               {filteredCategories.map((cat) => (
                 <div
                   key={cat.id}
-                  className="bg-card border border-border/80 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-md"
+                  className="bg-card border border-border/80 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-md hover:border-primary/40 transition-all"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-ink border border-border flex items-center justify-center text-primary flex-shrink-0">
-                      <FolderTree size={18} />
+                    <div className="w-11 h-11 rounded-xl bg-ink border border-border flex items-center justify-center text-primary flex-shrink-0">
+                      <FolderTree size={20} />
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-white text-sm truncate">{cat.name}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-gray text-xs">Urutan: #{cat.sort_order}</span>
-                        <span className="text-gray">•</span>
-                        <span className="text-primary text-xs font-semibold">
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-gray text-xs bg-ink px-2 py-0.5 rounded-md border border-border font-mono">
+                          #{cat.sort_order}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-primary text-xs font-semibold">
+                          <Package size={12} />
                           {cat.products_count || 0} produk
                         </span>
                       </div>
@@ -176,17 +178,19 @@ export default function CategoriesPage() {
                   <div className="flex items-center gap-1.5 flex-shrink-0">
                     <button
                       onClick={() => openModal(cat)}
-                      className="p-2 rounded-xl bg-ink border border-border hover:border-primary/40 text-gray hover:text-white transition-colors"
+                      className="p-2.5 rounded-xl bg-ink border border-border hover:border-primary/40 text-gray hover:text-white transition-colors"
                       title="Edit Kategori"
+                      aria-label="Edit Kategori"
                     >
-                      <Edit2 size={14} />
+                      <Edit2 size={15} />
                     </button>
                     <button
                       onClick={() => setConfirmDelete({ show: true, id: cat.id })}
-                      className="p-2 rounded-xl bg-ink border border-border hover:border-rose-500/40 text-rose-400 hover:bg-rose-500/10 transition-colors"
+                      className="p-2.5 rounded-xl bg-ink border border-border hover:border-rose-500/40 text-rose-400 hover:bg-rose-500/10 transition-colors"
                       title="Hapus Kategori"
+                      aria-label="Hapus Kategori"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
@@ -207,8 +211,8 @@ export default function CategoriesPage() {
               )}
             </div>
 
-            {/* Desktop View: Table */}
-            <div className="hidden sm:block bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xl">
+            {/* Desktop View: Table (>= lg screens) */}
+            <div className="hidden lg:block bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead className="bg-ink/80 border-b border-border/80 text-[11px] font-semibold text-gray uppercase tracking-wider">
@@ -216,7 +220,9 @@ export default function CategoriesPage() {
                       <th className="px-5 py-3.5 w-20 text-center">Urutan</th>
                       <th className="px-5 py-3.5">Nama Kategori</th>
                       <th className="px-5 py-3.5 text-center">Total Produk Terkait</th>
-                      <th className="px-5 py-3.5 text-right">Aksi</th>
+                      <th className="px-5 py-3.5 text-right sticky right-0 bg-ink/90 backdrop-blur-sm z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.3)]">
+                        Aksi
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60 text-sm">
@@ -242,7 +248,7 @@ export default function CategoriesPage() {
                             {cat.products_count || 0} Produk
                           </span>
                         </td>
-                        <td className="px-5 py-3.5 text-right">
+                        <td className="px-5 py-3.5 text-right sticky right-0 bg-card group-hover:bg-ink/90 transition-colors z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.25)]">
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => openModal(cat)}

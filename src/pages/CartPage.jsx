@@ -15,8 +15,9 @@ import { formatRupiah } from '../utils/formatRupiah';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import {
   Trash2, Minus, Plus, ShoppingBag, ChevronLeft,
-  User, Mail, Phone, MapPin, Truck, FileText
+  User, Mail, Phone, MapPin, Truck, FileText, MessageCircle
 } from 'lucide-react';
+import { getWhatsAppUrl } from '../constants/whatsapp';
 import OptimizedImage from '../components/ui/OptimizedImage';
 
 export default function CartPage() {
@@ -152,16 +153,16 @@ export default function CartPage() {
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                 {isEn ? 'Your Shopping Cart' : 'Keranjang Belanja Anda'}
               </div>
-              <h1 className="font-heading text-4xl sm:text-5xl text-white tracking-wide">
+              <h1 className={`font-heading text-4xl sm:text-5xl tracking-wide ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {isEn ? 'PRODUCT' : 'KERANJANG'} <span className="text-gradient">{isEn ? 'CART' : 'PRODUK'}</span>
               </h1>
-              <p className="text-gray-400 text-xs sm:text-sm mt-2">
+              <p className={`text-xs sm:text-sm mt-2 ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
                 {items.length} {isEn ? 'item types ready to process' : 'jenis item siap diproses'}
               </p>
             </ScrollReveal>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
 
             {/* Items Column */}
             <div className="lg:col-span-2 space-y-4">
@@ -169,8 +170,13 @@ export default function CartPage() {
                 {items.map((item, index) => {
                   const itemSubtotal = parseFloat(item.product.base_price) * item.quantity;
                   return (
-                    <div key={index} className="glass-card rounded-2xl p-4 sm:p-5 flex gap-4 items-center">
-                      <Link to={`/produk/${item.product.id}`} className="w-20 h-20 bg-black/40 border border-white/10 rounded-xl overflow-hidden shrink-0 block">
+                    <div
+                      key={index}
+                      className={`rounded-2xl p-4 sm:p-5 flex gap-3.5 sm:gap-4 items-start sm:items-center border transition-all ${
+                        isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'glass-card border-white/10'
+                      }`}
+                    >
+                      <Link to={`/produk/${item.product.id}`} className="w-18 h-18 sm:w-20 sm:h-20 bg-black/40 border border-white/10 rounded-xl overflow-hidden shrink-0 block">
                         <OptimizedImage
                           src={item.product.images?.[0]?.image_url}
                           thumbnailSrc={item.product.images?.[0]?.thumbnail_url}
@@ -183,43 +189,51 @@ export default function CartPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <Link to={`/produk/${item.product.id}`} className="text-white font-bold hover:text-primary transition-colors text-sm sm:text-base truncate block">
+                            <Link to={`/produk/${item.product.id}`} className={`font-bold hover:text-primary transition-colors text-sm sm:text-base truncate block ${
+                              isLight ? 'text-slate-900' : 'text-white'
+                            }`}>
                               {td(item.product.name)}
                             </Link>
                             <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                              {item.size && <span className="text-gray-400 text-xs">{isEn ? 'Size' : 'Ukuran'}: <strong className="text-white">{item.size}</strong></span>}
-                              {item.color && <span className="text-gray-400 text-xs">{isEn ? 'Color' : 'Warna'}: <strong className="text-white">{td(item.color)}</strong></span>}
+                              {item.size && <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>{isEn ? 'Size' : 'Ukuran'}: <strong className={isLight ? 'text-slate-800' : 'text-white'}>{item.size}</strong></span>}
+                              {item.color && <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>{isEn ? 'Color' : 'Warna'}: <strong className={isLight ? 'text-slate-800' : 'text-white'}>{td(item.color)}</strong></span>}
                             </div>
                           </div>
                           <button
                             type="button"
                             onClick={() => removeItem(index)}
-                            className="p-1.5 rounded-xl hover:bg-pink-500/20 text-gray-400 hover:text-pink-400 transition-colors shrink-0"
+                            className="p-1.5 rounded-xl hover:bg-rose-500/20 text-gray-400 hover:text-rose-500 transition-colors shrink-0 cursor-pointer"
                             title={isEn ? 'Remove' : 'Hapus'}
                           >
                             <Trash2 size={16} />
                           </button>
                         </div>
-                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/5">
+                        <div className={`flex items-center justify-between mt-3 pt-2 border-t ${
+                          isLight ? 'border-slate-100' : 'border-white/5'
+                        }`}>
                           <div className="flex items-center gap-1.5">
                             <button
                               type="button"
                               onClick={() => updateQuantity(index, item.quantity - 1)}
-                              className="w-7 h-7 flex items-center justify-center border border-white/10 rounded-lg hover:border-primary transition-colors text-white"
+                              className={`w-7 h-7 flex items-center justify-center border rounded-lg transition-colors cursor-pointer ${
+                                isLight ? 'border-slate-200 hover:bg-slate-100 text-slate-700' : 'border-white/10 hover:border-primary text-white'
+                              }`}
                             >
                               <Minus size={12} />
                             </button>
-                            <span className="w-8 text-center text-white text-sm font-bold">{item.quantity}</span>
+                            <span className={`w-8 text-center text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{item.quantity}</span>
                             <button
                               type="button"
                               onClick={() => updateQuantity(index, item.quantity + 1)}
-                              className="w-7 h-7 flex items-center justify-center border border-white/10 rounded-lg hover:border-primary transition-colors text-white"
+                              className={`w-7 h-7 flex items-center justify-center border rounded-lg transition-colors cursor-pointer ${
+                                isLight ? 'border-slate-200 hover:bg-slate-100 text-slate-700' : 'border-white/10 hover:border-primary text-white'
+                              }`}
                             >
                               <Plus size={12} />
                             </button>
                           </div>
                           <div className="text-right">
-                            <p className="text-gray-400 text-[11px]">{formatRupiah(item.product.base_price)} /pcs</p>
+                            <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>{formatRupiah(item.product.base_price)} /pcs</p>
                             <p className="text-primary font-bold text-sm sm:text-base">{formatRupiah(itemSubtotal)}</p>
                           </div>
                         </div>
@@ -232,7 +246,9 @@ export default function CartPage() {
               <ScrollReveal>
                 <Link
                   to="/produk"
-                  className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-xs font-semibold mt-4"
+                  className={`inline-flex items-center gap-2 transition-colors text-xs font-semibold mt-4 ${
+                    isLight ? 'text-slate-600 hover:text-primary' : 'text-gray-400 hover:text-white'
+                  }`}
                 >
                   <ChevronLeft size={16} /> {isEn ? 'Continue Shopping Other Products' : 'Lanjut Belanja Produk Lain'}
                 </Link>
@@ -242,8 +258,12 @@ export default function CartPage() {
             {/* Checkout Panel */}
             <div className="space-y-4">
               <ScrollReveal>
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-6 shadow-2xl">
-                  <h3 className="font-heading text-xl text-white tracking-wide mb-5 pb-3 border-b border-white/10">
+                <div className={`rounded-3xl border p-5 sm:p-6 shadow-2xl backdrop-blur-xl ${
+                  isLight ? 'bg-white border-slate-200/90 shadow-slate-900/5' : 'border-white/10 bg-white/[0.03]'
+                }`}>
+                  <h3 className={`font-heading text-xl tracking-wide mb-5 pb-3 border-b ${
+                    isLight ? 'text-slate-900 border-slate-200' : 'text-white border-white/10'
+                  }`}>
                     {t('cart.summary', 'Ringkasan Checkout')}
                   </h3>
 
@@ -300,9 +320,11 @@ export default function CartPage() {
                         <button
                           type="button"
                           onClick={() => setCustomerData((d) => ({ ...d, delivery_method: 'pickup' }))}
-                          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all ${
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                             customerData.delivery_method === 'pickup'
-                              ? 'border-primary bg-primary/20 text-white shadow-md shadow-primary/20'
+                              ? 'border-primary bg-primary/20 text-primary font-extrabold shadow-md shadow-primary/20'
+                              : isLight
+                              ? 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200'
                               : 'border-white/10 bg-white/[0.02] text-gray-400 hover:text-white'
                           }`}
                         >
@@ -311,9 +333,11 @@ export default function CartPage() {
                         <button
                           type="button"
                           onClick={() => setCustomerData((d) => ({ ...d, delivery_method: 'delivery' }))}
-                          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all ${
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                             customerData.delivery_method === 'delivery'
-                              ? 'border-primary bg-primary/20 text-white shadow-md shadow-primary/20'
+                              ? 'border-primary bg-primary/20 text-primary font-extrabold shadow-md shadow-primary/20'
+                              : isLight
+                              ? 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200'
                               : 'border-white/10 bg-white/[0.02] text-gray-400 hover:text-white'
                           }`}
                         >
@@ -349,17 +373,21 @@ export default function CartPage() {
                     </div>
 
                     {/* Totals */}
-                    <div className="border-t border-white/10 pt-4 space-y-2 text-xs">
-                      <div className="flex justify-between text-gray-300">
+                    <div className={`border-t pt-4 space-y-2 text-xs ${
+                      isLight ? 'border-slate-200' : 'border-white/10'
+                    }`}>
+                      <div className={`flex justify-between ${isLight ? 'text-slate-600' : 'text-gray-300'}`}>
                         <span>{t('cart.subtotal', 'Subtotal')} ({items.reduce((s, i) => s + i.quantity, 0)} pcs)</span>
-                        <span className="font-semibold text-white">{formatRupiah(subtotal)}</span>
+                        <span className={`font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>{formatRupiah(subtotal)}</span>
                       </div>
-                      <div className="flex justify-between text-gray-300">
+                      <div className={`flex justify-between ${isLight ? 'text-slate-600' : 'text-gray-300'}`}>
                         <span>{t('cart.shippingFee', 'Ongkos Kirim')}</span>
-                        <span className="font-semibold text-white">{shipping > 0 ? formatRupiah(shipping) : (isEn ? 'Free' : 'Gratis')}</span>
+                        <span className={`font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>{shipping > 0 ? formatRupiah(shipping) : (isEn ? 'Free' : 'Gratis')}</span>
                       </div>
-                      <div className="flex justify-between items-center border-t border-dashed border-white/15 pt-3">
-                        <span className="text-white font-bold text-sm">{t('cart.total', 'Total')}</span>
+                      <div className={`flex justify-between items-center border-t border-dashed pt-3 ${
+                        isLight ? 'border-slate-200' : 'border-white/15'
+                      }`}>
+                        <span className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{t('cart.total', 'Total')}</span>
                         <span className="text-primary font-heading text-xl tracking-wide">{formatRupiah(total)}</span>
                       </div>
                     </div>
@@ -372,6 +400,16 @@ export default function CartPage() {
                     >
                       {submitting ? (isEn ? 'Processing...' : 'Memproses...') : t('cart.proceedPayment', 'Lanjut ke Pembayaran')}
                     </button>
+
+                    <a
+                      href={getWhatsAppUrl('order')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full mt-3 py-2.5 px-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 font-semibold text-xs flex items-center justify-center gap-2 transition-all no-underline"
+                    >
+                      <MessageCircle size={15} />
+                      <span>{isEn ? 'Need Help Ordering? Chat CS' : 'Butuh Bantuan Pesanan? Chat CS'}</span>
+                    </a>
                   </div>
                 </div>
               </ScrollReveal>

@@ -95,7 +95,7 @@ function TestimonialCard({ item }) {
       {/* Review Content */}
       <div className="relative z-10 flex-1 my-2">
         <p className="text-zinc-200 text-[13.5px] sm:text-[14.5px] leading-[1.75] font-normal italic">
-          &ldquo;{item.review}&rdquo;
+          &ldquo;{(item.review || '').replace(/^testimoni\s+update(\s+dari\s+order\s*\d*)?\s*:\s*/i, '')}&rdquo;
         </p>
       </div>
 

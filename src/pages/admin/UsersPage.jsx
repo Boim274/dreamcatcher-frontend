@@ -459,8 +459,8 @@ export default function UsersPage() {
           </div>
         ) : (
           <>
-            {/* Mobile View: Cards */}
-            <div className="sm:hidden space-y-3">
+            {/* Mobile View: Cards (< lg screens) */}
+            <div className="lg:hidden space-y-3">
               {users.map((user) => {
                 const isSelf = currentAdmin?.id === user.id;
                 const isAdmin = user.role === 'admin';
@@ -468,16 +468,16 @@ export default function UsersPage() {
                 return (
                   <div
                     key={user.id}
-                    className="bg-[#180f1e]/90 border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-xl backdrop-blur-xl"
+                    className="bg-[#180f1e]/90 border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-xl backdrop-blur-xl hover:border-primary/40 transition-all"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-3 min-w-0">
-                        <UserAvatar user={user} size="w-11 h-11 text-sm" rounded="rounded-2xl" border />
+                        <UserAvatar user={user} size="w-12 h-12 text-sm" rounded="rounded-2xl" border />
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
                             <p className="font-bold text-white text-sm truncate">{user.name}</p>
                             {isSelf && (
-                              <span className="px-1.5 py-0.2 rounded text-[9px] bg-primary text-white font-extrabold uppercase">
+                              <span className="px-1.5 py-0.2 rounded text-[9px] bg-primary text-white font-extrabold uppercase shrink-0">
                                 Anda
                               </span>
                             )}
@@ -495,7 +495,7 @@ export default function UsersPage() {
                       <button
                         onClick={() => handleToggleRole(user)}
                         disabled={isSelf}
-                        className={`px-2.5 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all ${
+                        className={`px-2.5 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all shrink-0 ${
                           isSelf ? 'opacity-80 cursor-default' : 'cursor-pointer hover:scale-105 active:scale-95'
                         } ${
                           isAdmin
@@ -510,18 +510,18 @@ export default function UsersPage() {
                     </div>
 
                     {/* Quota Progress */}
-                    <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-black/40 border border-white/10">
+                    <div className="grid grid-cols-2 gap-2.5 p-3 rounded-xl bg-black/40 border border-white/10">
                       <QuotaCell label="Generate AI" quota={user.quota?.generate} />
                       <QuotaCell label="Edit AI" quota={user.quota?.edit} />
                     </div>
 
                     {/* Action Bar */}
-                    <div className="flex items-center gap-2 pt-1 border-t border-white/10">
+                    <div className="flex items-center gap-2 pt-2 border-t border-white/10">
                       <button
                         onClick={() => openEditModal(user)}
                         className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
-                        <Edit2 size={13} /> Edit User
+                        <Edit2 size={13} /> Edit
                       </button>
                       <button
                         onClick={() => openQuotaModal(user)}
@@ -534,6 +534,7 @@ export default function UsersPage() {
                         onClick={() => handleResetQuota(user)}
                         className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer"
                         title="Reset kuota terpakai menjadi 0"
+                        aria-label="Reset Kuota"
                       >
                         <RefreshCw size={14} />
                       </button>
@@ -542,6 +543,7 @@ export default function UsersPage() {
                           onClick={() => setDeleteTarget(user)}
                           className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-400 transition-colors cursor-pointer"
                           title="Hapus user"
+                          aria-label="Hapus User"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -566,8 +568,8 @@ export default function UsersPage() {
               )}
             </div>
 
-            {/* Desktop View: Table */}
-            <div className="hidden sm:block bg-[#180f1e]/90 border border-white/10 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+            {/* Desktop View: Table (>= lg screens) */}
+            <div className="hidden lg:block bg-[#180f1e]/90 border border-white/10 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead className="bg-black/50 border-b border-white/10 text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-heading">
@@ -577,7 +579,9 @@ export default function UsersPage() {
                       <th className="px-5 py-4 text-center">Pesanan</th>
                       <th className="px-5 py-4">Kuota Generate</th>
                       <th className="px-5 py-4">Kuota Edit AI</th>
-                      <th className="px-5 py-4 text-right">Kelola Aksi</th>
+                      <th className="px-5 py-4 text-right sticky right-0 bg-black/80 backdrop-blur-sm z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.4)]">
+                        Kelola Aksi
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 text-sm">
@@ -656,7 +660,7 @@ export default function UsersPage() {
                           </td>
 
                           {/* Action Buttons */}
-                          <td className="px-5 py-4 text-right">
+                          <td className="px-5 py-4 text-right sticky right-0 bg-[#180f1e] group-hover:bg-[#180f1e]/95 transition-colors z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.3)]">
                             <div className="flex items-center justify-end gap-1.5">
                               <button
                                 onClick={() => openEditModal(user)}
@@ -712,37 +716,39 @@ export default function UsersPage() {
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
-              {pagination.last_page > 1 && (
-                <div className="flex items-center justify-between p-4 border-t border-white/10 bg-black/30 text-xs text-zinc-400">
-                  <p>
-                    Menampilkan <span className="text-white font-bold">{(pagination.current_page - 1) * pagination.per_page + 1}</span>–
-                    <span className="text-white font-bold">{Math.min(pagination.current_page * pagination.per_page, pagination.total)}</span> dari{' '}
-                    <span className="text-white font-bold">{pagination.total}</span> pengguna
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={pagination.current_page === 1}
-                      className="p-2 rounded-xl bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <span className="px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-white font-bold">
-                      {pagination.current_page} / {pagination.last_page}
-                    </span>
-                    <button
-                      onClick={() => setPage((p) => Math.min(pagination.last_page, p + 1))}
-                      disabled={pagination.current_page === pagination.last_page}
-                      className="p-2 rounded-xl bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
+
+            {/* Pagination for both mobile & desktop */}
+            {pagination.last_page > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-[#180f1e]/90 border border-white/10 rounded-2xl backdrop-blur-xl text-xs text-zinc-400 shadow-xl">
+                <p className="text-center sm:text-left">
+                  Menampilkan <span className="text-white font-bold">{(pagination.current_page - 1) * pagination.per_page + 1}</span>–
+                  <span className="text-white font-bold">{Math.min(pagination.current_page * pagination.per_page, pagination.total)}</span> dari{' '}
+                  <span className="text-white font-bold">{pagination.total}</span> pengguna
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={pagination.current_page === 1}
+                    className="p-2 rounded-xl bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    aria-label="Halaman sebelumnya"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className="px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-white font-bold">
+                    {pagination.current_page} / {pagination.last_page}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(pagination.last_page, p + 1))}
+                    disabled={pagination.current_page === pagination.last_page}
+                    className="p-2 rounded-xl bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    aria-label="Halaman berikutnya"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
 

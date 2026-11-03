@@ -314,14 +314,14 @@ export default function PortfoliosPage() {
           </div>
         ) : (
           <>
-            {/* Mobile View: Cards */}
-            <div className="sm:hidden space-y-3">
+            {/* Mobile View: Cards (< lg screens) */}
+            <div className="lg:hidden space-y-3">
               {portfolios.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-card border border-border/80 rounded-2xl p-4 flex flex-col gap-3 shadow-md"
+                  className="bg-card border border-border/80 rounded-2xl p-4 flex flex-col gap-3 shadow-md hover:border-primary/40 transition-all"
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-3.5">
                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-ink border border-border/60 flex-shrink-0">
                       {item.image_url ? (
                         <OptimizedImage
@@ -340,11 +340,12 @@ export default function PortfoliosPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-1">
-                        <p className="font-semibold text-white text-sm truncate">{item.title}</p>
+                        <p className="font-bold text-white text-sm truncate">{item.title}</p>
                         <button
                           onClick={() => toggleFeatured(item.id, item.is_featured)}
                           className="p-1 text-gray-dark hover:text-amber-400 transition-colors flex-shrink-0"
                           title="Toggle Featured"
+                          aria-label="Toggle Featured"
                         >
                           <Star
                             size={16}
@@ -356,21 +357,29 @@ export default function PortfoliosPage() {
                       <p className="text-gray text-xs line-clamp-2 mt-0.5">
                         {item.description || 'Tidak ada deskripsi'}
                       </p>
-                      <div className="mt-1.5">
+                      <div className="mt-1.5 flex items-center gap-1.5">
                         <span className="inline-block px-2 py-0.5 rounded-md bg-ink border border-border text-primary text-[10px] font-semibold">
                           {item.service?.name || 'Umum'}
                         </span>
+                        {item.is_featured && (
+                          <span className="inline-block px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-semibold">
+                            Featured ⭐
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-border/60">
-                    <span className="text-gray text-xs font-mono">Urutan: #{item.sort_order}</span>
+                  <div className="flex items-center justify-between pt-2.5 border-t border-border/60">
+                    <span className="text-gray text-xs font-mono bg-ink px-2 py-0.5 rounded border border-border">
+                      #{item.sort_order}
+                    </span>
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => openModal(item)}
                         className="p-2 rounded-xl bg-ink border border-border hover:border-primary/40 text-gray hover:text-white transition-colors"
                         title="Edit Portfolio"
+                        aria-label="Edit Portfolio"
                       >
                         <Edit2 size={14} />
                       </button>
@@ -378,6 +387,7 @@ export default function PortfoliosPage() {
                         onClick={() => deletePortfolio(item.id)}
                         className="p-2 rounded-xl bg-ink border border-border hover:border-rose-500/40 text-rose-400 hover:bg-rose-500/10 transition-colors"
                         title="Hapus Portfolio"
+                        aria-label="Hapus Portfolio"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -401,8 +411,8 @@ export default function PortfoliosPage() {
               )}
             </div>
 
-            {/* Desktop View: Table */}
-            <div className="hidden sm:block bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xl">
+            {/* Desktop View: Table (>= lg screens) */}
+            <div className="hidden lg:block bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead className="bg-ink/80 border-b border-border/80 text-[11px] font-semibold text-gray uppercase tracking-wider">
@@ -412,7 +422,9 @@ export default function PortfoliosPage() {
                       <th className="px-5 py-3.5">Layanan</th>
                       <th className="px-5 py-3.5 text-center">Featured Beranda</th>
                       <th className="px-5 py-3.5 text-center">Urutan</th>
-                      <th className="px-5 py-3.5 text-right">Aksi</th>
+                      <th className="px-5 py-3.5 text-right sticky right-0 bg-ink/90 backdrop-blur-sm z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.3)]">
+                        Aksi
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60 text-sm">
@@ -467,7 +479,7 @@ export default function PortfoliosPage() {
                         <td className="px-5 py-3.5 text-center text-gray-light font-mono text-xs">
                           {item.sort_order}
                         </td>
-                        <td className="px-5 py-3.5 text-right">
+                        <td className="px-5 py-3.5 text-right sticky right-0 bg-card group-hover:bg-ink/90 transition-colors z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.25)]">
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => openModal(item)}
@@ -506,37 +518,39 @@ export default function PortfoliosPage() {
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
-              {pagination.last_page > 1 && (
-                <div className="flex items-center justify-between p-4 border-t border-border/80 bg-ink/30 text-xs text-gray">
-                  <p>
-                    Menampilkan <span className="text-white font-medium">{(pagination.current_page - 1) * pagination.per_page + 1}</span>–
-                    <span className="text-white font-medium">{Math.min(pagination.current_page * pagination.per_page, pagination.total)}</span> dari{' '}
-                    <span className="text-white font-medium">{pagination.total}</span> item
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={pagination.current_page === 1}
-                      className="p-2 rounded-xl bg-card border border-border text-gray-light hover:text-white hover:bg-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <span className="px-3 py-1 rounded-xl bg-card border border-border text-white font-semibold">
-                      {pagination.current_page} / {pagination.last_page}
-                    </span>
-                    <button
-                      onClick={() => setPage((p) => Math.min(pagination.last_page, p + 1))}
-                      disabled={pagination.current_page === pagination.last_page}
-                      className="p-2 rounded-xl bg-card border border-border text-gray-light hover:text-white hover:bg-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
+
+            {/* Pagination for both views */}
+            {pagination.last_page > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-border/80 rounded-2xl text-xs text-gray shadow-md">
+                <p className="text-center sm:text-left">
+                  Menampilkan <span className="text-white font-medium">{(pagination.current_page - 1) * pagination.per_page + 1}</span>–
+                  <span className="text-white font-medium">{Math.min(pagination.current_page * pagination.per_page, pagination.total)}</span> dari{' '}
+                  <span className="text-white font-medium">{pagination.total}</span> item
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={pagination.current_page === 1}
+                    className="p-2 rounded-xl bg-ink border border-border text-gray-light hover:text-white hover:bg-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Halaman sebelumnya"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className="px-3 py-1 rounded-xl bg-ink border border-border text-white font-semibold">
+                    {pagination.current_page} / {pagination.last_page}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(pagination.last_page, p + 1))}
+                    disabled={pagination.current_page === pagination.last_page}
+                    className="p-2 rounded-xl bg-ink border border-border text-gray-light hover:text-white hover:bg-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Halaman berikutnya"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
 

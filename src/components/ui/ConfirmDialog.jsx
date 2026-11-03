@@ -108,13 +108,13 @@ export default function ConfirmDialog({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 mt-6 pt-5 border-t border-white/10 relative z-10">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 mt-6 pt-5 border-t border-white/10 relative z-10">
           <button
             ref={cancelRef}
             type="button"
             onClick={handleClose}
             disabled={loading}
-            className="px-5 py-2.5 rounded-xl border border-white/15 hover:bg-white/5 text-zinc-300 hover:text-white transition-colors text-xs font-bold cursor-pointer"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-white/15 hover:bg-white/5 text-zinc-300 hover:text-white transition-colors text-xs font-bold cursor-pointer text-center"
           >
             {cCancelText}
           </button>
@@ -122,7 +122,7 @@ export default function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-lg active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer border-none ${iconConfig.btn}`}
+            className={`w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-lg active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer border-none ${iconConfig.btn}`}
           >
             {loading ? (
               <>

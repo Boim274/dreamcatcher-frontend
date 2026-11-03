@@ -9,7 +9,7 @@ import ScrollReveal from '../components/ui/ScrollReveal';
 import ServiceIcon from '../components/ui/ServiceIcons';
 import Icon from '../components/ui/Icon';
 import { formatRupiah, getMinPrice, getSatuanPrice } from '../utils/formatRupiah';
-import { WA_URL } from '../constants/whatsapp';
+import { getWhatsAppUrl } from '../constants/whatsapp';
 import { useLanguageStore } from '../store/languageStore';
 import { useThemeStore } from '../store/themeStore';
 import { useOrderStore } from '../store/orderStore';
@@ -636,7 +636,7 @@ export default function PricelistPage() {
               <a
                 target="_blank"
                 rel="noopener noreferrer"
-                href={WA_URL}
+                href={getWhatsAppUrl('sablon')}
                 className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-bold text-xs uppercase tracking-wider text-white shadow-xl shadow-green-500/25 transition-all hover:scale-105 active:scale-95 shrink-0 relative z-10"
                 style={{ background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)' }}
               >

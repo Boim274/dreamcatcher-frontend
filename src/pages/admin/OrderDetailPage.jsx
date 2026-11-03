@@ -569,19 +569,9 @@ export default function OrderDetailPage() {
               <OrderReceipt order={order} mode="card" showActions={true} />
             </div>
           ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-black/50 border-b border-white/10 text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-heading">
-                <tr>
-                  <th className="px-4 py-3.5">Layanan / Kategori</th>
-                  <th className="px-4 py-3.5">Pratinjau Desain & Nama Item</th>
-                  <th className="px-4 py-3.5">Spesifikasi Sablon</th>
-                  <th className="px-4 py-3.5 text-right">Qty</th>
-                  <th className="px-4 py-3.5 text-right">Harga Satuan</th>
-                  <th className="px-4 py-3.5 text-right">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 text-sm">
+            <>
+              {/* Mobile Card List (< lg) */}
+              <div className="lg:hidden space-y-3">
                 {order.items?.map((item) => {
                   const isSablon = Boolean(item.service_id || item.sablon_type || item.design_type || item.design_id);
                   const fallbackOrderImg = order.items?.find((i) => i.design?.image_url)?.design?.image_url;
@@ -592,152 +582,312 @@ export default function OrderDetailPage() {
                   const isAiDesign = item.design_type === 'ai_generated' || item.design?.design_type === 'ai_generated';
 
                   return (
-                    <tr key={item.id} className="hover:bg-white/[0.03] transition-colors">
-                      <td className="px-4 py-4 align-top">
-                        <div className="flex flex-col gap-1">
-                          <span className="font-bold text-white text-xs">
+                    <div
+                      key={item.id}
+                      className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-2 border-b border-white/5 pb-2.5">
+                        <div className="min-w-0">
+                          <span className="text-[10px] text-zinc-400 uppercase tracking-wider block font-semibold">
                             {item.service?.name || (item.product_id ? 'Produk Pakaian' : 'Layanan Sablon')}
                           </span>
-                          {isSablon && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-lg w-fit font-semibold">
-                              {isAiDesign ? <Sparkles size={11} className="text-amber-400" /> : <ImageIcon size={11} className="text-blue-400" />}
-                              <span>{isAiDesign ? 'Desain AI' : 'Desain Upload'}</span>
-                            </span>
-                          )}
+                          <p className="font-bold text-white text-sm mt-0.5 truncate">{item.product_name}</p>
                         </div>
-                      </td>
+                        {isSablon && (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-lg shrink-0 font-semibold">
+                            {isAiDesign ? <Sparkles size={11} className="text-amber-400" /> : <ImageIcon size={11} className="text-blue-400" />}
+                            <span>{isAiDesign ? 'Desain AI' : 'Desain Upload'}</span>
+                          </span>
+                        )}
+                      </div>
 
-                      <td className="px-4 py-4 align-top">
-                        <div className="flex items-start gap-3">
-                          {fullImg ? (
-                            <div className="relative group/img shrink-0 w-16 h-16 rounded-2xl overflow-hidden bg-black/40 border border-white/10 hover:border-primary transition-all shadow-md">
-                              <OptimizedImage
-                                src={fullImg}
-                                thumbnailSrc={thumbImg}
-                                variant="thumbnail"
-                                alt={item.product_name || 'Desain'}
-                                containerClassName="w-full h-full cursor-pointer"
-                                className="w-full h-full object-contain"
-                                onClick={() => setLightboxImage(fullImg)}
-                                title="Klik untuk memperbesar"
-                              />
+                      <div className="flex items-start gap-3">
+                        {fullImg ? (
+                          <div className="relative group/img shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-black/50 border border-white/10 shadow-md">
+                            <OptimizedImage
+                              src={fullImg}
+                              thumbnailSrc={thumbImg}
+                              variant="thumbnail"
+                              alt={item.product_name || 'Desain'}
+                              containerClassName="w-full h-full cursor-pointer"
+                              className="w-full h-full object-contain"
+                              onClick={() => setLightboxImage(fullImg)}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setLightboxImage(fullImg)}
+                              className="absolute inset-0 bg-black/60 opacity-0 active:opacity-100 flex items-center justify-center text-white"
+                            >
+                              <ZoomIn size={14} />
+                            </button>
+                          </div>
+                        ) : isSablon ? (
+                          <div className="w-16 h-16 rounded-xl bg-black/50 border border-white/10 flex flex-col items-center justify-center shrink-0 text-zinc-500">
+                            <ImageIcon size={18} className="text-zinc-600 mb-0.5" />
+                            <span className="text-[9px]">No File</span>
+                          </div>
+                        ) : null}
+
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          <div className="flex flex-wrap gap-1.5 text-[10px]">
+                            {item.shirt_model && (
+                              <span className="px-2 py-0.5 rounded-md bg-purple-500/15 border border-purple-500/25 text-purple-300 font-bold">
+                                {item.shirt_model}
+                              </span>
+                            )}
+                            {(item.variant_label || item.size) && (
+                              <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-zinc-200">
+                                Size: {item.size || item.variant_label}
+                              </span>
+                            )}
+                            {item.selected_color && (
+                              <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-zinc-200">
+                                {item.selected_color}
+                              </span>
+                            )}
+                            {item.sablon_type && (
+                              <span className="px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary font-bold">
+                                {item.sablon_type}
+                              </span>
+                            )}
+                            {item.print_area && (
+                              <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-zinc-300">
+                                {item.print_area}
+                              </span>
+                            )}
+                          </div>
+
+                          {fullImg && (
+                            <div className="flex items-center gap-2 pt-0.5">
                               <button
                                 type="button"
                                 onClick={() => setLightboxImage(fullImg)}
-                                className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 rounded-2xl flex items-center justify-center text-white transition-opacity cursor-pointer z-10"
-                                title="Perbesar gambar"
+                                className="text-[11px] text-primary hover:underline flex items-center gap-1 font-semibold"
                               >
-                                <ZoomIn size={16} />
+                                <ZoomIn size={12} /> Perbesar
                               </button>
+                              <span className="text-zinc-600">·</span>
+                              <a
+                                href={fullImg}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 font-semibold no-underline"
+                              >
+                                <ExternalLink size={12} /> Buka HD
+                              </a>
                             </div>
-                          ) : isSablon ? (
-                            <div className="w-16 h-16 rounded-2xl bg-black/40 border border-white/10 flex flex-col items-center justify-center shrink-0 text-zinc-500">
-                              <ImageIcon size={20} className="text-zinc-600 mb-0.5" />
-                              <span className="text-[9px]">No File</span>
-                            </div>
-                          ) : null}
-
-                          <div className="min-w-0 flex-1">
-                            <p className="font-bold text-white text-sm">{item.product_name}</p>
-                            {item.design?.prompt && (
-                              <p className="text-zinc-400 text-xs italic bg-black/40 p-2 rounded-xl border border-white/5 mt-1.5 leading-relaxed">
-                                &ldquo;{item.design.prompt}&rdquo;
-                              </p>
-                            )}
-                            {fullImg && (
-                              <div className="flex items-center gap-2 mt-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setLightboxImage(fullImg)}
-                                  className="text-[11px] text-primary hover:underline flex items-center gap-1 font-semibold cursor-pointer"
-                                >
-                                  <ZoomIn size={12} /> Zoom
-                                </button>
-                                <span className="text-zinc-600">·</span>
-                                <a
-                                  href={fullImg}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 font-semibold no-underline"
-                                >
-                                  <ExternalLink size={12} /> Buka HD
-                                </a>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-4 align-top">
-                        <div className="flex flex-wrap gap-1.5 text-[11px]">
-                          {item.shirt_model && (
-                            <span className="px-2 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/20 text-purple-300 font-bold">
-                              Model: <strong className="text-white">{item.shirt_model}</strong>
-                            </span>
-                          )}
-                          {(item.variant_label || item.size) && (
-                            <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-zinc-200">
-                              {item.variant_label && !item.variant_label.startsWith('Size:') ? item.variant_label : `Ukuran: ${item.size || item.variant_label}`}
-                            </span>
-                          )}
-                          {item.sablon_type && (
-                            <span className="px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary font-bold">
-                              {item.sablon_type}
-                            </span>
-                          )}
-                          {item.selected_color && (
-                            <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-zinc-200">
-                              Warna: <strong className="text-white">{item.selected_color}</strong>
-                            </span>
-                          )}
-                          {item.print_area && (
-                            <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-zinc-300">
-                              Area: {item.print_area}
-                            </span>
-                          )}
-                          {item.print_size && (
-                            <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-zinc-300">
-                              Dimensi: {item.print_size}
-                            </span>
                           )}
                         </div>
-                      </td>
+                      </div>
 
-                      <td className="px-4 py-4 text-right font-mono font-bold text-white align-top text-xs">
-                        {item.quantity} pcs
-                      </td>
-                      <td className="px-4 py-4 text-right font-mono text-zinc-300 align-top text-xs">
-                        {formatRupiah(item.unit_price)}
-                      </td>
-                      <td className="px-4 py-4 text-right font-mono font-bold text-white align-top text-xs">
-                        {formatRupiah(item.subtotal)}
-                      </td>
-                    </tr>
+                      {item.design?.prompt && (
+                        <p className="text-zinc-400 text-xs italic bg-black/50 p-2 rounded-xl border border-white/5 leading-relaxed">
+                          &ldquo;{item.design.prompt}&rdquo;
+                        </p>
+                      )}
+
+                      <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
+                        <span className="text-zinc-400 font-medium">
+                          {item.quantity} pcs × {formatRupiah(item.unit_price)}
+                        </span>
+                        <span className="font-mono font-bold text-white text-sm">
+                          {formatRupiah(item.subtotal)}
+                        </span>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-              <tfoot className="bg-black/50 border-t border-white/10 font-bold text-xs text-white">
-                <tr>
-                  <td colSpan="5" className="px-4 py-3 text-right text-zinc-400">Subtotal Item</td>
-                  <td className="px-4 py-3 text-right font-mono text-white">{formatRupiah(order.subtotal)}</td>
-                </tr>
-                {order.shipping_cost > 0 && (
-                  <tr>
-                    <td colSpan="5" className="px-4 py-3 text-right text-zinc-400">Biaya Pengiriman</td>
-                    <td className="px-4 py-3 text-right font-mono text-white">{formatRupiah(order.shipping_cost)}</td>
-                  </tr>
-                )}
-                <tr className="border-t border-white/10">
-                  <td colSpan="5" className="px-4 py-4 text-right text-base uppercase font-heading text-primary">
-                    GRAND TOTAL TAGIHAN
-                  </td>
-                  <td className="px-4 py-4 text-right font-mono text-primary text-lg font-heading">
-                    {formatRupiah(order.total_price)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+
+                {/* Mobile Financial Summary Card */}
+                <div className="p-4 rounded-2xl bg-black/60 border border-white/15 space-y-2 mt-3">
+                  <div className="flex items-center justify-between text-xs text-zinc-400">
+                    <span>Subtotal Item</span>
+                    <span className="font-mono text-zinc-200">{formatRupiah(order.subtotal)}</span>
+                  </div>
+                  {order.shipping_cost > 0 && (
+                    <div className="flex items-center justify-between text-xs text-zinc-400">
+                      <span>Biaya Pengiriman</span>
+                      <span className="font-mono text-zinc-200">{formatRupiah(order.shipping_cost)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                    <span className="text-xs uppercase font-heading font-bold text-white">Grand Total Tagihan</span>
+                    <span className="font-mono font-bold text-primary text-base">{formatRupiah(order.total_price)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Desktop Table (>= lg) */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-black/50 border-b border-white/10 text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-heading">
+                    <tr>
+                      <th className="px-4 py-3.5">Layanan / Kategori</th>
+                      <th className="px-4 py-3.5">Pratinjau Desain & Nama Item</th>
+                      <th className="px-4 py-3.5">Spesifikasi Sablon</th>
+                      <th className="px-4 py-3.5 text-right">Qty</th>
+                      <th className="px-4 py-3.5 text-right">Harga Satuan</th>
+                      <th className="px-4 py-3.5 text-right">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-sm">
+                    {order.items?.map((item) => {
+                      const isSablon = Boolean(item.service_id || item.sablon_type || item.design_type || item.design_id);
+                      const fallbackOrderImg = order.items?.find((i) => i.design?.image_url)?.design?.image_url;
+                      const fallbackOrderThumb = order.items?.find((i) => i.design?.thumbnail_url)?.design?.thumbnail_url;
+                      const rawOriginal = item.design?.image_url || item.product?.images?.[0]?.image_url || (isSablon ? fallbackOrderImg : null);
+                      const fullImg = rawOriginal ? getImageUrl(rawOriginal) : null;
+                      const thumbImg = item.design?.thumbnail_url || item.product?.images?.[0]?.thumbnail_url || (isSablon ? fallbackOrderThumb : null) || fullImg;
+                      const isAiDesign = item.design_type === 'ai_generated' || item.design?.design_type === 'ai_generated';
+
+                      return (
+                        <tr key={item.id} className="hover:bg-white/[0.03] transition-colors">
+                          <td className="px-4 py-4 align-top">
+                            <div className="flex flex-col gap-1">
+                              <span className="font-bold text-white text-xs">
+                                {item.service?.name || (item.product_id ? 'Produk Pakaian' : 'Layanan Sablon')}
+                              </span>
+                              {isSablon && (
+                                <span className="inline-flex items-center gap-1 text-[10px] text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-lg w-fit font-semibold">
+                                  {isAiDesign ? <Sparkles size={11} className="text-amber-400" /> : <ImageIcon size={11} className="text-blue-400" />}
+                                  <span>{isAiDesign ? 'Desain AI' : 'Desain Upload'}</span>
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-4 align-top">
+                            <div className="flex items-start gap-3">
+                              {fullImg ? (
+                                <div className="relative group/img shrink-0 w-16 h-16 rounded-2xl overflow-hidden bg-black/40 border border-white/10 hover:border-primary transition-all shadow-md">
+                                  <OptimizedImage
+                                    src={fullImg}
+                                    thumbnailSrc={thumbImg}
+                                    variant="thumbnail"
+                                    alt={item.product_name || 'Desain'}
+                                    containerClassName="w-full h-full cursor-pointer"
+                                    className="w-full h-full object-contain"
+                                    onClick={() => setLightboxImage(fullImg)}
+                                    title="Klik untuk memperbesar"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setLightboxImage(fullImg)}
+                                    className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 rounded-2xl flex items-center justify-center text-white transition-opacity cursor-pointer z-10"
+                                    title="Perbesar gambar"
+                                  >
+                                    <ZoomIn size={16} />
+                                  </button>
+                                </div>
+                              ) : isSablon ? (
+                                <div className="w-16 h-16 rounded-2xl bg-black/40 border border-white/10 flex flex-col items-center justify-center shrink-0 text-zinc-500">
+                                  <ImageIcon size={20} className="text-zinc-600 mb-0.5" />
+                                  <span className="text-[9px]">No File</span>
+                                </div>
+                              ) : null}
+
+                              <div className="min-w-0 flex-1">
+                                <p className="font-bold text-white text-sm">{item.product_name}</p>
+                                {item.design?.prompt && (
+                                  <p className="text-zinc-400 text-xs italic bg-black/40 p-2 rounded-xl border border-white/5 mt-1.5 leading-relaxed">
+                                    &ldquo;{item.design.prompt}&rdquo;
+                                  </p>
+                                )}
+                                {fullImg && (
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setLightboxImage(fullImg)}
+                                      className="text-[11px] text-primary hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                                    >
+                                      <ZoomIn size={12} /> Zoom
+                                    </button>
+                                    <span className="text-zinc-600">·</span>
+                                    <a
+                                      href={fullImg}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 font-semibold no-underline"
+                                    >
+                                      <ExternalLink size={12} /> Buka HD
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-4 align-top">
+                            <div className="flex flex-wrap gap-1.5 text-[11px]">
+                              {item.shirt_model && (
+                                <span className="px-2 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/20 text-purple-300 font-bold">
+                                  Model: <strong className="text-white">{item.shirt_model}</strong>
+                                </span>
+                              )}
+                              {(item.variant_label || item.size) && (
+                                <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-zinc-200">
+                                  {item.variant_label && !item.variant_label.startsWith('Size:') ? item.variant_label : `Ukuran: ${item.size || item.variant_label}`}
+                                </span>
+                              )}
+                              {item.sablon_type && (
+                                <span className="px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary font-bold">
+                                  {item.sablon_type}
+                                </span>
+                              )}
+                              {item.selected_color && (
+                                <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-zinc-200">
+                                  Warna: <strong className="text-white">{item.selected_color}</strong>
+                                </span>
+                              )}
+                              {item.print_area && (
+                                <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-zinc-300">
+                                  Area: {item.print_area}
+                                </span>
+                              )}
+                              {item.print_size && (
+                                <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-zinc-300">
+                                  Dimensi: {item.print_size}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-4 text-right font-mono font-bold text-white align-top text-xs">
+                            {item.quantity} pcs
+                          </td>
+                          <td className="px-4 py-4 text-right font-mono text-zinc-300 align-top text-xs">
+                            {formatRupiah(item.unit_price)}
+                          </td>
+                          <td className="px-4 py-4 text-right font-mono font-bold text-white align-top text-xs">
+                            {formatRupiah(item.subtotal)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot className="bg-black/50 border-t border-white/10 font-bold text-xs text-white">
+                    <tr>
+                      <td colSpan="5" className="px-4 py-3 text-right text-zinc-400">Subtotal Item</td>
+                      <td className="px-4 py-3 text-right font-mono text-white">{formatRupiah(order.subtotal)}</td>
+                    </tr>
+                    {order.shipping_cost > 0 && (
+                      <tr>
+                        <td colSpan="5" className="px-4 py-3 text-right text-zinc-400">Biaya Pengiriman</td>
+                        <td className="px-4 py-3 text-right font-mono text-white">{formatRupiah(order.shipping_cost)}</td>
+                      </tr>
+                    )}
+                    <tr className="border-t border-white/10">
+                      <td colSpan="5" className="px-4 py-4 text-right text-base uppercase font-heading text-primary">
+                        GRAND TOTAL TAGIHAN
+                      </td>
+                      <td className="px-4 py-4 text-right font-mono text-primary text-lg font-heading">
+                        {formatRupiah(order.total_price)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </>
           )}
         </div>
 

@@ -337,23 +337,23 @@ export default function ReportsPage() {
         <div className="bg-[#180f1e]/90 backdrop-blur-xl border border-white/10 rounded-3xl p-4 sm:p-5 shadow-2xl space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             {/* Quick Filter Buttons */}
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <Filter size={13} className="text-primary" />
+                <Filter size={13} className="text-primary shrink-0" />
                 <span className="text-zinc-400 text-[11px] font-bold uppercase tracking-wider font-heading">
                   Rentang Cepat
                 </span>
                 {(dateFrom || dateTo) && (
-                  <span className="text-[10px] text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md font-mono">
+                  <span className="text-[10px] text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md font-mono truncate">
                     {getChartTitle()}
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-1.5 p-1 bg-black/40 rounded-2xl border border-white/10">
+              <div className="flex items-center gap-1.5 p-1 bg-black/40 rounded-2xl border border-white/10 overflow-x-auto scrollbar-none max-w-full">
                 <button
                   type="button"
                   onClick={resetFilter}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                  className={`shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                     activeFilter === 'default'
                       ? 'bg-gradient-to-r from-primary to-[#ff60a8] text-white shadow-md shadow-primary/30'
                       : 'text-zinc-400 hover:text-white'
@@ -364,7 +364,7 @@ export default function ReportsPage() {
                 <button
                   type="button"
                   onClick={() => quickFilter(7)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                  className={`shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                     activeFilter === 'quick' && activeQuickDays === 7
                       ? 'bg-gradient-to-r from-primary to-[#ff60a8] text-white shadow-md shadow-primary/30'
                       : 'text-zinc-400 hover:text-white'
@@ -375,7 +375,7 @@ export default function ReportsPage() {
                 <button
                   type="button"
                   onClick={() => quickFilter(30)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                  className={`shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                     activeFilter === 'quick' && activeQuickDays === 30
                       ? 'bg-gradient-to-r from-primary to-[#ff60a8] text-white shadow-md shadow-primary/30'
                       : 'text-zinc-400 hover:text-white'
@@ -386,7 +386,7 @@ export default function ReportsPage() {
                 <button
                   type="button"
                   onClick={filterThisMonth}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                  className={`shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                     activeFilter === 'quick' && activeQuickDays === 'this_month'
                       ? 'bg-gradient-to-r from-primary to-[#ff60a8] text-white shadow-md shadow-primary/30'
                       : 'text-zinc-400 hover:text-white'
@@ -397,7 +397,7 @@ export default function ReportsPage() {
                 <button
                   type="button"
                   onClick={() => quickFilter(90)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                  className={`shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                     activeFilter === 'quick' && activeQuickDays === 90
                       ? 'bg-gradient-to-r from-primary to-[#ff60a8] text-white shadow-md shadow-primary/30'
                       : 'text-zinc-400 hover:text-white'
@@ -409,41 +409,54 @@ export default function ReportsPage() {
             </div>
 
             {/* Custom Date Picker */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-2 lg:pt-0 lg:border-l lg:border-white/10 lg:pl-5">
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="input-dark text-xs !py-2 bg-[#120a16] border-white/15 focus:border-primary text-white"
-                />
-                <span className="text-zinc-400 text-xs">s/d</span>
-                <input
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="input-dark text-xs !py-2 bg-[#120a16] border-white/15 focus:border-primary text-white"
-                />
-              </div>
-              <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                <button
-                  type="button"
-                  onClick={applyDateFilter}
-                  disabled={!dateFrom || !dateTo}
-                  className="px-4 py-2 bg-primary hover:bg-primary/90 active:scale-95 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-md shadow-primary/20"
-                >
-                  Terapkan
-                </button>
-                {(dateFrom || dateTo) && (
+            <div className="pt-3 lg:pt-0 lg:border-l lg:border-white/10 lg:pl-5 space-y-1.5">
+              <span className="text-zinc-400 text-[11px] font-bold uppercase tracking-wider font-heading block">
+                Pilih Tanggal Manual
+              </span>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+                  <div className="min-w-0">
+                    <input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="w-full min-w-0 input-dark text-xs !py-2 !px-2 bg-[#120a16] border-white/15 focus:border-primary text-white rounded-xl"
+                      aria-label="Tanggal Mulai"
+                    />
+                  </div>
+                  <span className="hidden sm:inline text-zinc-400 text-xs shrink-0 font-medium text-center">s/d</span>
+                  <div className="min-w-0">
+                    <input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="w-full min-w-0 input-dark text-xs !py-2 !px-2 bg-[#120a16] border-white/15 focus:border-primary text-white rounded-xl"
+                      aria-label="Tanggal Selesai"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button
                     type="button"
-                    onClick={resetFilter}
-                    className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
-                    title="Reset Filter"
+                    onClick={applyDateFilter}
+                    disabled={!dateFrom || !dateTo}
+                    className="flex-1 sm:flex-initial px-4 py-2 bg-gradient-to-r from-primary to-[#ff60a8] hover:brightness-110 active:scale-95 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-md shadow-primary/20 flex items-center justify-center gap-1.5 whitespace-nowrap"
                   >
-                    <RotateCcw size={15} />
+                    <Filter size={13} />
+                    <span>Terapkan</span>
                   </button>
-                )}
+                  {(dateFrom || dateTo) && (
+                    <button
+                      type="button"
+                      onClick={resetFilter}
+                      className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer shrink-0 border border-white/10"
+                      title="Reset Filter Tanggal"
+                    >
+                      <RotateCcw size={15} />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -720,52 +733,100 @@ export default function ReportsPage() {
 
           {/* TAB 1: RINGKASAN HARIAN */}
           {tableTab === 'daily' && (
-            <div className="overflow-x-auto">
+            <div>
               {hasChartData ? (
-                <table className="w-full text-left">
-                  <thead className="bg-black/50 border-b border-white/10 text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-heading">
-                    <tr>
-                      <th className="px-5 py-3.5">Tanggal</th>
-                      <th className="px-5 py-3.5 text-center">Volume Pesanan</th>
-                      <th className="px-5 py-3.5 text-center">Pesanan Selesai</th>
-                      <th className="px-5 py-3.5 text-right">Pendapatan Riil</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5 text-sm">
+                <>
+                  {/* Mobile Daily Cards (< lg screens) */}
+                  <div className="lg:hidden space-y-3 p-4">
                     {chartLabels.map((label, i) => {
                       const count = chartOrders[i] || 0;
                       const completed = stats?.chart_data?.datasets?.[1]?.data?.[i] || 0;
                       const rev = chartRevenues[i] || 0;
 
                       return (
-                        <tr key={label} className="hover:bg-white/[0.03] transition-colors">
-                          <td className="px-5 py-3.5 font-bold text-white text-xs">{label}</td>
-                          <td className="px-5 py-3.5 text-center">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-white/5 text-zinc-300 font-semibold text-xs">
-                              {count} pesanan
+                        <div
+                          key={label}
+                          className="bg-black/40 border border-white/10 rounded-2xl p-4 space-y-2.5 shadow-sm"
+                        >
+                          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                            <span className="font-bold text-white text-sm">{label}</span>
+                            <span className="font-mono font-bold text-primary text-sm">
+                              {formatRupiah(rev)}
                             </span>
-                          </td>
-                          <td className="px-5 py-3.5 text-center">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-400 font-semibold text-xs">
-                              {completed} selesai
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="px-2.5 py-1 rounded-lg bg-white/5 text-zinc-300 font-semibold">
+                              {count} Pesanan Masuk
                             </span>
-                          </td>
-                          <td className="px-5 py-3.5 text-right font-mono font-bold text-white text-xs">
-                            {formatRupiah(rev)}
-                          </td>
-                        </tr>
+                            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 font-semibold">
+                              {completed} Selesai
+                            </span>
+                          </div>
+                        </div>
                       );
                     })}
-                  </tbody>
-                  <tfoot className="bg-black/40 border-t border-white/10 font-bold text-xs text-white">
-                    <tr>
-                      <td className="px-5 py-3.5 uppercase font-heading text-primary">TOTAL PERIODE</td>
-                      <td className="px-5 py-3.5 text-center font-mono">{totalOrders} pesanan</td>
-                      <td className="px-5 py-3.5 text-center font-mono text-emerald-400">{completedOrders} selesai</td>
-                      <td className="px-5 py-3.5 text-right font-mono text-primary text-sm font-heading">{formatRupiah(totalRevenue)}</td>
-                    </tr>
-                  </tfoot>
-                </table>
+
+                    {/* Total Summary on Mobile */}
+                    <div className="bg-gradient-to-r from-primary/10 to-[#ff60a8]/10 border border-primary/25 rounded-2xl p-4 space-y-2 text-xs">
+                      <div className="flex items-center justify-between font-bold text-white">
+                        <span className="uppercase font-heading text-primary">TOTAL PERIODE</span>
+                        <span className="text-base font-mono font-bold text-primary">{formatRupiah(totalRevenue)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-zinc-400">
+                        <span>{totalOrders} Total Pesanan</span>
+                        <span className="text-emerald-400 font-medium">{completedOrders} Selesai</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Desktop Daily Table (>= lg screens) */}
+                  <div className="hidden lg:block overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-black/50 border-b border-white/10 text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-heading">
+                        <tr>
+                          <th className="px-5 py-3.5">Tanggal</th>
+                          <th className="px-5 py-3.5 text-center">Volume Pesanan</th>
+                          <th className="px-5 py-3.5 text-center">Pesanan Selesai</th>
+                          <th className="px-5 py-3.5 text-right">Pendapatan Riil</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 text-sm">
+                        {chartLabels.map((label, i) => {
+                          const count = chartOrders[i] || 0;
+                          const completed = stats?.chart_data?.datasets?.[1]?.data?.[i] || 0;
+                          const rev = chartRevenues[i] || 0;
+
+                          return (
+                            <tr key={label} className="hover:bg-white/[0.03] transition-colors">
+                              <td className="px-5 py-3.5 font-bold text-white text-xs">{label}</td>
+                              <td className="px-5 py-3.5 text-center">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-white/5 text-zinc-300 font-semibold text-xs">
+                                  {count} pesanan
+                                </span>
+                              </td>
+                              <td className="px-5 py-3.5 text-center">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-400 font-semibold text-xs">
+                                  {completed} selesai
+                                </span>
+                              </td>
+                              <td className="px-5 py-3.5 text-right font-mono font-bold text-white text-xs">
+                                {formatRupiah(rev)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot className="bg-black/40 border-t border-white/10 font-bold text-xs text-white">
+                        <tr>
+                          <td className="px-5 py-3.5 uppercase font-heading text-primary">TOTAL PERIODE</td>
+                          <td className="px-5 py-3.5 text-center font-mono">{totalOrders} pesanan</td>
+                          <td className="px-5 py-3.5 text-center font-mono text-emerald-400">{completedOrders} selesai</td>
+                          <td className="px-5 py-3.5 text-right font-mono text-primary text-sm font-heading">{formatRupiah(totalRevenue)}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </>
               ) : (
                 <div className="py-12 text-center text-zinc-500">
                   <p>Belum ada data ringkasan harian di periode ini.</p>
@@ -776,55 +837,108 @@ export default function ReportsPage() {
 
           {/* TAB 2: DAFTAR TRANSAKSI INDIVIDUAL */}
           {tableTab === 'orders' && (
-            <div className="overflow-x-auto">
+            <div>
               {stats?.orders_list?.length > 0 ? (
-                <table className="w-full text-left">
-                  <thead className="bg-black/50 border-b border-white/10 text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-heading">
-                    <tr>
-                      <th className="px-5 py-3.5">Kode Pesanan</th>
-                      <th className="px-5 py-3.5">Customer</th>
-                      <th className="px-5 py-3.5 text-center">Metode</th>
-                      <th className="px-5 py-3.5 text-center">Status</th>
-                      <th className="px-5 py-3.5 text-right">Total Tagihan</th>
-                      <th className="px-5 py-3.5 text-right">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5 text-sm">
+                <>
+                  {/* Mobile Order Cards (< lg screens) */}
+                  <div className="lg:hidden space-y-3 p-4">
                     {stats.orders_list.map((o) => (
-                      <tr key={o.id} className="hover:bg-white/[0.03] transition-colors">
-                        <td className="px-5 py-3.5 font-mono font-bold text-primary text-xs">
-                          {o.order_code}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <p className="font-bold text-white text-xs truncate max-w-[180px]">{o.customer_name}</p>
-                          <p className="text-zinc-500 text-[11px] truncate max-w-[180px]">{o.customer_email}</p>
-                        </td>
-                        <td className="px-5 py-3.5 text-center">
-                          <span className="text-[11px] text-zinc-400 uppercase font-semibold">
-                            {o.delivery_method === 'pickup' ? 'Ambil di Toko' : 'Kurir'}
+                      <div
+                        key={o.id}
+                        className="bg-black/40 border border-white/10 rounded-2xl p-4 space-y-3 shadow-sm hover:border-primary/40 transition-all"
+                      >
+                        <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+                          <span className="font-mono font-bold text-primary text-sm">
+                            {o.order_code}
                           </span>
-                        </td>
-                        <td className="px-5 py-3.5 text-center">
                           <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-white/5 text-zinc-300 border border-white/10">
                             {o.status}
                           </span>
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-mono font-bold text-white text-xs">
-                          {formatRupiah(o.total_price)}
-                        </td>
-                        <td className="px-5 py-3.5 text-right">
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 text-xs">
+                          <div className="min-w-0">
+                            <p className="font-bold text-white truncate">{o.customer_name}</p>
+                            <p className="text-zinc-500 text-[11px] truncate">{o.customer_email}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-[10px] text-zinc-500 uppercase">Metode</p>
+                            <p className="text-zinc-300 font-medium">
+                              {o.delivery_method === 'pickup' ? 'Ambil di Toko' : 'Kurir'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2.5 border-t border-white/10">
+                          <div>
+                            <span className="text-[10px] text-zinc-500 block">Total Tagihan</span>
+                            <span className="font-mono font-bold text-white text-sm">{formatRupiah(o.total_price)}</span>
+                          </div>
                           <Link
                             to={`/admin/pesanan/${o.id}`}
-                            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-zinc-300 hover:text-white inline-flex items-center gap-1 text-xs font-semibold no-underline"
-                            title="Buka Detail Pesanan"
+                            className="px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/25 hover:bg-primary hover:text-white text-primary text-xs font-semibold inline-flex items-center gap-1.5 transition-all"
                           >
-                            <ExternalLink size={13} />
+                            <span>Detail</span>
+                            <ExternalLink size={12} />
                           </Link>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+
+                  {/* Desktop Orders Table (>= lg screens) */}
+                  <div className="hidden lg:block overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-black/50 border-b border-white/10 text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-heading">
+                        <tr>
+                          <th className="px-5 py-3.5">Kode Pesanan</th>
+                          <th className="px-5 py-3.5">Customer</th>
+                          <th className="px-5 py-3.5 text-center">Metode</th>
+                          <th className="px-5 py-3.5 text-center">Status</th>
+                          <th className="px-5 py-3.5 text-right">Total Tagihan</th>
+                          <th className="px-5 py-3.5 text-right sticky right-0 bg-black/80 backdrop-blur-sm z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.4)]">
+                            Aksi
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 text-sm">
+                        {stats.orders_list.map((o) => (
+                          <tr key={o.id} className="hover:bg-white/[0.03] transition-colors group">
+                            <td className="px-5 py-3.5 font-mono font-bold text-primary text-xs">
+                              {o.order_code}
+                            </td>
+                            <td className="px-5 py-3.5">
+                              <p className="font-bold text-white text-xs truncate max-w-[180px]">{o.customer_name}</p>
+                              <p className="text-zinc-500 text-[11px] truncate max-w-[180px]">{o.customer_email}</p>
+                            </td>
+                            <td className="px-5 py-3.5 text-center">
+                              <span className="text-[11px] text-zinc-400 uppercase font-semibold">
+                                {o.delivery_method === 'pickup' ? 'Ambil di Toko' : 'Kurir'}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3.5 text-center">
+                              <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-white/5 text-zinc-300 border border-white/10">
+                                {o.status}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3.5 text-right font-mono font-bold text-white text-xs">
+                              {formatRupiah(o.total_price)}
+                            </td>
+                            <td className="px-5 py-3.5 text-right sticky right-0 bg-[#180f1e] group-hover:bg-[#180f1e]/95 transition-colors z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.3)]">
+                              <Link
+                                to={`/admin/pesanan/${o.id}`}
+                                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-zinc-300 hover:text-white inline-flex items-center gap-1 text-xs font-semibold no-underline"
+                                title="Buka Detail Pesanan"
+                              >
+                                <ExternalLink size={13} />
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               ) : (
                 <div className="py-12 text-center text-zinc-500">
                   <p>Tidak ada transaksi pesanan yang ditemukan pada periode ini.</p>

@@ -39,7 +39,7 @@ import { useLanguageStore } from '../store/languageStore';
 import { useThemeStore } from '../store/themeStore';
 import api from '../services/api';
 import { formatRupiah, getMinPrice } from '../utils/formatRupiah';
-import { WA_URL } from '../constants/whatsapp';
+import { getWhatsAppUrl } from '../constants/whatsapp';
 
 const marqueeItemsId = [
   'KONVEKSI & CUSTOM APPAREL', 'SABLON DTF HIGH DEFINITION', 'PLASTISOL PEKAT & AWET', 'BORDIR KOMPUTER', 'AI DESIGN ASSISTANT', '3D MOCKUP PREVIEW', 'STANDAR KUALITAS TERUJI'
@@ -534,12 +534,12 @@ export default function LandingPage() {
             <div className="lg:col-span-7 space-y-6 text-left">
               <ScrollReveal direction="up" delay={200}>
                 {isEn ? (
-                  <h1 className="font-heading text-[clamp(38px,6.8vw,90px)] leading-[0.96] tracking-wide sm:tracking-wider text-white m-0">
+                  <h1 className="font-heading text-[clamp(28px,6.5vw,90px)] leading-[0.96] tracking-wide sm:tracking-wider text-white m-0">
                     CUSTOM APPAREL <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#ff60a8] to-primary">&amp; GARMENT</span><br />
                     BRING YOUR DESIGNS TO LIFE
                   </h1>
                 ) : (
-                  <h1 className="font-heading text-[clamp(38px,6.8vw,90px)] leading-[0.96] tracking-wide sm:tracking-wider text-white m-0">
+                  <h1 className="font-heading text-[clamp(28px,6.5vw,90px)] leading-[0.96] tracking-wide sm:tracking-wider text-white m-0">
                     KONVEKSI &amp; <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#ff60a8] to-primary">CUSTOM APPAREL</span><br />
                     UNTUK WUJUDKAN DESAINMU
                   </h1>
@@ -547,18 +547,18 @@ export default function LandingPage() {
               </ScrollReveal>
 
               <ScrollReveal direction="blur" delay={400}>
-                <p className="text-zinc-300 text-base sm:text-lg leading-relaxed max-w-xl">
+                <p className="text-zinc-300 text-sm sm:text-lg leading-relaxed max-w-xl">
                   {t('hero.subtitle', 'Pesan kaos dan produk apparel kustom dengan proses desain interaktif, visualisasi mockup 3D, serta pengerjaan produksi terstandarisasi dalam satu platform.')}
                 </p>
               </ScrollReveal>
 
               <ScrollReveal direction="up" delay={550}>
-                <div className="flex items-center gap-4 flex-wrap pt-2">
-                  <Link to="/pesan" className="btn-gradient-primary text-sm font-bold tracking-wider py-3.5 px-8 shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-transform">
+                <div className="flex items-center gap-3 sm:gap-4 flex-wrap pt-2">
+                  <Link to="/pesan" className="btn-gradient-primary text-xs sm:text-sm font-bold tracking-wider py-3.5 px-6 sm:px-8 shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-transform">
                     <span>{isEn ? 'Start Custom Apparel' : 'Mulai Custom Apparel'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
-                  <Link to="/design-studio" className="btn-glass text-sm font-semibold tracking-wider py-3.5 px-6 hover:border-primary/50 transition-all">
+                  <Link to="/design-studio" className="btn-glass text-xs sm:text-sm font-semibold tracking-wider py-3.5 px-5 sm:px-6 hover:border-primary/50 transition-all">
                     <Zap className="w-4 h-4 text-primary" />
                     <span>{t('nav.studio', isEn ? 'Design Studio' : 'Studio Desain')}</span>
                   </Link>
@@ -567,18 +567,18 @@ export default function LandingPage() {
 
               {/* STATS BADGES */}
               <ScrollReveal direction="up" delay={700}>
-                <div className="pt-6 grid grid-cols-3 gap-3 max-w-md">
-                  <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center backdrop-blur-md">
-                    <p className="font-heading text-2xl sm:text-3xl text-primary leading-none">3.000+</p>
-                    <p className="text-[10px] sm:text-xs text-zinc-400 uppercase tracking-wider mt-1">{isEn ? 'Orders Completed' : 'Pesanan Selesai'}</p>
+                <div className="pt-6 grid grid-cols-3 gap-2 sm:gap-3 max-w-md">
+                  <div className="p-2 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center backdrop-blur-md">
+                    <p className="font-heading text-xl sm:text-2xl md:text-3xl text-primary leading-none">3.000+</p>
+                    <p className="text-[9px] sm:text-[10px] md:text-xs text-zinc-400 uppercase tracking-wider mt-1">{isEn ? 'Orders Done' : 'Pesanan Selesai'}</p>
                   </div>
-                  <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center backdrop-blur-md">
-                    <p className="font-heading text-2xl sm:text-3xl text-primary leading-none">99%</p>
-                    <p className="text-[10px] sm:text-xs text-zinc-400 uppercase tracking-wider mt-1">{isEn ? 'Satisfied & Repeat' : 'Puas & Repeat'}</p>
+                  <div className="p-2 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center backdrop-blur-md">
+                    <p className="font-heading text-xl sm:text-2xl md:text-3xl text-primary leading-none">99%</p>
+                    <p className="text-[9px] sm:text-[10px] md:text-xs text-zinc-400 uppercase tracking-wider mt-1">{isEn ? 'Satisfied' : 'Puas & Repeat'}</p>
                   </div>
-                  <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center backdrop-blur-md">
-                    <p className="font-heading text-2xl sm:text-3xl text-primary leading-none">{isEn ? '5 YRS' : '5 TH'}</p>
-                    <p className="text-[10px] sm:text-xs text-zinc-400 uppercase tracking-wider mt-1">{isEn ? 'Experience' : 'Pengalaman'}</p>
+                  <div className="p-2 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/10 text-center backdrop-blur-md">
+                    <p className="font-heading text-xl sm:text-2xl md:text-3xl text-primary leading-none">{isEn ? '5 YRS' : '5 TH'}</p>
+                    <p className="text-[9px] sm:text-[10px] md:text-xs text-zinc-400 uppercase tracking-wider mt-1">{isEn ? 'Experience' : 'Pengalaman'}</p>
                   </div>
                 </div>
               </ScrollReveal>
@@ -958,13 +958,13 @@ export default function LandingPage() {
                     <span>{isEn ? 'View Pricing & Specs' : 'Cek Daftar Harga Sablon'}</span>
                   </Link>
                   <a
-                    href={WA_URL}
+                    href={getWhatsAppUrl('general')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="py-3.5 px-6 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 hover:text-white text-xs font-semibold tracking-wider text-center transition-all flex items-center justify-center gap-2"
                   >
                     <MessageCircle size={15} />
-                    <span>{isEn ? 'Consult on WhatsApp' : 'Konsultasi Desain & Bahan'}</span>
+                    <span>{isEn ? 'Consultation on WhatsApp' : 'Konsultasi Desain & Bahan'}</span>
                   </a>
                 </div>
               </div>
@@ -1295,7 +1295,7 @@ export default function LandingPage() {
               </div>
 
               <a
-                href={WA_URL}
+                href={getWhatsAppUrl('general')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm transition-all no-underline shrink-0 active:scale-95"
@@ -1327,12 +1327,13 @@ export default function LandingPage() {
               <ArrowRight className="w-4 h-4" />
             </Link>
             <a
-              href="https://wa.me/6287877294587"
+              href={getWhatsAppUrl('general')}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-glass py-4 px-7 text-sm font-semibold tracking-wider hover:border-primary/50 transition-all"
+              className="btn-glass py-4 px-7 text-sm font-semibold tracking-wider hover:border-primary/50 transition-all flex items-center justify-center gap-2"
             >
-              {t('cta.waBtn', 'Konsultasi WhatsApp')}
+              <MessageCircle size={16} className="text-emerald-400" />
+              <span>{t('cta.waBtn', 'Konsultasi WhatsApp')}</span>
             </a>
           </div>
         </div>

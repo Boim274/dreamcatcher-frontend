@@ -562,7 +562,11 @@ function ActionButtons({ order, onCancelSuccess, onTestimonialSuccess }) {
           </button>
         )}
         <a
-          href={waLink(language === 'en' ? `Hello Dreamcatcher, I would like to inquire about order #${order.order_code}` : `Halo Dreamcatcher, saya ingin menanyakan pesanan #${order.order_code}`)}
+          href={waLink(
+            language === 'en'
+              ? `Hello Admin, I would like to consult about my order #${order.order_code}.\n\nOrder Code: #${order.order_code}\nStatus: ${order.status}\n\nPlease provide an update on this order. Thank you!`
+              : `Halo Admin, saya ingin konsultasi mengenai pesanan #${order.order_code}.\n\nNomor Pesanan: #${order.order_code}\nStatus: ${order.status}\n\nMohon informasi update terkait pesanan ini ya Admin. Terima kasih.`
+          )}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-glass flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl text-xs sm:text-[13px] uppercase tracking-wider font-semibold"

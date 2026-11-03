@@ -1788,7 +1788,76 @@ export default function ServicesPage() {
                     </div>
                   </div>
 
-                  <div className="overflow-x-auto rounded-2xl border border-white/10">
+                  {/* Mobile View: Cards (< lg screens) */}
+                  <div className="lg:hidden space-y-3">
+                    {services
+                      .filter((s) => !filters.search || s.name.toLowerCase().includes(filters.search.toLowerCase()))
+                      .map((service) => (
+                        <div
+                          key={service.id}
+                          className="bg-[#140c1a] border border-white/10 rounded-2xl p-4 space-y-3 shadow-md hover:border-primary/40 transition-all"
+                        >
+                          <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-2.5">
+                            <div className="min-w-0">
+                              <p className="font-bold text-white text-sm truncate">{service.name}</p>
+                              <p className="text-[11px] text-zinc-400 line-clamp-1 mt-0.5">
+                                {service.description || 'Tidak ada deskripsi'}
+                              </p>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${
+                              service.pricing_type === 'tiered'
+                                ? 'bg-primary/20 text-primary border border-primary/30'
+                                : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            }`}>
+                              {service.pricing_type === 'tiered' ? 'Bertingkat' : 'Flat'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs">
+                            <div>
+                              <span className="text-zinc-500 text-[10px] block">Harga Dasar</span>
+                              <span className="font-mono font-bold text-white text-sm">{formatRupiah(service.base_price)}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-zinc-500 text-[10px] block">Min. Order</span>
+                              <span className="text-zinc-300 font-semibold">{service.minimum_order} pcs</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2.5 border-t border-white/10">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                              service.is_active
+                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                : 'bg-zinc-500/15 text-zinc-400 border border-zinc-500/30'
+                            }`}>
+                              {service.is_active ? 'Aktif' : 'Non-Aktif'}
+                            </span>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => openModal(service)}
+                                className="p-2 hover:bg-white/10 text-zinc-300 hover:text-white rounded-xl bg-white/5 border border-white/10 transition-colors cursor-pointer"
+                                title="Edit Layanan"
+                                aria-label="Edit Layanan"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                              <button
+                                onClick={() => setConfirmDelete({ show: true, id: service.id })}
+                                className="p-2 hover:bg-rose-500/10 text-rose-400 rounded-xl bg-rose-500/5 border border-rose-500/20 transition-colors cursor-pointer"
+                                title="Hapus Layanan"
+                                aria-label="Hapus Layanan"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* Desktop View: Table (>= lg screens) */}
+                  <div className="hidden lg:block overflow-x-auto rounded-2xl border border-white/10">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-white/10 bg-white/[0.02] text-[11px] font-bold text-gray-400 uppercase tracking-wider">
@@ -1797,14 +1866,16 @@ export default function ServicesPage() {
                           <th className="py-3 px-4">Harga Dasar</th>
                           <th className="py-3 px-4">Min. Order</th>
                           <th className="py-3 px-4">Status</th>
-                          <th className="py-3 px-4 text-right">Aksi</th>
+                          <th className="py-3 px-4 text-right sticky right-0 bg-[#180f1e]/95 backdrop-blur-sm z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.4)]">
+                            Aksi
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5 text-xs">
                         {services
                           .filter((s) => !filters.search || s.name.toLowerCase().includes(filters.search.toLowerCase()))
                           .map((service) => (
-                            <tr key={service.id} className="hover:bg-white/[0.02] transition-colors">
+                            <tr key={service.id} className="hover:bg-white/[0.02] transition-colors group">
                               <td className="py-3 px-4">
                                 <span className="font-bold text-white block">{service.name}</span>
                                 <span className="text-[11px] text-zinc-400 line-clamp-1 max-w-xs">{service.description || 'Tidak ada deskripsi'}</span>
@@ -1829,7 +1900,7 @@ export default function ServicesPage() {
                                   {service.is_active ? 'Aktif' : 'Non-Aktif'}
                                 </span>
                               </td>
-                              <td className="py-3 px-4 text-right">
+                              <td className="py-3 px-4 text-right sticky right-0 bg-[#180f1e] group-hover:bg-[#180f1e]/95 transition-colors z-10 shadow-[-8px_0_12px_-4px_rgba(0,0,0,0.3)]">
                                 <div className="flex items-center justify-end gap-1.5">
                                   <button
                                     onClick={() => openModal(service)}

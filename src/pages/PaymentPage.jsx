@@ -528,7 +528,7 @@ const BANK_ACCOUNTS = [
                     <button
                       type="button"
                       onClick={() => copyToClipboard(acc.number)}
-                      className={`btn-glass inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                      className={`btn-glass w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
                         copiedAccount === acc.number
                           ? '!bg-emerald-500 !text-white !border-emerald-500'
                           : ''

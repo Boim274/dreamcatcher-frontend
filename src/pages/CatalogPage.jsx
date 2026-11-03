@@ -12,7 +12,7 @@ import ScrollReveal from '../components/ui/ScrollReveal';
 import { useLanguageStore } from '../store/languageStore';
 import { useThemeStore } from '../store/themeStore';
 import { formatRupiah, getMinPrice } from '../utils/formatRupiah';
-import { WA_URL } from '../constants/whatsapp';
+import { getWhatsAppUrl } from '../constants/whatsapp';
 import { getServiceImage } from './LandingPage';
 
 export default function CatalogPage() {
@@ -302,7 +302,7 @@ export default function CatalogPage() {
               <a
                 target="_blank"
                 rel="noopener noreferrer"
-                href={WA_URL}
+                href={getWhatsAppUrl('catalog')}
                 className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-full font-bold text-xs uppercase tracking-wider text-white shadow-xl shadow-green-500/25 transition-all hover:scale-105 active:scale-95 relative z-10 w-full sm:w-auto"
                 style={{ background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)' }}
               >

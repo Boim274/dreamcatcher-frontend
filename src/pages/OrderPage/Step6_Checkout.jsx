@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useOrderStore } from '../../store/orderStore';
 import { useLanguageStore } from '../../store/languageStore';
@@ -12,6 +13,7 @@ import CustomerProfileModal from '../../components/common/CustomerProfileModal';
 import PhoneCountryInput from '../../components/common/PhoneCountryInput';
 import OrderReceipt from '../../components/common/OrderReceipt';
 import { getCleanConfigItems, formatConfigSummary } from '../../utils/orderReceiptHelper';
+import { getWhatsAppUrl } from '../../constants/whatsapp';
 import { Printer, Eye, Receipt, Layers } from 'lucide-react';
 
 export default function Step6Checkout() {
@@ -48,6 +50,15 @@ export default function Step6Checkout() {
       }));
     }
   }, [user]);
+
+  useEffect(() => {
+    if (showConfirm) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, [showConfirm]);
 
   const subtotal = getSubtotal();
   const shipping = getShippingCost();
@@ -585,10 +596,29 @@ export default function Step6Checkout() {
         </button>
       </div>
 
-      {/* Confirm Modal */}
-      {showConfirm && (
-        <div className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-3.5 sm:p-4 backdrop-blur-sm">
-          <div className="bg-[#170e1c] border border-white/15 w-full max-w-sm sm:max-w-md p-5 sm:p-8 rounded-2xl sm:rounded-3xl shadow-2xl animate-fade-in relative overflow-hidden">
+      {/* WhatsApp Consultation Help for Order */}
+      <div className="mt-4 text-center">
+        <a
+          href={getWhatsAppUrl('order')}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 py-2 px-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-xs transition-all no-underline"
+        >
+          <Icon name="message-circle" size={15} />
+          <span>{language === 'en' ? 'Need help with this order? Chat CS WhatsApp' : 'Butuh panduan pesanan? Konsultasi CS WhatsApp'}</span>
+        </a>
+      </div>
+
+      {/* Confirm Modal: Teleported via createPortal directly to body so it always centers in viewport without scrolling */}
+      {showConfirm && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-3.5 sm:p-4 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowConfirm(false)}
+        >
+          <div
+            className="bg-[#170e1c] border border-white/15 w-full max-w-sm sm:max-w-md p-5 sm:p-7 rounded-2xl sm:rounded-3xl shadow-2xl relative overflow-hidden my-auto animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
 
             <div className="text-center mb-5 sm:mb-6">
@@ -639,7 +669,8 @@ export default function Step6Checkout() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Profile Modal */}
