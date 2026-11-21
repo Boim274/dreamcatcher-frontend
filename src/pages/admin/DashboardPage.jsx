@@ -312,9 +312,17 @@ export default function DashboardPage() {
                       const items = order.items || [];
                       const firstItem = items[0];
                       const itemName = firstItem?.product?.name || firstItem?.product_name || firstItem?.service?.name || 'Item Pesanan';
-                      const itemImg = firstItem?.design?.thumbnail_url || firstItem?.design?.image_url
+                      const itemWithDesign = items.find((i) => i.design?.thumbnail_url || i.design?.image_url);
+                      const shirtModelImg = firstItem?.shirt_model && firstItem?.service?.options_config?.shirt_models?.find(
+                        (m) => m.name?.toLowerCase() === firstItem.shirt_model?.toLowerCase() || m.id === firstItem.shirt_model
+                      )?.image;
+                      const itemImg = itemWithDesign?.design?.thumbnail_url || itemWithDesign?.design?.image_url
+                        || firstItem?.design?.thumbnail_url || firstItem?.design?.image_url
                         || firstItem?.product?.images?.[0]?.thumbnail_url || firstItem?.product?.images?.[0]?.image_url
+                        || shirtModelImg
+                        || firstItem?.service?.thumbnail
                         || null;
+                      const itemThumb = itemWithDesign?.design?.thumbnail_url || firstItem?.design?.thumbnail_url || firstItem?.product?.images?.[0]?.thumbnail_url;
 
                       return (
                         <Link
@@ -326,6 +334,7 @@ export default function DashboardPage() {
                             {itemImg ? (
                               <OptimizedImage
                                 src={itemImg}
+                                thumbnailSrc={itemThumb}
                                 variant="thumbnail"
                                 alt={itemName}
                                 containerClassName="w-11 h-11 rounded-lg bg-card border border-border flex-shrink-0"
